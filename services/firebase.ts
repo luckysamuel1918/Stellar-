@@ -47,7 +47,7 @@ export const createUserProfileDocument = async (userAuth: firebase.User, additio
         accountNumber,
         pin, // Note: Storing a PIN directly is insecure. This is for demonstration only.
         balance: 1000, // Starting balance for new users for demo purposes
-        isAdmin: email === 'admin@westcoast.com', // Example admin setup
+        isAdmin: email === 'admin@westcoasttrust.com', // Example admin setup
         createdAt,
         photoURL: '',
       };
