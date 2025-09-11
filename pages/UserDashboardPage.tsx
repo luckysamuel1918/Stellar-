@@ -32,6 +32,13 @@ const formatCurrency = (amount: number, currency: string) => {
 const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
     const printReceipt = () => window.print();
 
+    const DetailRow = ({ label, value }) => (
+        <div className="flex justify-between items-start gap-4">
+            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
+            <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-words text-base">{value}</span>
+        </div>
+    );
+
     return (
         <div className="text-center">
              <style>{`
@@ -42,8 +49,8 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
                     .no-print { display: none !important; }
                 }
             `}</style>
-            <div id="receipt-content" className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg text-left text-sm">
-                <div className="relative border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
+            <div id="receipt-content" className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg text-left">
+                <div className="relative border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6 sm:p-8">
                     {/* Paid Stamp */}
                     <div className="absolute top-8 right-8 transform rotate-12 no-print">
                         <div className="border-4 border-green-500 text-green-500 rounded-full w-24 h-24 flex items-center justify-center font-black text-2xl uppercase opacity-70">
@@ -62,35 +69,42 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
                     {/* Summary */}
                     <div className="text-center my-8">
                         <p className="text-gray-500 dark:text-gray-400">Amount Sent</p>
-                        <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
+                        <p className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
                         <div className="inline-flex items-center gap-2 mt-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 font-semibold px-3 py-1 rounded-full text-sm">
                             <CheckCircle size={16}/>
                             <span>Transaction Completed</span>
                         </div>
                     </div>
 
-                    {/* Details Grid */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-200 dark:border-gray-600 pt-6">
-                        <div className="space-y-3">
-                            <h3 className="font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs tracking-wider">Beneficiary Details</h3>
-                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Name</span><span className="font-semibold text-gray-800 dark:text-gray-200 text-right">{receiptData.receiverName}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Account</span><span className="font-semibold text-gray-800 dark:text-gray-200">{isInternational ? 'International Account' : receiptData.receiverAccountNumber}</span></div>
-                            {bankDetails && Object.entries(bankDetails).map(([key, value]) => value && (
-                                <div key={key} className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span><span className="font-semibold text-gray-800 dark:text-gray-200">{String(value)}</span></div>
-                            ))}
+                    {/* Details Sections */}
+                    <div className="space-y-8">
+                        <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-600 dark:text-gray-300 uppercase text-sm tracking-wider">Beneficiary Details</h3>
+                            <div className="p-5 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-4">
+                                <DetailRow label="Name" value={receiptData.receiverName} />
+                                <DetailRow label="Account" value={isInternational ? 'International Account' : receiptData.receiverAccountNumber} />
+                                {bankDetails && Object.entries(bankDetails).map(([key, value]) => value && (
+                                    <DetailRow key={key} label={key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())} value={String(value)} />
+                                ))}
+                            </div>
                         </div>
-                         <div className="space-y-3">
-                            <h3 className="font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs tracking-wider">Sender Details</h3>
-                             <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Name</span><span className="font-semibold text-gray-800 dark:text-gray-200 text-right">{user.fullName}</span></div>
-                             <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Account</span><span className="font-semibold text-gray-800 dark:text-gray-200">{user.accountNumber}</span></div>
+                         <div className="space-y-4">
+                            <h3 className="font-semibold text-gray-600 dark:text-gray-300 uppercase text-sm tracking-wider">Sender Details</h3>
+                             <div className="p-5 bg-gray-50 dark:bg-gray-700/50 rounded-lg space-y-4">
+                                <DetailRow label="Name" value={user.fullName} />
+                                <DetailRow label="Account" value={user.accountNumber} />
+                            </div>
                         </div>
                     </div>
                     
                      {/* Transaction Details Footer */}
-                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-6 space-y-2">
-                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Date</span><span className="font-semibold text-gray-800 dark:text-gray-200">{new Date(receiptData.timestamp.toDate()).toLocaleString()}</span></div>
-                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Transaction ID</span><span className="font-mono text-gray-700 dark:text-gray-200 text-xs">{receiptData.id}</span></div>
-                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Description</span><span className="font-semibold text-gray-800 dark:text-gray-200">{receiptData.description || 'N/A'}</span></div>
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-5 mt-8 space-y-3">
+                         <DetailRow label="Date" value={new Date(receiptData.timestamp.toDate()).toLocaleString()} />
+                         <div className="flex justify-between items-start gap-4">
+                            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">Transaction ID</span>
+                            <span className="font-mono text-gray-700 dark:text-gray-300 text-xs text-right break-all">{receiptData.id}</span>
+                         </div>
+                         <DetailRow label="Description" value={receiptData.description || 'N/A'} />
                     </div>
                 </div>
             </div>
@@ -249,6 +263,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
 
             const transaction = await performTransfer(user, recipient, parseFloat(amount), purpose);
             if (transaction) {
+                onSuccess(transaction);
                 await deleteOtp(user.uid);
                 setReceiptData(transaction);
                 setStep(4);
@@ -264,7 +279,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     
     return (
       <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
-        <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 sm:p-8 relative">
+        <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 sm:p-8 relative">
             <button onClick={onClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
             
             {step === 1 && (
@@ -335,7 +350,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                  <ReceiptView 
                     receiptData={receiptData} 
                     user={user} 
-                    onClose={() => { onSuccess(); onClose(); }}
+                    onClose={onClose}
                     bankDetails={{ bankName, routingNumber }}
                 />
             )}
@@ -428,6 +443,7 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
             };
             const transaction = await performTransfer(user, tempRecipient, parseFloat(amount), purpose);
             if (transaction) {
+                onSuccess(transaction);
                 await deleteOtp(user.uid);
                 setReceiptData(transaction);
                 setStep(4);
@@ -443,7 +459,7 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
 
     return (
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6 sm:p-8 relative">
+            <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 sm:p-8 relative">
                  <button onClick={onClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
                 {step === 1 && (
                     <form onSubmit={handleProceedToConfirm} className="space-y-6">
@@ -513,7 +529,7 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                     <ReceiptView 
                         receiptData={receiptData} 
                         user={user} 
-                        onClose={() => { onSuccess(); onClose(); }}
+                        onClose={onClose}
                         isInternational={true}
                         bankDetails={{ bankName: bankName, country: country, swiftBic: swiftBic }}
                     />
@@ -587,10 +603,10 @@ const CheckDepositModal = ({ user, onClose, onSuccess }) => {
         setLoading(true);
         setError('');
         try {
-            await adminUpdateBalance(user, numAmount, 'credit', 'Mobile Check Deposit');
+            const newTransaction = await adminUpdateBalance(user, numAmount, 'credit', 'Mobile Check Deposit');
+            onSuccess(newTransaction);
             setStep(2);
             setTimeout(() => {
-                onSuccess();
                 onClose();
             }, 3000);
         } catch(e) {
@@ -790,7 +806,7 @@ const CardsView: React.FC<{ user: UserProfile }> = ({ user }) => {
     );
 };
 
-const PaymentsView: React.FC<{ user: UserProfile, onSuccess: () => void }> = ({ user, onSuccess }) => {
+const PaymentsView: React.FC<{ user: UserProfile, onSuccess: (newTransaction?: Transaction) => void }> = ({ user, onSuccess }) => {
     const [biller, setBiller] = useState('Edison Electric');
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
@@ -814,10 +830,10 @@ const PaymentsView: React.FC<{ user: UserProfile, onSuccess: () => void }> = ({ 
         setError('');
         setSuccess('');
         try {
-            await adminUpdateBalance(user, numAmount, 'debit', `Bill Payment to ${biller}`);
+            const newTransaction = await adminUpdateBalance(user, numAmount, 'debit', `Bill Payment to ${biller}`);
             setSuccess(`Successfully paid ${formatCurrency(numAmount, user.currencyCode)} to ${biller}.`);
             setAmount('');
-            onSuccess(); // Refresh user data
+            onSuccess(newTransaction);
         } catch (err) {
             setError(err.message || 'Payment failed.');
         } finally {
@@ -1055,6 +1071,15 @@ const UserDashboardPage: React.FC = () => {
         fetchData();
     }, [fetchData]);
 
+    const handleSuccess = (newTransaction?: Transaction) => {
+        // The transaction object returned immediately after creation might be incomplete
+        // (e.g., server timestamp not yet populated). The most reliable way to update
+        // the UI is to refetch all data from the server. This ensures both the balance
+        // and the transaction list are fully consistent and correctly sorted.
+        fetchData();
+    };
+
+
     useEffect(() => {
         if (userData && userData.isSuspended) {
             let inactivityTimer: number;
@@ -1133,7 +1158,7 @@ const UserDashboardPage: React.FC = () => {
             case 'home': return <DashboardHomeView userData={userData} transactions={transactions} onActionClick={handleQuickAction}/>;
             case 'history': return <TransactionHistoryView transactions={transactions} currentUserId={userData.uid} currencyCode={userData.currencyCode} />;
             case 'cards': return <CardsView user={userData} />;
-            case 'payments': return <PaymentsView user={userData} onSuccess={fetchData} />;
+            case 'payments': return <PaymentsView user={userData} onSuccess={handleSuccess} />;
             case 'me': return <ProfileView user={userData} onUpdate={fetchData} />;
             default: return <DashboardHomeView userData={userData} transactions={transactions} onActionClick={handleQuickAction} />;
         }
@@ -1187,9 +1212,9 @@ const UserDashboardPage: React.FC = () => {
                             </header>
                         )}
 
-                        {showTransferModal && userData && <DomesticTransferModal user={userData} onClose={() => setShowTransferModal(false)} onSuccess={fetchData} />}
-                        {showDepositModal && userData && <CheckDepositModal user={userData} onClose={() => setShowDepositModal(false)} onSuccess={fetchData} />}
-                        {showInternationalModal && userData && <InternationalTransferModal user={userData} onClose={() => setShowInternationalModal(false)} onSuccess={fetchData} />}
+                        {showTransferModal && userData && <DomesticTransferModal user={userData} onClose={() => setShowTransferModal(false)} onSuccess={handleSuccess} />}
+                        {showDepositModal && userData && <CheckDepositModal user={userData} onClose={() => setShowDepositModal(false)} onSuccess={handleSuccess} />}
+                        {showInternationalModal && userData && <InternationalTransferModal user={userData} onClose={() => setShowInternationalModal(false)} onSuccess={handleSuccess} />}
                         
                         {renderContent()}
                     </div>

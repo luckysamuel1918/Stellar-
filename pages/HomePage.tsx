@@ -61,7 +61,7 @@ const HeroSection: React.FC = () => {
                 </div>
             </div>
             <div className="absolute inset-0 z-0 opacity-30 dark:opacity-40">
-                 <img src="https://images.unsplash.com/photo-1664092041235-8656810a4d44?q=80&w=1920&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" onError={handleImageError} />
+                 <img src="https://images.unsplash.com/photo-1665686374006-b8f04b627f44?q=80&w=2071&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" onError={handleImageError} />
                  <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark dark:from-black via-westcoast-dark/80 dark:via-black/80 to-transparent"></div>
             </div>
         </div>
@@ -74,19 +74,19 @@ const FeaturesSection: React.FC = () => {
             icon: <Landmark size={28} className="text-westcoast-blue" />, 
             title: 'Smart Banking', 
             description: 'Effortless payments, advanced budgeting, and global support, all in one place.',
-            imgSrc: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=800&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2070&auto=format&fit=crop'
         },
         { 
             icon: <TrendingUp size={28} className="text-westcoast-blue" />, 
             title: 'Powerful Investing', 
             description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.',
-            imgSrc: 'https://images.unsplash.com/photo-1640622300473-9777435c38c04?q=80&w=800&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1640622300473-977435c26c04?q=80&w=2072&auto=format&fit=crop'
         },
         { 
             icon: <ShieldCheck size={28} className="text-westcoast-blue" />, 
             title: 'Total Security', 
             description: 'Your assets are protected with bank-grade security and FDIC insurance.',
-            imgSrc: 'https://images.unsplash.com/photo-1585224329602-3f721d3ba3e7?q=80&w=800&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1562826335-70e283901b5a?q=80&w=2070&auto=format&fit=crop'
         },
     ];
     return (
@@ -113,10 +113,10 @@ const FeaturesSection: React.FC = () => {
 const ProductsSection: React.FC = () => {
     const navigate = useNavigate();
     const products = [
-        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=600&auto=format&fit=crop' },
-        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=600&auto=format&fit=crop' },
-        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1556761175-b413da4b248a?q=80&w=600&auto=format&fit=crop' },
-        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=600&auto=format&fit=crop' },
+        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?q=80&w=2070&auto=format&fit=crop' },
+        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop' },
+        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=2070&auto=format&fit=crop' },
+        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1932&auto=format&fit=crop' },
     ];
     return (
         <div className="bg-westcoast-bg dark:bg-gray-900 py-20">
@@ -161,7 +161,7 @@ const FinalCTASection: React.FC = () => {
                     className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden"
                 >
                     <img
-                        src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200&auto=format&fit=crop"
+                        src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=2071&auto=format&fit=crop"
                         onError={handleImageError}
                         alt="Team working together"
                         className="absolute inset-0 w-full h-full object-cover"

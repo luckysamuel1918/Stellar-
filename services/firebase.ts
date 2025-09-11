@@ -160,7 +160,7 @@ export const adminUpdateBalance = async (
     description: string,
     senderName?: string,
     customTimestamp?: firebase.firestore.Timestamp
-) => {
+): Promise<Transaction | null> => {
     const batch = db.batch();
     const userRef = db.doc(`users/${user.uid}`);
     // FIX: Make balance calculation more robust to handle potential non-numeric values from Firestore.
@@ -172,7 +172,7 @@ export const adminUpdateBalance = async (
     batch.update(userRef, { balance: newBalance });
     await batch.commit();
 
-     await createTransaction({
+    const newTransaction = await createTransaction({
         amount,
         description,
         status: 'completed',
@@ -184,6 +184,7 @@ export const adminUpdateBalance = async (
         receiverAccountNumber: user.accountNumber,
         timestamp: customTimestamp,
     });
+    return newTransaction;
 };
 
 // FIX: Refactored to use Firebase v8 API.
