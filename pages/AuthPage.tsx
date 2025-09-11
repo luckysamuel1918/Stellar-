@@ -3,6 +3,7 @@
 
 
 
+
 import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -88,17 +89,17 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg">
-      <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg dark:bg-gray-900">
+      <div className="w-full max-w-md p-8 space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
         <div className="text-center">
-            <h2 className="text-3xl font-bold text-westcoast-dark">Sign In</h2>
-            <p className="mt-2 text-sm text-westcoast-text-light">
+            <h2 className="text-3xl font-bold text-westcoast-dark dark:text-white">Sign In</h2>
+            <p className="mt-2 text-sm text-westcoast-text-light dark:text-gray-300">
                 Please use your registered email/account number and password.
             </p>
         </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="identifier" className="block text-sm font-medium text-westcoast-text-light">
+            <label htmlFor="identifier" className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">
               Email or Account Number
             </label>
             <input
@@ -109,11 +110,11 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
               required
               value={identifier}
               onChange={(e) => setIdentifier(e.target.value)}
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-westcoast-text-light">
+            <label htmlFor="password" className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">
               Password
             </label>
             <input
@@ -124,7 +125,7 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}

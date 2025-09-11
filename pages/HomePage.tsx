@@ -1,4 +1,5 @@
 
+
 import React, { useEffect } from 'react';
 import { ChevronRight, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -13,7 +14,7 @@ const MarketTicker: React.FC = () => {
         { name: "BTC/USD", value: "64,132.50", change: "+850.20 (1.34%)", positive: true },
     ];
     return (
-        <div className="bg-westcoast-dark text-white overflow-hidden whitespace-nowrap">
+        <div className="bg-westcoast-dark dark:bg-black text-white overflow-hidden whitespace-nowrap">
             <div className="py-2 animate-marquee inline-block">
                 {stocks.concat(stocks).map((stock, index) => (
                     <div key={index} className="inline-flex items-center mx-4 text-sm">
@@ -39,11 +40,11 @@ const MarketTicker: React.FC = () => {
 const HeroSection: React.FC = () => {
     const navigate = useNavigate();
     return (
-        <div className="relative bg-westcoast-dark text-white">
+        <div className="relative bg-westcoast-dark dark:bg-black text-white">
             <div className="container mx-auto px-4 flex items-center min-h-[500px]">
                 <div className="w-full md:w-1/2 text-left z-10">
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-tight">Your Financial Future, Elevated.</h1>
-                    <p className="text-md sm:text-lg text-gray-300 mb-8">Seamless banking meets powerful investing. Grow your wealth with confidence on a platform built for you.</p>
+                    <p className="text-md sm:text-lg text-gray-300 dark:text-gray-400 mb-8">Seamless banking meets powerful investing. Grow your wealth with confidence on a platform built for you.</p>
                     <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
                         <button onClick={() => navigate('/user?action=signup')} className="bg-westcoast-accent text-westcoast-dark font-bold py-3 px-8 rounded-full hover:opacity-90 transition-opacity">
                             Open an Account
@@ -54,9 +55,9 @@ const HeroSection: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <div className="absolute inset-0 z-0 opacity-30">
+            <div className="absolute inset-0 z-0 opacity-30 dark:opacity-40">
                  <img src="https://images.unsplash.com/photo-1664092041235-8656810a4d44?q=80&w=2832&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" />
-                 <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark via-westcoast-dark/80 to-transparent"></div>
+                 <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark dark:from-black via-westcoast-dark/80 dark:via-black/80 to-transparent"></div>
             </div>
         </div>
     );
@@ -74,7 +75,7 @@ const FeaturesSection: React.FC = () => {
             icon: <TrendingUp size={28} className="text-westcoast-blue" />, 
             title: 'Powerful Investing', 
             description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.',
-            imgSrc: 'https://images.unsplash.com/photo-1640622300473-977435c38c04?q=80&w=2940&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1640622300473-9777435c38c04?q=80&w=2940&auto=format&fit=crop'
         },
         { 
             icon: <ShieldCheck size={28} className="text-westcoast-blue" />, 
@@ -84,16 +85,16 @@ const FeaturesSection: React.FC = () => {
         },
     ];
     return (
-        <div className="bg-white py-20">
+        <div className="bg-white dark:bg-gray-800 py-20">
             <div className="container mx-auto px-4">
                  <div className="grid md:grid-cols-3 gap-8">
                      {features.map(feature => (
-                        <div key={feature.title} className="bg-gray-50 rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+                        <div key={feature.title} className="bg-gray-50 dark:bg-gray-700 rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
                             <img src={feature.imgSrc} alt={feature.title} className="w-full h-48 object-cover" />
                             <div className="p-6">
                                 <div className="mb-4">{feature.icon}</div>
-                                <h3 className="text-2xl font-bold text-westcoast-text-dark mb-2">{feature.title}</h3>
-                                <p className="text-westcoast-text-light">{feature.description}</p>
+                                <h3 className="text-2xl font-bold text-westcoast-text-dark dark:text-white mb-2">{feature.title}</h3>
+                                <p className="text-westcoast-text-light dark:text-gray-300">{feature.description}</p>
                             </div>
                         </div>
                      ))}
@@ -113,22 +114,22 @@ const ProductsSection: React.FC = () => {
         { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=2940&auto=format&fit=crop' },
     ];
     return (
-        <div className="bg-westcoast-bg py-20">
+        <div className="bg-westcoast-bg dark:bg-gray-900 py-20">
             <div className="container mx-auto px-4">
                  <div className="text-center mb-16">
-                    <h2 className="text-4xl font-bold text-westcoast-text-dark mb-4">One Platform, Every Financial Need</h2>
-                    <p className="text-lg text-westcoast-text-light max-w-3xl mx-auto">From daily spending to long-term investing, our integrated products are designed to work together seamlessly.</p>
+                    <h2 className="text-4xl font-bold text-westcoast-text-dark dark:text-white mb-4">One Platform, Every Financial Need</h2>
+                    <p className="text-lg text-westcoast-text-light dark:text-gray-300 max-w-3xl mx-auto">From daily spending to long-term investing, our integrated products are designed to work together seamlessly.</p>
                  </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {products.map(product => (
-                        <div key={product.title} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
+                        <div key={product.title} className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
                             <img src={product.imgSrc} alt={product.title} className="w-full h-40 object-cover" />
                             <div className="p-6 flex flex-col flex-grow">
                                 <div className="flex items-start space-x-4">
                                     <div className="bg-westcoast-blue/10 p-3 rounded-lg text-westcoast-blue flex-shrink-0 mt-1">{product.icon}</div>
                                     <div>
-                                        <h3 className="text-lg font-bold text-westcoast-text-dark mb-2">{product.title}</h3>
-                                        <p className="text-sm text-westcoast-text-light">{product.description}</p>
+                                        <h3 className="text-lg font-bold text-westcoast-text-dark dark:text-white mb-2">{product.title}</h3>
+                                        <p className="text-sm text-westcoast-text-light dark:text-gray-300">{product.description}</p>
                                     </div>
                                 </div>
                                 <div className="mt-auto pt-4">
@@ -149,13 +150,13 @@ const ProductsSection: React.FC = () => {
 const FinalCTASection: React.FC = () => {
     const navigate = useNavigate();
     return (
-        <div className="bg-white py-20">
+        <div className="bg-white dark:bg-gray-800 py-20">
             <div className="container mx-auto px-4">
                 <div 
                     className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden bg-cover bg-center"
                     style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2938&auto=format&fit=crop')" }}
                 >
-                    <div className="absolute inset-0 bg-westcoast-dark/70 backdrop-blur-sm"></div>
+                    <div className="absolute inset-0 bg-westcoast-dark/70 dark:bg-black/70 backdrop-blur-sm"></div>
                     <div className="absolute -top-16 -left-16 w-48 h-48 bg-westcoast-blue/20 rounded-full"></div>
                     <div className="absolute -bottom-24 -right-16 w-64 h-64 bg-westcoast-accent/20 rounded-full"></div>
                     <div className="relative z-10">

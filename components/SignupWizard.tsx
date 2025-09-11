@@ -1,5 +1,6 @@
 
 
+
 import React, { useState } from 'react';
 import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { auth, createUserProfileDocument } from '../services/firebase';
@@ -150,16 +151,16 @@ const countryData = [
 
 const InputField = ({ id, label, error, ...props }) => (
   <div>
-    <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light">{label}</label>
-    <input id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue ${error ? 'border-red-500' : 'border-gray-300'}`} />
+    <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
+    <input id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}`} />
     {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
   </div>
 );
 
 const SelectField = ({ id, label, error, children, ...props }) => (
   <div>
-    <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light">{label}</label>
-    <select id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue ${error ? 'border-red-500' : 'border-gray-300'}`}>
+    <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
+    <select id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}`}>
       {children}
     </select>
     {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
@@ -236,17 +237,17 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
 
     const ProgressTracker = () => (
         <div className="mb-8">
-            <h2 className="text-3xl font-bold text-center text-westcoast-dark mb-2">Open a Westcoast Account</h2>
-            <p className="text-center text-westcoast-text-light font-semibold">Step {step} of 3</p>
+            <h2 className="text-3xl font-bold text-center text-westcoast-dark dark:text-white mb-2">Open a Westcoast Account</h2>
+            <p className="text-center text-westcoast-text-light dark:text-gray-300 font-semibold">Step {step} of 3</p>
             <div className="flex mt-4">
-                {[1, 2, 3].map(s => (<div key={s} className="w-1/3 px-1"><div className={`h-2 rounded-full ${step >= s ? 'bg-westcoast-blue' : 'bg-gray-200'}`}></div></div>))}
+                {[1, 2, 3].map(s => (<div key={s} className="w-1/3 px-1"><div className={`h-2 rounded-full ${step >= s ? 'bg-westcoast-blue' : 'bg-gray-200 dark:bg-gray-600'}`}></div></div>))}
             </div>
         </div>
     );
 
     return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg p-2 sm:p-4">
-            <div className="w-full max-w-xl p-6 sm:p-8 space-y-6 bg-white rounded-xl shadow-lg">
+        <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg dark:bg-gray-900 p-2 sm:p-4">
+            <div className="w-full max-w-xl p-6 sm:p-8 space-y-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
                 {step < 4 ? <ProgressTracker /> : null}
                 {firebaseError && <p className="text-sm text-red-600 text-center mb-4">{firebaseError}</p>}
 
@@ -263,7 +264,7 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
                         <option value="">Select a country</option>
                         {countryData.sort((a,b) => a.name.localeCompare(b.name)).map(country => <option key={country.name} value={country.name}>{country.name}</option>)}
                     </SelectField>
-                    {formData.currencyCode && <p className="text-sm text-westcoast-text-light">Selected Currency: <span className="font-bold">{formData.currencyCode}</span></p>}
+                    {formData.currencyCode && <p className="text-sm text-westcoast-text-light dark:text-gray-300">Selected Currency: <span className="font-bold">{formData.currencyCode}</span></p>}
                 </div>}
                 
                 {step === 3 && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -274,14 +275,14 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
 
                 {step === 4 && <div className="text-center py-8">
                     <CheckCircle className="w-20 h-20 text-green-500 mx-auto mb-4" />
-                    <h2 className="text-3xl font-bold text-westcoast-dark mb-2">Account Created Successfully!</h2>
-                    <p className="text-westcoast-text-light mb-6">Your new account is ready. Welcome to Westcoast.</p>
-                    <div className="bg-westcoast-bg p-4 rounded-lg"><p className="text-sm text-westcoast-text-light">Your Account Number</p><p className="text-2xl font-mono font-bold text-westcoast-blue tracking-widest">{accountNumber}</p></div>
+                    <h2 className="text-3xl font-bold text-westcoast-dark dark:text-white mb-2">Account Created Successfully!</h2>
+                    <p className="text-westcoast-text-light dark:text-gray-300 mb-6">Your new account is ready. Welcome to Westcoast.</p>
+                    <div className="bg-westcoast-bg dark:bg-gray-700 p-4 rounded-lg"><p className="text-sm text-westcoast-text-light dark:text-gray-300">Your Account Number</p><p className="text-2xl font-mono font-bold text-westcoast-blue tracking-widest">{accountNumber}</p></div>
                      <button onClick={() => navigate('/user-dashboard')} className="mt-8 px-6 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90">Go to Dashboard</button>
                 </div>}
 
                 {step < 4 && <div className="flex justify-between items-center pt-6">
-                    <div>{step > 1 && <button onClick={handleBack} className="flex items-center px-4 py-2 text-sm font-bold text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300"><ArrowLeft className="w-4 h-4 mr-2" /> Back</button>}</div>
+                    <div>{step > 1 && <button onClick={handleBack} className="flex items-center px-4 py-2 text-sm font-bold text-gray-700 bg-gray-200 dark:bg-gray-600 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500"><ArrowLeft className="w-4 h-4 mr-2" /> Back</button>}</div>
                     <button type="button" onClick={onLoginSwitch} className="text-sm font-medium text-westcoast-blue hover:underline">Already have an account?</button>
                     {step < 3 ? <button onClick={handleNext} className="flex items-center px-4 py-2 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90">Next <ArrowRight className="w-4 h-4 ml-2" /></button>
                      : <button onClick={handleSubmit} disabled={loading} className="px-6 py-2 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90 disabled:opacity-50">{loading ? 'Creating Account...' : 'Create Account'}</button>}

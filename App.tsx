@@ -1,5 +1,6 @@
 
 
+
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
@@ -11,7 +12,42 @@ import UserDashboardPage from './pages/UserDashboardPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import { WestcoastLogo } from './components/icons';
-import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark } from 'lucide-react';
+import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun } from 'lucide-react';
+
+// --- THEME CONTEXT ---
+interface ThemeContextType {
+  theme: 'light' | 'dark';
+  toggleTheme: () => void;
+}
+const ThemeContext = createContext<ThemeContextType>({ theme: 'light', toggleTheme: () => {} });
+
+const ThemeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const storedTheme = localStorage.getItem('theme');
+    if (storedTheme === 'dark' || storedTheme === 'light') {
+      return storedTheme;
+    }
+    return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  });
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    if (theme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    localStorage.setItem('theme', theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
+  };
+
+  return <ThemeContext.Provider value={{ theme, toggleTheme }}>{children}</ThemeContext.Provider>;
+};
+export const useTheme = () => useContext(ThemeContext);
+
 
 // --- AUTH CONTEXT ---
 interface AuthContextType {
@@ -69,6 +105,7 @@ export const useAuth = () => useContext(AuthContext);
 // --- LAYOUT COMPONENTS ---
 const Header: React.FC = () => {
     const { user, userData, signOut } = useAuth();
+    const { theme, toggleTheme } = useTheme();
     const navigate = useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -85,16 +122,22 @@ const Header: React.FC = () => {
         { name: "Support", href: "#" },
     ];
 
+    const ThemeToggleButton = () => (
+      <button onClick={toggleTheme} aria-label="Toggle theme" className="p-2 rounded-full text-westcoast-text-dark dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+        {theme === 'light' ? <Moon size={20} /> : <Sun size={20} />}
+      </button>
+    );
+
     return (
-        <header className="bg-white/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
             <nav className="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div className="flex items-center space-x-8">
                     <Link to="/">
                         <WestcoastLogo />
                     </Link>
-                    <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-westcoast-text-light">
+                    <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-westcoast-text-light dark:text-gray-300">
                         {navLinks.map(link => (
-                            <a key={link.name} href={link.href} className="hover:text-westcoast-blue transition-colors flex items-center">
+                            <a key={link.name} href={link.href} className="hover:text-westcoast-blue dark:hover:text-westcoast-accent transition-colors flex items-center">
                                 {link.icon}{link.name}
                             </a>
                         ))}
@@ -107,14 +150,14 @@ const Header: React.FC = () => {
                                 <UserIcon size={16} className="mr-2"/>
                                 <span>Dashboard</span>
                             </button>
-                            <button onClick={signOut} className="bg-gray-200 text-westcoast-text-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-300 transition-colors flex items-center">
+                            <button onClick={signOut} className="bg-gray-200 text-westcoast-text-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-300 transition-colors">
                                 <LogOut size={16} className="mr-2"/>
                                 <span>Log Out</span>
                             </button>
                         </div>
                     ) : (
                         <>
-                         <button onClick={() => navigate('/user')} className="text-westcoast-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-100 transition-colors">
+                         <button onClick={() => navigate('/user')} className="text-westcoast-dark dark:text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                             Sign In
                         </button>
                         <button onClick={() => navigate('/user')} className="bg-westcoast-dark text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-westcoast-blue transition-colors">
@@ -122,29 +165,31 @@ const Header: React.FC = () => {
                         </button>
                         </>
                     )}
+                    <ThemeToggleButton />
                 </div>
-                 <div className="md:hidden">
+                 <div className="md:hidden flex items-center space-x-2">
+                    <ThemeToggleButton />
                     <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu">
-                        <Menu className="h-6 w-6 text-westcoast-dark" />
+                        <Menu className="h-6 w-6 text-westcoast-dark dark:text-white" />
                     </button>
                 </div>
             </nav>
 
              {isMobileMenuOpen && (
-                 <div className="fixed inset-0 bg-white z-50 p-4 md:hidden">
+                 <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 p-4 md:hidden">
                     <div className="flex justify-between items-center mb-8">
                         <WestcoastLogo />
                         <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
-                            <X className="h-6 w-6 text-westcoast-dark" />
+                            <X className="h-6 w-6 text-westcoast-dark dark:text-white" />
                         </button>
                     </div>
                     <div className="flex flex-col space-y-4">
                         {navLinks.map(link => (
-                             <a key={link.name} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-semibold text-westcoast-text-dark hover:text-westcoast-blue transition-colors flex items-center p-2 rounded-md">
+                             <a key={link.name} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-semibold text-westcoast-text-dark dark:text-white hover:text-westcoast-blue dark:hover:text-westcoast-accent transition-colors flex items-center p-2 rounded-md">
                                 {link.icon}{link.name}
                             </a>
                         ))}
-                        <hr className="my-4" />
+                        <hr className="my-4 dark:border-gray-700" />
                         {user ? (
                             <div className="flex flex-col space-y-3">
                                 <button onClick={() => { handleDashboardRedirect(); setIsMobileMenuOpen(false); }} className="bg-westcoast-blue text-white font-semibold px-4 py-3 rounded-full text-base hover:opacity-90 transition-opacity flex items-center justify-center">
@@ -158,7 +203,7 @@ const Header: React.FC = () => {
                             </div>
                         ) : (
                             <div className="flex flex-col space-y-3">
-                                <button onClick={() => { navigate('/user'); setIsMobileMenuOpen(false); }} className="bg-gray-100 text-westcoast-dark font-semibold px-4 py-3 rounded-full text-base hover:bg-gray-200 transition-colors">
+                                <button onClick={() => { navigate('/user'); setIsMobileMenuOpen(false); }} className="bg-gray-100 dark:bg-gray-800 text-westcoast-dark dark:text-white font-semibold px-4 py-3 rounded-full text-base hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors">
                                     Sign In
                                 </button>
                                 <button onClick={() => { navigate('/user'); setIsMobileMenuOpen(false); }} className="bg-westcoast-dark text-white font-semibold px-4 py-3 rounded-full text-base hover:bg-westcoast-blue transition-colors">
@@ -174,7 +219,7 @@ const Header: React.FC = () => {
 };
 
 const Footer: React.FC = () => (
-    <footer className="bg-westcoast-dark text-white">
+    <footer className="bg-westcoast-dark text-white dark:bg-black">
         <div className="container mx-auto px-4 pt-16 pb-8">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
                 <div className="col-span-2 lg:col-span-1">
@@ -237,26 +282,28 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
     return (
-        <AuthProvider>
-            <Routes>
-                {/* Public routes with Header and Footer */}
-                <Route element={<AppLayout />}>
-                    <Route path="/" element={<HomePage />} />
-                    <Route path="/user" element={<AuthPage />} />
-                </Route>
-                
-                {/* Standalone routes without the main layout */}
-                <Route path="/admin-login" element={<AdminLoginPage />} />
-                <Route
-                    path="/admin-dashboard"
-                    element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
-                />
-                <Route
-                    path="/user-dashboard"
-                    element={<UserRoute><UserDashboardPage /></UserRoute>}
-                />
-            </Routes>
-        </AuthProvider>
+        <ThemeProvider>
+            <AuthProvider>
+                <Routes>
+                    {/* Public routes with Header and Footer */}
+                    <Route element={<AppLayout />}>
+                        <Route path="/" element={<HomePage />} />
+                        <Route path="/user" element={<AuthPage />} />
+                    </Route>
+                    
+                    {/* Standalone routes without the main layout */}
+                    <Route path="/admin-login" element={<AdminLoginPage />} />
+                    <Route
+                        path="/admin-dashboard"
+                        element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
+                    />
+                    <Route
+                        path="/user-dashboard"
+                        element={<UserRoute><UserDashboardPage /></UserRoute>}
+                    />
+                </Routes>
+            </AuthProvider>
+        </ThemeProvider>
     );
 }
 
