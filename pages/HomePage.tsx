@@ -1,9 +1,14 @@
-
-
 import React, { useEffect } from 'react';
 import { ChevronRight, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
+
+const PLACEHOLDER_IMAGE_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOWNhM2FmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgcnk9IjIiIGZpbGw9IiNlNWU3ZWIiPjwvcmVjdD48Y2lyY2xlIGN4PSI4LjUiIGN5PSI4LjUiIHI9IjEuNSIgZmlsbD0iIzljYTNhZiIgc3Ryb2tlPSJub25lIj48L2NpcmNsZT48cG9seWxpbmUgcG9pbnRzPSIyMSAxNSAxNiAxMCA1IDIxIiBmaWxsPSJub25lIj48L3BvbHlsaW5lPjwvc3ZnPg==';
+
+const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
+    e.currentTarget.src = PLACEHOLDER_IMAGE_URI;
+    e.currentTarget.onerror = null; // Prevent infinite loop
+};
 
 const MarketTicker: React.FC = () => {
     const stocks = [
@@ -56,7 +61,7 @@ const HeroSection: React.FC = () => {
                 </div>
             </div>
             <div className="absolute inset-0 z-0 opacity-30 dark:opacity-40">
-                 <img src="https://images.unsplash.com/photo-1664092041235-8656810a4d44?q=80&w=2832&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" />
+                 <img src="https://images.unsplash.com/photo-1664092041235-8656810a4d44?q=80&w=1920&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" onError={handleImageError} />
                  <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark dark:from-black via-westcoast-dark/80 dark:via-black/80 to-transparent"></div>
             </div>
         </div>
@@ -69,19 +74,19 @@ const FeaturesSection: React.FC = () => {
             icon: <Landmark size={28} className="text-westcoast-blue" />, 
             title: 'Smart Banking', 
             description: 'Effortless payments, advanced budgeting, and global support, all in one place.',
-            imgSrc: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2940&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=800&auto=format&fit=crop'
         },
         { 
             icon: <TrendingUp size={28} className="text-westcoast-blue" />, 
             title: 'Powerful Investing', 
             description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.',
-            imgSrc: 'https://images.unsplash.com/photo-1640622300473-9777435c38c04?q=80&w=2940&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1640622300473-9777435c38c04?q=80&w=800&auto=format&fit=crop'
         },
         { 
             icon: <ShieldCheck size={28} className="text-westcoast-blue" />, 
             title: 'Total Security', 
             description: 'Your assets are protected with bank-grade security and FDIC insurance.',
-            imgSrc: 'https://images.unsplash.com/photo-1585224329602-3f721d3ba3e7?q=80&w=2940&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1585224329602-3f721d3ba3e7?q=80&w=800&auto=format&fit=crop'
         },
     ];
     return (
@@ -90,7 +95,7 @@ const FeaturesSection: React.FC = () => {
                  <div className="grid md:grid-cols-3 gap-8">
                      {features.map(feature => (
                         <div key={feature.title} className="bg-gray-50 dark:bg-gray-700 rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
-                            <img src={feature.imgSrc} alt={feature.title} className="w-full h-48 object-cover" />
+                            <img src={feature.imgSrc} alt={feature.title} className="w-full h-48 object-cover" onError={handleImageError}/>
                             <div className="p-6">
                                 <div className="mb-4">{feature.icon}</div>
                                 <h3 className="text-2xl font-bold text-westcoast-text-dark dark:text-white mb-2">{feature.title}</h3>
@@ -108,10 +113,10 @@ const FeaturesSection: React.FC = () => {
 const ProductsSection: React.FC = () => {
     const navigate = useNavigate();
     const products = [
-        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=2940&auto=format&fit=crop' },
-        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2940&auto=format&fit=crop' },
-        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1556761175-b413da4b248a?q=80&w=2848&auto=format&fit=crop' },
-        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=2940&auto=format&fit=crop' },
+        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=600&auto=format&fit=crop' },
+        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=600&auto=format&fit=crop' },
+        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1556761175-b413da4b248a?q=80&w=600&auto=format&fit=crop' },
+        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=600&auto=format&fit=crop' },
     ];
     return (
         <div className="bg-westcoast-bg dark:bg-gray-900 py-20">
@@ -123,7 +128,7 @@ const ProductsSection: React.FC = () => {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {products.map(product => (
                         <div key={product.title} className="bg-white dark:bg-gray-800 rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
-                            <img src={product.imgSrc} alt={product.title} className="w-full h-40 object-cover" />
+                            <img src={product.imgSrc} alt={product.title} className="w-full h-40 object-cover" onError={handleImageError} />
                             <div className="p-6 flex flex-col flex-grow">
                                 <div className="flex items-start space-x-4">
                                     <div className="bg-westcoast-blue/10 p-3 rounded-lg text-westcoast-blue flex-shrink-0 mt-1">{product.icon}</div>
@@ -153,9 +158,15 @@ const FinalCTASection: React.FC = () => {
         <div className="bg-white dark:bg-gray-800 py-20">
             <div className="container mx-auto px-4">
                 <div 
-                    className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden bg-cover bg-center"
-                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2938&auto=format&fit=crop')" }}
+                    className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden"
                 >
+                    <img
+                        src="https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=1200&auto=format&fit=crop"
+                        onError={handleImageError}
+                        alt="Team working together"
+                        className="absolute inset-0 w-full h-full object-cover"
+                        aria-hidden="true"
+                    />
                     <div className="absolute inset-0 bg-westcoast-dark/70 dark:bg-black/70 backdrop-blur-sm"></div>
                     <div className="absolute -top-16 -left-16 w-48 h-48 bg-westcoast-blue/20 rounded-full"></div>
                     <div className="absolute -bottom-24 -right-16 w-64 h-64 bg-westcoast-accent/20 rounded-full"></div>

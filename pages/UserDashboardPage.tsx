@@ -908,6 +908,18 @@ const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
 // --- UI HELPER COMPONENTS ---
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-12 h-12', textClass = 'text-lg' }) => {
+    const [imgError, setImgError] = useState(false);
+
+    useEffect(() => {
+        if (user?.photoURL) {
+            setImgError(false);
+        }
+    }, [user?.photoURL]);
+
+    const handleImageError = () => {
+        setImgError(true);
+    };
+    
     const getInitials = (name: string) => {
         if (!name) return '';
         const names = name.split(' ');
@@ -915,8 +927,8 @@ const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }>
         return name.substring(0, 2).toUpperCase();
     };
 
-    if (user && user.photoURL) {
-        return <img src={user.photoURL} alt={user.fullName} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
+    if (user && user.photoURL && !imgError) {
+        return <img src={user.photoURL} alt={user.fullName} onError={handleImageError} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
     }
     
     return (

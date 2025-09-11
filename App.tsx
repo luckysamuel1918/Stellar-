@@ -126,7 +126,7 @@ const Header: React.FC = () => {
     );
 
     return (
-        <header className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md shadow-sm sticky top-0 z-50">
+        <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
             <nav className="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div className="flex items-center space-x-8">
                     <Link to="/">
@@ -173,7 +173,7 @@ const Header: React.FC = () => {
             </nav>
 
              {isMobileMenuOpen && (
-                 <div className="fixed inset-0 bg-white dark:bg-gray-900 z-50 p-4 md:hidden">
+                 <div className="fixed inset-0 bg-white/95 dark:bg-gray-900/95 backdrop-blur-lg z-50 p-4 md:hidden">
                     <div className="flex justify-between items-center mb-8">
                         <WestcoastLogo />
                         <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
