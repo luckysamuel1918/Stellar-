@@ -10,6 +10,18 @@ import firebase from "firebase/compat/app";
 import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp } from 'lucide-react';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
+    const [imgError, setImgError] = useState(false);
+
+    useEffect(() => {
+        if (user?.photoURL) {
+            setImgError(false);
+        }
+    }, [user?.photoURL]);
+
+    const handleImageError = () => {
+        setImgError(true);
+    };
+
     const getInitials = (name: string) => {
         if (!name) return '?';
         const names = name.split(' ');
@@ -17,8 +29,8 @@ const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }>
         return name.substring(0, 2).toUpperCase();
     };
 
-    if (user.photoURL) {
-        return <img src={user.photoURL} alt={user.fullName} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
+    if (user.photoURL && !imgError) {
+        return <img src={user.photoURL} alt={user.fullName} onError={handleImageError} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
     }
     
     return (
@@ -424,7 +436,7 @@ const AdminDashboardPage: React.FC = () => {
 
     if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
 
-    const totalFunds = users.reduce((acc, user) => acc + user.balance, 0);
+    const totalFunds = users.reduce((acc, user) => acc + (user.balance || 0), 0);
 
     const renderModal = () => {
         if (!modal.user) return null;
@@ -496,7 +508,7 @@ const AdminDashboardPage: React.FC = () => {
                                             </div>
                                         </td>
                                         <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
-                                        <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden sm:table-cell">{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
+                                        <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden sm:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
                                         <td className="py-4 px-4 text-center">
                                             <div className="flex items-center justify-center flex-wrap gap-1">
                                                  <button onClick={() => openModal('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>

@@ -830,7 +830,7 @@ const PaymentsView: React.FC<{ user: UserProfile, onSuccess: (newTransaction?: T
         setError('');
         setSuccess('');
         try {
-            const newTransaction = await adminUpdateBalance(user, numAmount, 'debit', `Bill Payment to ${biller}`);
+            const newTransaction = await adminUpdateBalance(user, numAmount, 'debit', `Bill Payment to ${biller}`, undefined, undefined, 'bill_payment');
             setSuccess(`Successfully paid ${formatCurrency(numAmount, user.currencyCode)} to ${biller}.`);
             setAmount('');
             onSuccess(newTransaction);

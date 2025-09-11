@@ -159,7 +159,8 @@ export const adminUpdateBalance = async (
     type: 'credit' | 'debit', 
     description: string,
     senderName?: string,
-    customTimestamp?: firebase.firestore.Timestamp
+    customTimestamp?: firebase.firestore.Timestamp,
+    transactionType?: Transaction['type']
 ): Promise<Transaction | null> => {
     const batch = db.batch();
     const userRef = db.doc(`users/${user.uid}`);
@@ -176,7 +177,7 @@ export const adminUpdateBalance = async (
         amount,
         description,
         status: 'completed',
-        type,
+        type: transactionType || type,
         senderId: 'admin',
         senderName: senderName || 'Westcoast Trust Bank Admin',
         receiverId: user.uid,
