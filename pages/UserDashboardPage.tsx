@@ -8,9 +8,9 @@ import {
 } from '../services/firebase';
 import { 
     Bell, MessageSquare, CreditCard, Send, Globe, ClipboardCheck, History,
-    ArrowUpRight, ArrowDownLeft, CheckCircle, Home, User as UserIcon, Landmark,
+    ArrowUpRight, ArrowDownLeft, CheckCircle, Home, User as UserIcon,
     X, Loader2, UploadCloud, Banknote, ShieldCheck, Edit, Lock, Mail, Snowflake,
-    AlertTriangle, Eye, Receipt, Building, Car, Wallet, Printer, LogOut
+    AlertTriangle, Eye, Receipt, Printer, LogOut
 } from 'lucide-react';
 import { WestcoastLogo } from '../components/icons';
 
@@ -43,7 +43,7 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
                 }
             `}</style>
             <div id="receipt-content" className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg text-left text-sm">
-                <div className="relative border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                <div className="relative border-2 border-gray-200 dark:border-gray-700 rounded-lg p-4 sm:p-6">
                     {/* Paid Stamp */}
                     <div className="absolute top-8 right-8 transform rotate-12 no-print">
                         <div className="border-4 border-green-500 text-green-500 rounded-full w-24 h-24 flex items-center justify-center font-black text-2xl uppercase opacity-70">
@@ -62,7 +62,7 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
                     {/* Summary */}
                     <div className="text-center my-8">
                         <p className="text-gray-500 dark:text-gray-400">Amount Sent</p>
-                        <p className="text-4xl font-bold text-gray-900 dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
+                        <p className="text-3xl sm:text-4xl font-bold text-gray-900 dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
                         <div className="inline-flex items-center gap-2 mt-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 font-semibold px-3 py-1 rounded-full text-sm">
                             <CheckCircle size={16}/>
                             <span>Transaction Completed</span>
@@ -851,40 +851,6 @@ const PaymentsView: React.FC<{ user: UserProfile, onSuccess: () => void }> = ({ 
     );
 };
 
-const LoanView: React.FC<{ user: UserProfile }> = ({ user }) => {
-    return (
-        <div className="p-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Loans Center</h2>
-            <div className="space-y-6">
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
-                    <h3 className="font-bold mb-3">Your Active Loans</h3>
-                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
-                        <p className="text-gray-500 dark:text-gray-400">You have no active loans.</p>
-                    </div>
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
-                    <h3 className="font-bold mb-3">Apply for a New Loan</h3>
-                    <div className="space-y-3">
-                        <button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-left">
-                            <Building className="w-6 h-6 text-westcoast-blue"/>
-                            <div><p className="font-semibold">Mortgage Loan</p><p className="text-xs text-gray-500 dark:text-gray-400">Buy your dream home</p></div>
-                        </button>
-                         <button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-left">
-                            <Car className="w-6 h-6 text-westcoast-blue"/>
-                            <div><p className="font-semibold">Auto Loan</p><p className="text-xs text-gray-500 dark:text-gray-400">Finance your next vehicle</p></div>
-                        </button>
-                         <button className="w-full flex items-center gap-4 p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 text-left">
-                            <Wallet className="w-6 h-6 text-westcoast-blue"/>
-                            <div><p className="font-semibold">Personal Loan</p><p className="text-xs text-gray-500 dark:text-gray-400">For all your personal needs</p></div>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    );
-};
-
 const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
     <>
         <header className="p-4 flex justify-between items-center">
@@ -1143,7 +1109,6 @@ const UserDashboardPage: React.FC = () => {
             case 'history': return <TransactionHistoryView transactions={transactions} currentUserId={userData.uid} currencyCode={userData.currencyCode} />;
             case 'cards': return <CardsView user={userData} />;
             case 'payments': return <PaymentsView user={userData} onSuccess={fetchData} />;
-            case 'loan': return <LoanView user={userData} />;
             case 'me': return <ProfileView user={userData} onUpdate={fetchData} />;
             default: return <DashboardHomeView userData={userData} transactions={transactions} onActionClick={handleQuickAction} />;
         }
@@ -1170,8 +1135,8 @@ const UserDashboardPage: React.FC = () => {
                     <div className="flex justify-around py-2">
                         <NavItem icon={<Home />} label="Home" active={activeView === 'home'} onClick={() => setActiveView('home')} />
                         <NavItem icon={<CreditCard />} label="Cards" active={activeView === 'cards'} onClick={() => setActiveView('cards')} />
-                        <NavItem icon={<Send />} label="Payments" active={activeView === 'payments'} onClick={() => setActiveView('payments')} />
-                        <NavItem icon={<Landmark />} label="Loan" active={activeView === 'loan'} onClick={() => setActiveView('loan')} />
+                        <NavItem icon={<Receipt />} label="Payments" active={activeView === 'payments'} onClick={() => setActiveView('payments')} />
+                        <NavItem icon={<History />} label="History" active={activeView === 'history'} onClick={() => setActiveView('history')} />
                         <NavItem icon={<UserIcon />} label="Me" active={activeView === 'me'} onClick={() => setActiveView('me')} />
                     </div>
                 </footer>
