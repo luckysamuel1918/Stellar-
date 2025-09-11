@@ -641,48 +641,10 @@ const CardsView: React.FC<{ user: UserProfile }> = ({ user }) => {
         <div className="p-4">
             <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">My Cards</h2>
             <div className="space-y-6">
-                {/* Debit Card */}
-                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
-                    <div className="p-5 rounded-xl bg-gradient-to-br from-gray-700 to-gray-900 text-white shadow-lg relative overflow-hidden">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -m-8"></div>
-                        <div className="flex justify-between items-start">
-                             <div>
-                                <p className="text-sm opacity-80">Debit Card</p>
-                                <p className="text-xs opacity-60">Westcoast Trust Bank</p>
-                            </div>
-                            <WestcoastLogo className="text-white !text-sm" />
-                        </div>
-                        <div className="my-6">
-                            <p className="font-mono text-xl tracking-widest">**** **** **** 5821</p>
-                        </div>
-                        <div className="flex justify-between items-end text-sm">
-                            <div>
-                                <p className="text-xs opacity-60">Card Holder</p>
-                                <p className="font-semibold uppercase">{user.fullName}</p>
-                            </div>
-                            <div>
-                                <p className="text-xs opacity-60">Expires</p>
-                                <p className="font-semibold">12/26</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div className="grid grid-cols-3 gap-2 text-center pt-4">
-                        <button className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <Snowflake className="w-6 h-6 text-blue-500" />
-                            <span className="text-xs mt-1">Freeze</span>
-                        </button>
-                        <button className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <AlertTriangle className="w-6 h-6 text-red-500" />
-                            <span className="text-xs mt-1">Report</span>
-                        </button>
-                        <button className="flex flex-col items-center p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700">
-                            <Eye className="w-6 h-6 text-gray-500" />
-                            <span className="text-xs mt-1">View PIN</span>
-                        </button>
-                    </div>
+                <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm text-center">
+                    <p className="text-gray-500 dark:text-gray-400">No cards have been added yet.</p>
                 </div>
-                {/* Add New Card Button */}
-                 <button className="w-full text-center py-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm font-semibold text-westcoast-blue">
+                <button className="w-full text-center py-4 bg-white dark:bg-gray-800 rounded-2xl shadow-sm font-semibold text-westcoast-blue">
                     + Add New Card
                 </button>
             </div>
@@ -758,18 +720,8 @@ const LoanView: React.FC<{ user: UserProfile }> = ({ user }) => {
             <div className="space-y-6">
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
                     <h3 className="font-bold mb-3">Your Active Loans</h3>
-                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                        <div className="flex justify-between items-center mb-2">
-                            <p className="font-semibold">Personal Loan</p>
-                            <span className="text-xs font-semibold bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100 px-2 py-1 rounded-full">Active</span>
-                        </div>
-                        <div className="flex justify-between text-sm my-4">
-                            <div><p className="text-gray-500 dark:text-gray-400">Outstanding</p><p className="font-bold text-lg">{formatCurrency(5420.11, user.currencyCode)}</p></div>
-                            <div className="text-right"><p className="text-gray-500 dark:text-gray-400">Next Payment</p><p className="font-bold">{formatCurrency(250, user.currencyCode)}</p></div>
-                        </div>
-                        <button className="w-full bg-westcoast-blue text-white font-bold py-2 rounded-lg text-sm">
-                            Make a Payment
-                        </button>
+                    <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-center">
+                        <p className="text-gray-500 dark:text-gray-400">You have no active loans.</p>
                     </div>
                 </div>
 
