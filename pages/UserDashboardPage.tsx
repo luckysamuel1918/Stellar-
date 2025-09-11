@@ -468,27 +468,53 @@ const TransactionItem: React.FC<{ tx: Transaction, currentUserId: string, curren
     const isDebit = tx.senderId === currentUserId;
     const formattedDate = tx.timestamp ? new Date(tx.timestamp.toDate()).toLocaleDateString() : 'N/A';
     
+    const getTransactionTitle = () => {
+        if (tx.description) return tx.description;
+        if (tx.type === 'transfer') {
+            return isDebit ? `Transfer to ${tx.receiverName}` : `Transfer from ${tx.senderName}`;
+        }
+        if (tx.type === 'credit') {
+            return tx.senderName === 'Westcoast Trust Bank Admin' ? 'Admin Credit' : `Credit from ${tx.senderName}`;
+        }
+        if (tx.type === 'debit') {
+            return 'Debit';
+        }
+        if (tx.type === 'bill_payment') {
+            return `Bill Payment to ${tx.receiverName}`;
+        }
+        return isDebit ? `To: ${tx.receiverName}` : `From: ${tx.senderName}`;
+    };
+
+    const getStatusPill = (status: 'completed' | 'pending' | 'failed') => {
+        const styles = {
+            completed: 'bg-green-100 text-green-800',
+            pending: 'bg-yellow-100 text-yellow-800',
+            failed: 'bg-red-100 text-red-800',
+        };
+        const text = status.charAt(0).toUpperCase() + status.slice(1);
+        return (
+            <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block ${styles[status] || 'bg-gray-100 text-gray-800'}`}>
+                {text}
+            </span>
+        );
+    };
+
+    const typeLabel = tx.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
+
     return (
         <div className="bg-white p-3 rounded-xl flex items-center gap-3 shadow-sm">
             <div className={`p-2 rounded-full ${isDebit ? 'bg-red-100' : 'bg-green-100'}`}>
                 {isDebit ? <ArrowUpRight className="w-5 h-5 text-red-500" /> : <ArrowDownLeft className="w-5 h-5 text-green-500" />}
             </div>
             <div className="flex-grow">
-                <div className="flex items-center">
-                    <p className="font-bold text-gray-800 text-sm truncate">{tx.description || (isDebit ? `To: ${tx.receiverName}` : `From: ${tx.senderName}`)}</p>
-                    {tx.status === 'completed' && <CheckCircle className="w-4 h-4 text-green-500 ml-1 flex-shrink-0" />}
-                </div>
-                <p className="text-xs text-gray-500">{formattedDate} • {isDebit ? tx.receiverAccountNumber : tx.senderName}</p>
+                <p className="font-bold text-gray-800 text-sm truncate">{getTransactionTitle()}</p>
+                <p className="text-xs text-gray-500">{formattedDate} • {typeLabel}</p>
             </div>
-            <div className="text-right">
+            <div className="text-right flex-shrink-0">
                 <p className={`font-bold text-sm ${isDebit ? 'text-red-600' : 'text-green-600'}`}>
                     {isDebit ? '-' : '+'}{formatCurrency(tx.amount, currencyCode)}
                 </p>
-                 {tx.status === 'completed' && 
-                    <span className="text-xs font-semibold bg-green-100 text-green-800 px-2 py-0.5 rounded-full mt-1 inline-block">
-                        Completed
-                    </span>
-                 }
+                {getStatusPill(tx.status)}
             </div>
         </div>
     );

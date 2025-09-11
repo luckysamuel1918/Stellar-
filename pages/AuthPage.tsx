@@ -1,13 +1,16 @@
 
 
+
 import React, { useState } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
 import SignupWizard from '../components/SignupWizard';
 
 const AuthPage: React.FC = () => {
-  const [isLogin, setIsLogin] = useState(true);
+  const location = useLocation();
+  const initialIsLogin = new URLSearchParams(location.search).get('action') !== 'signup';
+  const [isLogin, setIsLogin] = useState(initialIsLogin);
 
   if (!isLogin) {
     return <SignupWizard onLoginSwitch={() => setIsLogin(true)} />;

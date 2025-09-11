@@ -1,6 +1,8 @@
 
+
 import React from 'react';
 import { ChevronRight, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const MarketTicker: React.FC = () => {
     const stocks = [
@@ -34,28 +36,31 @@ const MarketTicker: React.FC = () => {
     );
 };
 
-const HeroSection: React.FC = () => (
-    <div className="relative bg-westcoast-dark text-white">
-        <div className="container mx-auto px-4 flex items-center min-h-[500px]">
-            <div className="w-full md:w-1/2 text-left z-10">
-                <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-tight">Your Financial Future, Elevated.</h1>
-                <p className="text-md sm:text-lg text-gray-300 mb-8">Seamless banking meets powerful investing. Grow your wealth with confidence on a platform built for you.</p>
-                <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
-                    <button className="bg-westcoast-accent text-westcoast-dark font-bold py-3 px-8 rounded-full hover:opacity-90 transition-opacity">
-                        Open an Account
-                    </button>
-                    <button className="bg-white/20 text-white font-bold py-3 px-8 rounded-full hover:bg-white/30 transition-colors">
-                        Explore Investing
-                    </button>
+const HeroSection: React.FC = () => {
+    const navigate = useNavigate();
+    return (
+        <div className="relative bg-westcoast-dark text-white">
+            <div className="container mx-auto px-4 flex items-center min-h-[500px]">
+                <div className="w-full md:w-1/2 text-left z-10">
+                    <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-tight">Your Financial Future, Elevated.</h1>
+                    <p className="text-md sm:text-lg text-gray-300 mb-8">Seamless banking meets powerful investing. Grow your wealth with confidence on a platform built for you.</p>
+                    <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button onClick={() => navigate('/user?action=signup')} className="bg-westcoast-accent text-westcoast-dark font-bold py-3 px-8 rounded-full hover:opacity-90 transition-opacity">
+                            Open an Account
+                        </button>
+                        <button onClick={() => navigate('/user?action=signup')} className="bg-white/20 text-white font-bold py-3 px-8 rounded-full hover:bg-white/30 transition-colors">
+                            Explore Investing
+                        </button>
+                    </div>
                 </div>
             </div>
+            <div className="absolute inset-0 z-0 opacity-30">
+                 <img src="https://images.unsplash.com/photo-1664092041235-8656810a4d44?q=80&w=2832&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" />
+                 <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark via-westcoast-dark/80 to-transparent"></div>
+            </div>
         </div>
-        <div className="absolute inset-0 z-0 opacity-30">
-             <img src="https://images.unsplash.com/photo-1664092041235-8656810a4d44?q=80&w=2832&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" />
-             <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark via-westcoast-dark/80 to-transparent"></div>
-        </div>
-    </div>
-);
+    );
+};
 
 const FeaturesSection: React.FC = () => {
     const features = [
@@ -100,34 +105,37 @@ const FeaturesSection: React.FC = () => {
 
 
 const ProductsSection: React.FC = () => {
+    const navigate = useNavigate();
     const products = [
-        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark /> },
-        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase /> },
-        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit /> },
-        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone /> },
+        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1563013544-824ae1b704d3?q=80&w=2940&auto=format&fit=crop' },
+        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2940&auto=format&fit=crop' },
+        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1556761175-b413da4b248a?q=80&w=2848&auto=format&fit=crop' },
+        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1530103862676-de8c9debad1d?q=80&w=2940&auto=format&fit=crop' },
     ];
     return (
         <div className="bg-westcoast-bg py-20">
             <div className="container mx-auto px-4">
-                 <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
-                    <div className="text-center lg:text-left">
-                        <h2 className="text-4xl font-bold text-westcoast-text-dark mb-4">One Platform, Every Financial Need</h2>
-                        <p className="text-lg text-westcoast-text-light">From daily spending to long-term investing, our integrated products are designed to work together seamlessly.</p>
-                    </div>
-                    <div className="flex justify-center">
-                        <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2940&auto=format&fit=crop" alt="Financial planning on a laptop" className="rounded-xl shadow-lg w-full max-w-lg object-cover" />
-                    </div>
+                 <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-westcoast-text-dark mb-4">One Platform, Every Financial Need</h2>
+                    <p className="text-lg text-westcoast-text-light max-w-3xl mx-auto">From daily spending to long-term investing, our integrated products are designed to work together seamlessly.</p>
                  </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     {products.map(product => (
-                        <div key={product.title} className="bg-white p-8 rounded-xl shadow-md flex items-start space-x-6 hover:shadow-xl hover:-translate-y-1 transition-all">
-                             <div className="bg-westcoast-blue/10 p-3 rounded-lg text-westcoast-blue">{product.icon}</div>
-                            <div>
-                                <h3 className="text-xl font-bold text-westcoast-text-dark mb-2">{product.title}</h3>
-                                <p className="text-westcoast-text-light mb-4">{product.description}</p>
-                                <a href="#" className="font-bold text-westcoast-blue hover:underline flex items-center">
-                                    Learn More <ChevronRight size={16} className="ml-1" />
-                                </a>
+                        <div key={product.title} className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all flex flex-col">
+                            <img src={product.imgSrc} alt={product.title} className="w-full h-40 object-cover" />
+                            <div className="p-6 flex flex-col flex-grow">
+                                <div className="flex items-start space-x-4">
+                                    <div className="bg-westcoast-blue/10 p-3 rounded-lg text-westcoast-blue flex-shrink-0 mt-1">{product.icon}</div>
+                                    <div>
+                                        <h3 className="text-lg font-bold text-westcoast-text-dark mb-2">{product.title}</h3>
+                                        <p className="text-sm text-westcoast-text-light">{product.description}</p>
+                                    </div>
+                                </div>
+                                <div className="mt-auto pt-4">
+                                     <button onClick={() => navigate('/user?action=signup')} className="font-bold text-westcoast-blue hover:underline flex items-center text-sm">
+                                        Learn More <ChevronRight size={16} className="ml-1" />
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     ))}
@@ -138,27 +146,30 @@ const ProductsSection: React.FC = () => {
 };
 
 
-const FinalCTASection: React.FC = () => (
-    <div className="bg-white py-20">
-        <div className="container mx-auto px-4">
-            <div 
-                className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden bg-cover bg-center"
-                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2938&auto=format&fit=crop')" }}
-            >
-                <div className="absolute inset-0 bg-westcoast-dark/70 backdrop-blur-sm"></div>
-                <div className="absolute -top-16 -left-16 w-48 h-48 bg-westcoast-blue/20 rounded-full"></div>
-                <div className="absolute -bottom-24 -right-16 w-64 h-64 bg-westcoast-accent/20 rounded-full"></div>
-                <div className="relative z-10">
-                    <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to build your wealth?</h2>
-                    <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-8">Join thousands of users who trust Westcoast to manage their banking and investments. Sign up in minutes.</p>
-                    <button className="bg-westcoast-accent text-westcoast-dark font-bold py-3 px-8 rounded-full hover:opacity-90 transition-opacity text-lg">
-                        Get Started Today
-                    </button>
+const FinalCTASection: React.FC = () => {
+    const navigate = useNavigate();
+    return (
+        <div className="bg-white py-20">
+            <div className="container mx-auto px-4">
+                <div 
+                    className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden bg-cover bg-center"
+                    style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2938&auto=format&fit=crop')" }}
+                >
+                    <div className="absolute inset-0 bg-westcoast-dark/70 backdrop-blur-sm"></div>
+                    <div className="absolute -top-16 -left-16 w-48 h-48 bg-westcoast-blue/20 rounded-full"></div>
+                    <div className="absolute -bottom-24 -right-16 w-64 h-64 bg-westcoast-accent/20 rounded-full"></div>
+                    <div className="relative z-10">
+                        <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to build your wealth?</h2>
+                        <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-8">Join thousands of users who trust Westcoast to manage their banking and investments. Sign up in minutes.</p>
+                        <button onClick={() => navigate('/user?action=signup')} className="bg-westcoast-accent text-westcoast-dark font-bold py-3 px-8 rounded-full hover:opacity-90 transition-opacity text-lg">
+                            Get Started Today
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 
 const HomePage: React.FC = () => {

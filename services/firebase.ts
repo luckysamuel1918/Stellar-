@@ -93,12 +93,13 @@ export const getUserByAccountNumber = async (accountNumber: string): Promise<Use
 }
 
 // FIX: Refactored to use Firebase v8 API.
-export const createTransaction = async (transactionData: Omit<Transaction, 'id' | 'timestamp'>): Promise<Transaction | null> => {
+export const createTransaction = async (transactionData: Omit<Transaction, 'id'>): Promise<Transaction | null> => {
     try {
-        const docRef = await db.collection("transactions").add({
+        const dataWithTimestamp = {
             ...transactionData,
-            timestamp: firebase.firestore.FieldValue.serverTimestamp()
-        });
+            timestamp: transactionData.timestamp || firebase.firestore.FieldValue.serverTimestamp()
+        };
+        const docRef = await db.collection("transactions").add(dataWithTimestamp);
         const doc = await docRef.get();
         return { id: doc.id, ...doc.data() } as Transaction;
     } catch (error) {
@@ -140,13 +141,23 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
         senderName: sender.fullName,
         receiverId: receiver.uid,
         type: 'transfer',
+        // FIX: Add timestamp property to satisfy the Transaction type.
+        // The createTransaction function will use a server timestamp if this is undefined.
+        timestamp: undefined,
     });
 
     return transaction;
 };
 
 // FIX: Refactored to use Firebase v8 API.
-export const adminUpdateBalance = async (user: UserProfile, amount: number, type: 'credit' | 'debit', description: string) => {
+export const adminUpdateBalance = async (
+    user: UserProfile, 
+    amount: number, 
+    type: 'credit' | 'debit', 
+    description: string,
+    senderName?: string,
+    customTimestamp?: firebase.firestore.Timestamp
+) => {
     const batch = db.batch();
     const userRef = db.doc(`users/${user.uid}`);
     const newBalance = type === 'credit' ? user.balance + amount : user.balance - amount;
@@ -162,12 +173,13 @@ export const adminUpdateBalance = async (user: UserProfile, amount: number, type
         status: 'completed',
         type,
         senderId: 'admin',
-        senderName: 'Westcoast Trust Bank Admin',
+        senderName: senderName || 'Westcoast Trust Bank Admin',
         receiverId: user.uid,
         receiverName: user.fullName,
         receiverAccountNumber: user.accountNumber,
+        timestamp: customTimestamp,
     });
-}
+};
 
 // FIX: Refactored to use Firebase v8 API.
 export const getAllUsers = async (): Promise<UserProfile[]> => {
@@ -205,6 +217,65 @@ export const uploadProfilePicture = async (uid: string, file: File): Promise<str
     const snapshot = await fileRef.put(file);
     const downloadURL = await snapshot.ref.getDownloadURL();
     return downloadURL;
+};
+
+export const adminDeleteUser = async (uid: string): Promise<void> => {
+    if (!uid) throw new Error("User ID is required.");
+    const batch = db.batch();
+    const userRef = db.doc(`users/${uid}`);
+
+    // Delete user's transactions
+    const transactionsRef = db.collection("transactions");
+    const sentQuery = transactionsRef.where("senderId", "==", uid);
+    const receivedQuery = transactionsRef.where("receiverId", "==", uid);
+
+    const [sentSnapshot, receivedSnapshot] = await Promise.all([sentQuery.get(), receivedQuery.get()]);
+    sentSnapshot.forEach(doc => batch.delete(doc.ref));
+    receivedSnapshot.forEach(doc => batch.delete(doc.ref));
+
+    // Delete user's chat history
+    const messagesRef = db.collection(`chats/${uid}/messages`);
+    const messagesSnapshot = await messagesRef.get();
+    messagesSnapshot.forEach(doc => batch.delete(doc.ref));
+    
+    // Delete user document
+    batch.delete(userRef);
+
+    await batch.commit();
+    // NOTE: This does not delete the Firebase Auth user, as it requires Admin SDK.
+};
+
+export const adminUpdateTransaction = async (transactionId: string, data: Partial<Transaction>): Promise<void> => {
+    if (!transactionId) return;
+    const txRef = db.doc(`transactions/${transactionId}`);
+    await txRef.update(data);
+};
+
+export const getChatMessages = (userId: string, callback: (messages: any[]) => void) => {
+    return db.collection(`chats/${userId}/messages`)
+        .orderBy('timestamp', 'asc')
+        .onSnapshot(snapshot => {
+            const messages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            callback(messages);
+        });
+};
+
+export const sendChatMessage = async (userId: string, message: { text: string; senderId: string; senderName: string; }) => {
+    if (!userId || !message.text) return;
+    await db.collection(`chats/${userId}/messages`).add({
+        ...message,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    });
+};
+
+export const wipeChatHistory = async (userId:string) => {
+    const messagesRef = db.collection(`chats/${userId}/messages`);
+    const snapshot = await messagesRef.get();
+    if (snapshot.empty) return;
+
+    const batch = db.batch();
+    snapshot.docs.forEach(doc => batch.delete(doc.ref));
+    await batch.commit();
 };
 
 // FIX: Export auth and db objects directly for v8 compatibility.
