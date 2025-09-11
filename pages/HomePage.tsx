@@ -179,13 +179,13 @@ const HomePage: React.FC = () => {
 
     useEffect(() => {
         // If the user is an admin, redirect them away from the homepage
-        if (!loading && userData?.isAdmin) {
+        if (!loading && userData && userData.isAdmin) {
             navigate('/admin-dashboard', { replace: true });
         }
     }, [userData, loading, navigate]);
 
     // Prevent rendering the homepage for admins while redirecting
-    if (loading || userData?.isAdmin) {
+    if (loading || (userData && userData.isAdmin)) {
         return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
     }
 

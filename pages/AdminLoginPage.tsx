@@ -15,7 +15,7 @@ const AdminLoginPage: React.FC = () => {
   useEffect(() => {
     // Redirect only if the logged-in user is an admin.
     // This allows a non-admin user to see this page and attempt to log in as an admin.
-    if (!authLoading && userData?.isAdmin) {
+    if (!authLoading && userData && userData.isAdmin) {
       navigate('/admin-dashboard', { replace: true });
     }
   }, [userData, authLoading, navigate]);
@@ -64,7 +64,7 @@ const AdminLoginPage: React.FC = () => {
   
   // Show a loading screen while auth state is being checked, or if the user is an admin (who will be redirected).
   // This prevents the form from flashing briefly for a logged-in admin.
-  if (authLoading || userData?.isAdmin) {
+  if (authLoading || (userData && userData.isAdmin)) {
       return <div className="flex items-center justify-center min-h-[calc(100vh-200px)]"><p>Loading...</p></div>;
   }
 

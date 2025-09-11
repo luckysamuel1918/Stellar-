@@ -207,7 +207,11 @@ export const getUserTransactions = async (uid: string): Promise<Transaction[]> =
 
     const uniqueTransactions = Array.from(transactionsMap.values());
     // FIX: Made sort function null-safe to prevent errors in Safari.
-    return uniqueTransactions.sort((a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0));
+    return uniqueTransactions.sort((a, b) => {
+        const aSeconds = (a.timestamp && a.timestamp.seconds) || 0;
+        const bSeconds = (b.timestamp && b.timestamp.seconds) || 0;
+        return bSeconds - aSeconds;
+    });
 }
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {

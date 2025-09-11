@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6IzAwNzdGRjtzdG9wLW9wYWNpdHk6MSIgLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0eWxlPSJzdG9wLWNvbG9yOiMwMEQ0RkY7c3RvcC1wYWNpdHk6MSIgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0idXJsKCNncmFkMSkiLz48dGV4dCB4PSI1MCIgeT0iNjgiIGZvbnQtZmFtaWx5PSJJbnRlciwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlc8L3RleHQ+PC9zdmc+' />
+    <link rel="icon" type="image/svg+xml" href='data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjEwMCIgdmlld0JveD0iMCAwIDEwMCAxMDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PGxpbmVhckdyYWRpZW50IGlkPSJncmFkMSIgeDE9IjAlIiB5MT0iMCUiIHgyPSIxMDAlIiB5Mj0iMTAwJSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3R5bGU9InN0b3AtY29sb3I6IzAwNzdGRjtzdG9wLW9wYWNpdHk6MSIgLz48c3RvcCBvZmZzZXQ9IjEwMCUiIHN0aGU9InN0b3AtY29sb3I6IzAwRDQyRkY7c3RvcC1wYWNpdHk6MSIgLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSI0NSIgZmlsbD0idXJsKCNncmFkMSkiLz48dGV4dCB4PSI1MCIgeT0iNjgiIGZvbnQtZmFtaWx5PSJJbnRlciwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSI1MCIgZm9udC13ZWlnaHQ9IjkwMCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlc8L3RleHQ+PC9zdmc+' />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Experience seamless banking and powerful investing with Westcoast Trust Bank. Manage your finances, grow your wealth, and secure your future on our intuitive, secure, and modern digital platform." />
     <title>Westcoast Trust Bank | Banking & Investment</title>
@@ -47,9 +47,53 @@
   }
 }
 </script>
+<script src="https://polyfill.io/v3/polyfill.min.js?features=default"></script>
 </head>
   <body class="bg-westcoast-bg font-sans dark:bg-gray-900 dark:text-gray-200">
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="error-fallback" style="display: none; text-align: center; padding: 40px; font-family: 'Inter', sans-serif; background-color: #F6F9FC; min-height: 100vh; flex-direction: column; align-items: center; justify-content: center;">
+        <div>
+            <h1 style="font-size: 2rem; font-weight: bold; color: #0A2540;">Oops! Something went wrong.</h1>
+            <p style="margin-top: 1rem; color: #6B7280;">We've encountered an unexpected error. Please try refreshing the page.</p>
+            <button onclick="window.location.reload()" style="margin-top: 1.5rem; padding: 0.75rem 1.5rem; background-color: #0077FF; color: white; border: none; border-radius: 9999px; font-weight: bold; cursor: pointer;">
+                Refresh Page
+            </button>
+        </div>
+    </div>
     <div id="root"></div>
+
+    <script>
+      // Global Error Handler
+      function showErrorFallback() {
+          var root = document.getElementById('root');
+          var fallback = document.getElementById('error-fallback');
+          if (root) root.style.display = 'none';
+          if (fallback) fallback.style.display = 'flex';
+      }
+
+      window.addEventListener('error', function(event) {
+          console.error('Global error caught:', event.error);
+          showErrorFallback();
+      });
+
+      window.addEventListener('unhandledrejection', function(event) {
+          console.error('Unhandled promise rejection caught:', event.reason);
+          showErrorFallback();
+      });
+
+      // Service Worker Registration
+      if ('serviceWorker' in navigator) {
+          window.addEventListener('load', () => {
+              navigator.serviceWorker.register('/sw.js')
+                  .then(registration => {
+                      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                  })
+                  .catch(error => {
+                      console.log('ServiceWorker registration failed: ', error);
+                  });
+          });
+      }
+    </script>
     <script type="module" src="/index.tsx"></script>
   </body>
 </html>

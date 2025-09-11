@@ -421,7 +421,7 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                 address: '',
                 state: '',
                 country: country,
-                currencyCode: selectedCountryData?.currency || '',
+                currencyCode: (selectedCountryData && selectedCountryData.currency) || '',
                 isAdmin: false,
                 createdAt: new Date(),
                 customerId: '',
@@ -555,7 +555,7 @@ const CheckDepositModal = ({ user, onClose, onSuccess }) => {
     const [error, setError] = useState('');
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
-        const file = e.target.files?.[0];
+        const file = e.target.files && e.target.files[0];
         if (file) {
             if (file.size > 5 * 1024 * 1024) { // 5MB limit
                 setError('File is too large. Max size is 5MB.');
@@ -669,7 +669,7 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
     }, [user]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        const file = event.target.files?.[0];
+        const file = event.target.files && event.target.files[0];
         if (!file) return;
         if (file.size > 1 * 1024 * 1024) { setError('File is too large. Max size is 1MB.'); return; }
         setUploading(true);
@@ -730,7 +730,7 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
                 <div className="flex flex-col items-center">
                     <div className="relative mb-4">
                         <Avatar user={user} size="w-24 h-24 text-3xl" />
-                        <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 bg-westcoast-blue text-white rounded-full p-2 hover:bg-opacity-90 disabled:bg-gray-400 transition-colors">
+                        <button onClick={() => fileInputRef.current && fileInputRef.current.click()} disabled={uploading} className="absolute -bottom-1 -right-1 bg-westcoast-blue text-white rounded-full p-2 hover:bg-opacity-90 disabled:bg-gray-400 transition-colors">
                             {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Edit className="w-5 h-5" />}
                         </button>
                         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
@@ -915,13 +915,13 @@ const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }>
         return name.substring(0, 2).toUpperCase();
     };
 
-    if (user?.photoURL) {
+    if (user && user.photoURL) {
         return <img src={user.photoURL} alt={user.fullName} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
     }
     
     return (
         <div className={`${size} rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold ${textClass}`}>
-            {getInitials(user?.fullName)}
+            {getInitials(user && user.fullName)}
         </div>
     );
 };
@@ -937,7 +937,7 @@ const QuickActionButton: React.FC<{ icon: React.ReactNode; label: string; onClic
 
 const TransactionItem: React.FC<{ tx: Transaction, currentUserId: string, currencyCode: string }> = ({ tx, currentUserId, currencyCode }) => {
     const isDebit = tx.senderId === currentUserId;
-    const formattedDate = tx.timestamp ? new Date(tx.timestamp.toDate()).toLocaleDateString() : 'N/A';
+    const formattedDate = tx.timestamp && tx.timestamp.toDate ? new Date(tx.timestamp.toDate()).toLocaleDateString() : 'N/A';
     
     const getTransactionTitle = () => {
         if (tx.description) return tx.description;
@@ -1044,7 +1044,7 @@ const UserDashboardPage: React.FC = () => {
     }, [fetchData]);
 
     useEffect(() => {
-        if (userData?.isSuspended) {
+        if (userData && userData.isSuspended) {
             let inactivityTimer: number;
 
             const resetTimer = () => {
@@ -1129,11 +1129,13 @@ const UserDashboardPage: React.FC = () => {
 
     if (loading && !userData) return <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900"><p>Loading dashboard...</p></div>;
     
+    const pageTitle = (navItems.find(item => item.id === activeView) || { label: 'Dashboard' }).label;
+    
     return (
         <div className="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans">
-            {userData?.isSuspended && <SuspendedAccountModal onLogout={signOut} />}
+            {userData && userData.isSuspended && <SuspendedAccountModal onLogout={signOut} />}
             
-            <div className={`flex ${userData?.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
+            <div className={`flex ${userData && userData.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
                 
                 {/* --- Sidebar for Desktop --- */}
                 <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 min-h-screen p-4 flex-shrink-0">
@@ -1163,7 +1165,7 @@ const UserDashboardPage: React.FC = () => {
                         {userData && (
                             <header className="hidden md:flex justify-between items-center mb-8 px-4 md:px-0">
                                 <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
-                                    {navItems.find(item => item.id === activeView)?.label || 'Dashboard'}
+                                    {pageTitle}
                                 </h1>
                                 <div className="flex items-center gap-4">
                                     <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
@@ -1183,7 +1185,7 @@ const UserDashboardPage: React.FC = () => {
             </div>
 
             {/* --- Bottom Bar for Mobile --- */}
-            {!userData?.isSuspended && (
+            {!(userData && userData.isSuspended) && (
                  <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700">
                     <div className="flex justify-around py-2">
                          {navItems.map(item => (

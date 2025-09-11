@@ -242,7 +242,11 @@ const ManageTransactionsModal = ({ user, onClose }) => {
         const newTimestamp = firebase.firestore.Timestamp.fromDate(new Date(`${date}T${time}`));
         await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status });
         const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status } : tx);
-        setTransactions(updatedTxs.sort((a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0)));
+        setTransactions(updatedTxs.sort((a, b) => {
+            const aSeconds = (a.timestamp && a.timestamp.seconds) || 0;
+            const bSeconds = (b.timestamp && b.timestamp.seconds) || 0;
+            return bSeconds - aSeconds;
+        }));
         setEditingTx(null);
     };
 
@@ -255,7 +259,7 @@ const ManageTransactionsModal = ({ user, onClose }) => {
                         <ul className="space-y-3">
                             {transactions.map(tx => (
                                 <li key={tx.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    {editingTx?.id === tx.id ? (
+                                    {editingTx && editingTx.id === tx.id ? (
                                         <div className="space-y-2">
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                 <input type="date" value={date} onChange={e => setDate(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
@@ -308,7 +312,9 @@ const ChatModal = ({ user, admin, onClose }) => {
     }, [user.uid]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
     }, [messages]);
     
     const handleSend = async (e) => {
@@ -349,7 +355,7 @@ const ChatModal = ({ user, admin, onClose }) => {
                              <div key={msg.id} className={`flex ${msg.senderId === 'admin' ? 'justify-end' : 'justify-start'}`}>
                                  <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${msg.senderId === 'admin' ? 'bg-westcoast-blue text-white' : 'bg-gray-200 text-black dark:bg-gray-700 dark:text-white'}`}>
                                     <p className="text-sm">{msg.text}</p>
-                                    <p className={`text-xs mt-1 ${msg.senderId === 'admin' ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'}`}>{msg.timestamp?.toDate().toLocaleTimeString()}</p>
+                                    <p className={`text-xs mt-1 ${msg.senderId === 'admin' ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'}`}>{msg.timestamp && msg.timestamp.toDate().toLocaleTimeString()}</p>
                                 </div>
                             </div>
                         ))}
@@ -438,7 +444,7 @@ const AdminDashboardPage: React.FC = () => {
             <div className="max-w-7xl mx-auto">
                 <header className="mb-8">
                     <h1 className="text-3xl sm:text-4xl font-bold text-westcoast-dark dark:text-white">Admin Dashboard</h1>
-                    <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData?.fullName}!</p>
+                    <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
