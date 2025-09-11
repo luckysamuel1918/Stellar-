@@ -1,8 +1,12 @@
 
 
+
+
+
+
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
-import { HashRouter, Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { auth, User, getUserData } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
@@ -225,26 +229,24 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
 const App: React.FC = () => {
     return (
-        <HashRouter>
-            <AuthProvider>
-                <Routes>
-                    <Route element={<AppLayout />}>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/user" element={<AuthPage />} />
-                        <Route path="/admin-login" element={<AdminLoginPage />} />
-                        <Route
-                            path="/admin-dashboard"
-                            element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
-                        />
-                    </Route>
-                    
+        <AuthProvider>
+            <Routes>
+                <Route element={<AppLayout />}>
+                    <Route path="/" element={<HomePage />} />
+                    <Route path="/user" element={<AuthPage />} />
+                    <Route path="/admin-login" element={<AdminLoginPage />} />
                     <Route
-                        path="/user-dashboard"
-                        element={<UserRoute><UserDashboardPage /></UserRoute>}
+                        path="/admin-dashboard"
+                        element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
                     />
-                </Routes>
-            </AuthProvider>
-        </HashRouter>
+                </Route>
+                
+                <Route
+                    path="/user-dashboard"
+                    element={<UserRoute><UserDashboardPage /></UserRoute>}
+                />
+            </Routes>
+        </AuthProvider>
     );
 }
 
