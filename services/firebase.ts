@@ -159,7 +159,8 @@ export const adminUpdateBalance = async (
 ) => {
     const batch = db.batch();
     const userRef = db.doc(`users/${user.uid}`);
-    const newBalance = type === 'credit' ? user.balance + amount : user.balance - amount;
+    // FIX: Explicitly cast balance to a Number to prevent calculation errors.
+    const newBalance = type === 'credit' ? Number(user.balance) + amount : Number(user.balance) - amount;
     
     if(newBalance < 0) throw new Error("Debit amount exceeds user balance.");
 

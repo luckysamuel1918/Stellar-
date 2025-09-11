@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
@@ -8,7 +9,26 @@ import {
     wipeChatHistory
 } from '../services/firebase';
 import firebase from "firebase/compat/app";
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp } from 'lucide-react';
+
+const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
+    const getInitials = (name: string) => {
+        if (!name) return '?';
+        const names = name.split(' ');
+        if (names.length > 1) return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
+        return name.substring(0, 2).toUpperCase();
+    };
+
+    if (user.photoURL) {
+        return <img src={user.photoURL} alt={user.fullName} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
+    }
+    
+    return (
+        <div className={`${size} rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold ${textClass}`}>
+            {getInitials(user.fullName)}
+        </div>
+    );
+};
 
 const ManageBalanceModal: React.FC<{ user: UserProfile; onClose: () => void; onUpdate: () => void; }> = ({ user, onClose, onUpdate }) => {
     const [amount, setAmount] = useState('');
@@ -389,6 +409,8 @@ const AdminDashboardPage: React.FC = () => {
 
     if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
 
+    const totalFunds = users.reduce((acc, user) => acc + user.balance, 0);
+
     const renderModal = () => {
         if (!modal.user) return null;
         switch(modal.type) {
@@ -410,8 +432,9 @@ const AdminDashboardPage: React.FC = () => {
                     <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData?.fullName}!</p>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <StatCard title="Total Users" value={users.length} icon={<Users className="w-6 h-6 text-blue-600"/>} />
+                    <StatCard title="Total Funds" value={totalFunds.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0})} icon={<TrendingUp className="w-6 h-6 text-blue-600"/>} />
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
@@ -442,8 +465,13 @@ const AdminDashboardPage: React.FC = () => {
                                 {filteredUsers.map(user => (
                                     <tr key={user.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
                                         <td className="py-4 px-4">
-                                            <p className="font-semibold text-westcoast-text-dark dark:text-white">{user.fullName}</p>
-                                            <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
+                                            <div className="flex items-center gap-3">
+                                                <Avatar user={user} />
+                                                <div>
+                                                    <p className="font-semibold text-westcoast-text-dark dark:text-white">{user.fullName}</p>
+                                                    <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
+                                                </div>
+                                            </div>
                                         </td>
                                         <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
                                         <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden sm:table-cell">{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>

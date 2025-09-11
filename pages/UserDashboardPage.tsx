@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
@@ -43,31 +42,55 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
                     .no-print { display: none !important; }
                 }
             `}</style>
-            <div id="receipt-content">
-                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 no-print" />
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Transfer Successful</h2>
-                <p className="text-gray-500 dark:text-gray-300 mb-6">Your transaction has been completed.</p>
-                <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700 rounded-lg text-left text-sm space-y-4 border dark:border-gray-600">
-                    <div className="flex justify-between items-center pb-4 border-b dark:border-gray-600">
-                        <WestcoastLogo />
-                        <span className="font-semibold text-gray-600 dark:text-gray-300">Transaction Receipt</span>
+            <div id="receipt-content" className="p-4 sm:p-6 bg-white dark:bg-gray-800 rounded-lg text-left text-sm">
+                <div className="relative border-2 border-gray-200 dark:border-gray-700 rounded-lg p-6">
+                    {/* Paid Stamp */}
+                    <div className="absolute top-8 right-8 transform rotate-12 no-print">
+                        <div className="border-4 border-green-500 text-green-500 rounded-full w-24 h-24 flex items-center justify-center font-black text-2xl uppercase opacity-70">
+                            Paid
+                        </div>
                     </div>
-                    <div className="flex justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">Amount Sent</span>
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(receiptData.amount, user.currencyCode)}</span>
+                    {/* Header */}
+                    <div className="flex justify-between items-start pb-4 border-b border-gray-200 dark:border-gray-600">
+                        <div>
+                            <WestcoastLogo />
+                            <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">123 Finance St, Suite 100, San Francisco, CA 94105</p>
+                        </div>
+                        <span className="font-semibold text-gray-700 dark:text-gray-300">Transaction Receipt</span>
                     </div>
-                    <div className="space-y-3">
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">From</span><span className="font-semibold text-gray-700 dark:text-gray-200 text-right">{user.fullName}<br/><span className="font-normal text-xs text-gray-500 dark:text-gray-400">{user.accountNumber}</span></span></div>
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">To</span><span className="font-semibold text-gray-700 dark:text-gray-200 text-right">{receiptData.receiverName}<br/><span className="font-normal text-xs text-gray-500 dark:text-gray-400">{isInternational ? 'International Account' : receiptData.receiverAccountNumber}</span></span></div>
-                        {bankDetails && Object.entries(bankDetails).map(([key, value]) => value && (
-                            // FIX: The type of `value` is `unknown` and cannot be rendered. Convert it to a string.
-                             <div key={key} className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span><span className="font-semibold text-gray-700 dark:text-gray-200">{String(value)}</span></div>
-                        ))}
+
+                    {/* Summary */}
+                    <div className="text-center my-8">
+                        <p className="text-gray-500 dark:text-gray-400">Amount Sent</p>
+                        <p className="text-5xl font-bold text-gray-900 dark:text-white tracking-tighter">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
+                        <div className="inline-flex items-center gap-2 mt-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 font-semibold px-3 py-1 rounded-full text-sm">
+                            <CheckCircle size={16}/>
+                            <span>Transaction Completed</span>
+                        </div>
                     </div>
-                    <div className="border-t border-gray-200 dark:border-gray-600 pt-3 space-y-3">
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Date</span><span className="font-semibold text-gray-700 dark:text-gray-200">{new Date(receiptData.timestamp.toDate()).toLocaleString()}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Transaction ID</span><span className="font-mono text-gray-700 dark:text-gray-200 text-xs">{receiptData.id}</span></div>
-                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Status</span><span className="font-semibold text-green-600">Completed</span></div>
+
+                    {/* Details Grid */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 border-t border-gray-200 dark:border-gray-600 pt-6">
+                        <div className="space-y-3">
+                            <h3 className="font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs tracking-wider">Beneficiary Details</h3>
+                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Name</span><span className="font-semibold text-gray-800 dark:text-gray-200 text-right">{receiptData.receiverName}</span></div>
+                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Account</span><span className="font-semibold text-gray-800 dark:text-gray-200">{isInternational ? 'International Account' : receiptData.receiverAccountNumber}</span></div>
+                            {bankDetails && Object.entries(bankDetails).map(([key, value]) => value && (
+                                <div key={key} className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span><span className="font-semibold text-gray-800 dark:text-gray-200">{String(value)}</span></div>
+                            ))}
+                        </div>
+                         <div className="space-y-3">
+                            <h3 className="font-semibold text-gray-600 dark:text-gray-300 uppercase text-xs tracking-wider">Sender Details</h3>
+                             <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Name</span><span className="font-semibold text-gray-800 dark:text-gray-200 text-right">{user.fullName}</span></div>
+                             <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Account</span><span className="font-semibold text-gray-800 dark:text-gray-200">{user.accountNumber}</span></div>
+                        </div>
+                    </div>
+                    
+                     {/* Transaction Details Footer */}
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-4 mt-6 space-y-2">
+                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Date</span><span className="font-semibold text-gray-800 dark:text-gray-200">{new Date(receiptData.timestamp.toDate()).toLocaleString()}</span></div>
+                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Transaction ID</span><span className="font-mono text-gray-700 dark:text-gray-200 text-xs">{receiptData.id}</span></div>
+                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Description</span><span className="font-semibold text-gray-800 dark:text-gray-200">{receiptData.description || 'N/A'}</span></div>
                     </div>
                 </div>
             </div>
@@ -78,6 +101,7 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
         </div>
     );
 };
+
 
 const countryData = [
     { name: 'United States', currency: 'USD' }, { name: 'Canada', currency: 'CAD' }, { name: 'Mexico', currency: 'MXN' }, { name: 'United Kingdom', currency: 'GBP' }, { name: 'Germany', currency: 'EUR' }, { name: 'France', currency: 'EUR' }, { name: 'Japan', currency: 'JPY' }, { name: 'Australia', currency: 'AUD' }, { name: 'China', currency: 'CNY' }, { name: 'India', currency: 'INR' }, { name: 'Brazil', currency: 'BRL' }
@@ -661,12 +685,11 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
         }
     };
 
-    // FIX: Add inline types for props to make `name` and `onChange` optional, preventing type errors on read-only rows.
-    const InfoRow = ({ label, value, name, onChange, edit, type = "text" }: { label: any; value: any; name?: any; onChange?: any; edit: any; type?: string; }) => (
-        <div className="grid grid-cols-3 gap-4 items-center">
+    const InfoRow = ({ label, value, name, onChange, edit, type = "text", isReadOnly = false }) => (
+        <div className="grid grid-cols-3 gap-4 items-center py-2 border-b border-gray-100 dark:border-gray-700">
             <label className="text-gray-500 dark:text-gray-400 font-medium col-span-1">{label}</label>
-            {edit ? (
-                <input type={type} name={name} value={value} onChange={onChange} className="col-span-2 w-full px-3 py-1.5 border rounded-md dark:bg-gray-600 dark:border-gray-500" />
+            {edit && !isReadOnly ? (
+                <input type={type} name={name} value={value} onChange={onChange} className="col-span-2 w-full px-3 py-1.5 border rounded-md dark:bg-gray-600 dark:border-gray-500 bg-gray-50" />
             ) : (
                 <p className="font-semibold dark:text-white col-span-2 break-words">{value}</p>
             )}
@@ -675,52 +698,58 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
 
     return (
         <div className="p-4">
-            <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold text-gray-800 dark:text-white">My Profile</h2>
-                {!editMode && <button onClick={() => setEditMode(true)} className="flex items-center gap-2 text-sm font-semibold bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-westcoast-blue"><Edit size={16}/> Edit Profile</button>}
-            </div>
-            <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm flex flex-col items-center">
-                <div className="relative mb-4">
-                    <Avatar user={user} size="w-24 h-24 text-3xl" />
-                    <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 bg-westcoast-blue text-white rounded-full p-2 hover:bg-opacity-90 disabled:bg-gray-400 transition-colors">
-                        {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Edit className="w-5 h-5" />}
-                    </button>
-                    <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+            <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-sm">
+                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-0">My Profile</h2>
+                    {!editMode && <button onClick={() => setEditMode(true)} className="flex items-center justify-center gap-2 text-sm font-semibold bg-blue-50 dark:bg-blue-900/40 px-4 py-2 rounded-lg text-westcoast-blue self-start sm:self-center"><Edit size={16}/> Edit Profile</button>}
                 </div>
-                <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{user.fullName}</h3>
-                <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-                <div className="mt-6 w-full space-y-4 text-sm">
+
+                <div className="flex flex-col items-center">
+                    <div className="relative mb-4">
+                        <Avatar user={user} size="w-24 h-24 text-3xl" />
+                        <button onClick={() => fileInputRef.current?.click()} disabled={uploading} className="absolute -bottom-1 -right-1 bg-westcoast-blue text-white rounded-full p-2 hover:bg-opacity-90 disabled:bg-gray-400 transition-colors">
+                            {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Edit className="w-5 h-5" />}
+                        </button>
+                        <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{user.fullName}</h3>
+                    <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
+                </div>
+
+                <div className="mt-6 w-full text-sm">
                     <form onSubmit={handleSave}>
-                        <InfoRow label="Full Name" name="fullName" value={formData.fullName} onChange={handleFormChange} edit={editMode} />
-                        <InfoRow label="Email" value={formData.email} edit={false} />
-                        <InfoRow label="Phone" name="phone" value={formData.phone} onChange={handleFormChange} edit={editMode} type="tel"/>
-                        <InfoRow label="Address" name="address" value={formData.address} onChange={handleFormChange} edit={editMode} />
-                        <InfoRow label="State" name="state" value={formData.state} onChange={handleFormChange} edit={editMode} />
-                        <InfoRow label="Country" name="country" value={formData.country} onChange={handleFormChange} edit={editMode} />
-                        <div className="border-t dark:border-gray-700 my-4"></div>
-                        <InfoRow label="Account Number" value={formData.accountNumber} edit={false} />
-                        <InfoRow label="Currency" value={formData.currencyCode} edit={false} />
+                        <div className="space-y-2">
+                             <InfoRow label="Full Name" name="fullName" value={formData.fullName} onChange={handleFormChange} edit={editMode} />
+                             {/* FIX: Add name and onChange props to satisfy component's prop types for read-only fields. These props are not used when isReadOnly is true, but are required by the component's inferred prop types. */}
+                             <InfoRow label="Email" name="email" value={formData.email} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
+                             <InfoRow label="Phone" name="phone" value={formData.phone} onChange={handleFormChange} edit={editMode} type="tel"/>
+                             <InfoRow label="Address" name="address" value={formData.address} onChange={handleFormChange} edit={editMode} />
+                             <InfoRow label="State" name="state" value={formData.state} onChange={handleFormChange} edit={editMode} />
+                             <InfoRow label="Country" name="country" value={formData.country} onChange={handleFormChange} edit={editMode} />
+                             <InfoRow label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
+                             <InfoRow label="Currency" name="currencyCode" value={formData.currencyCode} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
+                        </div>
                         
                         {error && <p className="mt-4 text-sm text-center text-red-600">{error}</p>}
 
-                        {editMode && (
+                        {editMode ? (
                             <div className="flex gap-4 mt-6">
                                 <button type="button" onClick={() => { setEditMode(false); setFormData(user); }} className="w-full py-2 bg-gray-200 dark:bg-gray-600 font-semibold rounded-lg">Cancel</button>
                                 <button type="submit" disabled={saving} className="w-full py-2 bg-westcoast-blue text-white font-semibold rounded-lg disabled:opacity-50 flex justify-center items-center">{saving ? <Loader2 className="animate-spin" /> : 'Save Changes'}</button>
                             </div>
+                        ) : (
+                             <button onClick={signOut} className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors">
+                                <LogOut size={18} />
+                                Log Out
+                            </button>
                         )}
                     </form>
                 </div>
-                 {!editMode && (
-                    <button onClick={signOut} className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors">
-                        <LogOut size={18} />
-                        Log Out
-                    </button>
-                )}
             </div>
         </div>
     );
 };
+
 
 const CardsView: React.FC<{ user: UserProfile }> = ({ user }) => {
     return (
