@@ -1,6 +1,8 @@
 
 
 
+
+
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
@@ -150,7 +152,7 @@ const Header: React.FC = () => {
                                 <UserIcon size={16} className="mr-2"/>
                                 <span>Dashboard</span>
                             </button>
-                            <button onClick={signOut} className="bg-gray-200 text-westcoast-text-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-300 transition-colors">
+                            <button onClick={signOut} className="bg-gray-200 text-westcoast-text-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-300 transition-colors flex items-center">
                                 <LogOut size={16} className="mr-2"/>
                                 <span>Log Out</span>
                             </button>
@@ -169,7 +171,7 @@ const Header: React.FC = () => {
                 </div>
                  <div className="md:hidden flex items-center space-x-2">
                     <ThemeToggleButton />
-                    <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu">
+                    <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
                         <Menu className="h-6 w-6 text-westcoast-dark dark:text-white" />
                     </button>
                 </div>

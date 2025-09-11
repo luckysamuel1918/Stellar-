@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
@@ -10,7 +11,7 @@ import {
     Bell, MessageSquare, CreditCard, Send, Globe, ClipboardCheck, History,
     ArrowUpRight, ArrowDownLeft, CheckCircle, Home, User as UserIcon, Landmark,
     X, Loader2, UploadCloud, Banknote, ShieldCheck, Edit, Lock, Mail, Snowflake,
-    AlertTriangle, Eye, Receipt, Building, Car, Wallet
+    AlertTriangle, Eye, Receipt, Building, Car, Wallet, Printer, LogOut
 } from 'lucide-react';
 import { WestcoastLogo } from '../components/icons';
 
@@ -28,6 +29,55 @@ const formatCurrency = (amount: number, currency: string) => {
 };
 
 // --- MODAL & VIEW COMPONENTS ---
+
+const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
+    const printReceipt = () => window.print();
+
+    return (
+        <div className="text-center">
+             <style>{`
+                @media print {
+                    body * { visibility: hidden; }
+                    #receipt-content, #receipt-content * { visibility: visible; }
+                    #receipt-content { position: absolute; left: 0; top: 0; width: 100%; padding: 20px; }
+                    .no-print { display: none !important; }
+                }
+            `}</style>
+            <div id="receipt-content">
+                <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4 no-print" />
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Transfer Successful</h2>
+                <p className="text-gray-500 dark:text-gray-300 mb-6">Your transaction has been completed.</p>
+                <div className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-700 rounded-lg text-left text-sm space-y-4 border dark:border-gray-600">
+                    <div className="flex justify-between items-center pb-4 border-b dark:border-gray-600">
+                        <WestcoastLogo />
+                        <span className="font-semibold text-gray-600 dark:text-gray-300">Transaction Receipt</span>
+                    </div>
+                    <div className="flex justify-between">
+                        <span className="text-gray-500 dark:text-gray-400">Amount Sent</span>
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">{formatCurrency(receiptData.amount, user.currencyCode)}</span>
+                    </div>
+                    <div className="space-y-3">
+                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">From</span><span className="font-semibold text-gray-700 dark:text-gray-200 text-right">{user.fullName}<br/><span className="font-normal text-xs text-gray-500 dark:text-gray-400">{user.accountNumber}</span></span></div>
+                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">To</span><span className="font-semibold text-gray-700 dark:text-gray-200 text-right">{receiptData.receiverName}<br/><span className="font-normal text-xs text-gray-500 dark:text-gray-400">{isInternational ? 'International Account' : receiptData.receiverAccountNumber}</span></span></div>
+                        {bankDetails && Object.entries(bankDetails).map(([key, value]) => value && (
+                            // FIX: The type of `value` is `unknown` and cannot be rendered. Convert it to a string.
+                             <div key={key} className="flex justify-between"><span className="text-gray-500 dark:text-gray-400 capitalize">{key.replace(/([A-Z])/g, ' $1')}</span><span className="font-semibold text-gray-700 dark:text-gray-200">{String(value)}</span></div>
+                        ))}
+                    </div>
+                    <div className="border-t border-gray-200 dark:border-gray-600 pt-3 space-y-3">
+                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Date</span><span className="font-semibold text-gray-700 dark:text-gray-200">{new Date(receiptData.timestamp.toDate()).toLocaleString()}</span></div>
+                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Transaction ID</span><span className="font-mono text-gray-700 dark:text-gray-200 text-xs">{receiptData.id}</span></div>
+                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Status</span><span className="font-semibold text-green-600">Completed</span></div>
+                    </div>
+                </div>
+            </div>
+            <div className="mt-6 flex gap-4 no-print">
+                <button onClick={printReceipt} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2"><Printer size={18}/> Print</button>
+                <button onClick={onClose} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg">Done</button>
+            </div>
+        </div>
+    );
+};
 
 const countryData = [
     { name: 'United States', currency: 'USD' }, { name: 'Canada', currency: 'CAD' }, { name: 'Mexico', currency: 'MXN' }, { name: 'United Kingdom', currency: 'GBP' }, { name: 'Germany', currency: 'EUR' }, { name: 'France', currency: 'EUR' }, { name: 'Japan', currency: 'JPY' }, { name: 'Australia', currency: 'AUD' }, { name: 'China', currency: 'CNY' }, { name: 'India', currency: 'INR' }, { name: 'Brazil', currency: 'BRL' }
@@ -165,8 +215,6 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
             setLoading(false);
         }
     };
-
-    const printStyles = `...`; // Omitted for brevity, assumed unchanged
     
     return (
       <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
@@ -237,18 +285,12 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
             )}
             
             {step === 4 && receiptData && (
-                <div className="text-center">
-                    <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Transfer Successful</h2>
-                    <p className="text-gray-500 dark:text-gray-300 mb-6">Your transaction has been completed.</p>
-                    <div className="space-y-3 text-sm text-left bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Amount Sent</span><span className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(receiptData.amount, user.currencyCode)}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Date</span><span className="font-semibold text-gray-700 dark:text-gray-200">{new Date(receiptData.timestamp.toDate()).toLocaleString()}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">To</span><span className="font-semibold text-gray-700 dark:text-gray-200">{receiptData.receiverName}</span></div>
-                        <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Transaction ID</span><span className="font-mono text-gray-700 dark:text-gray-200">{receiptData.id.slice(0,10)}...</span></div>
-                    </div>
-                    <button onClick={() => { onSuccess(); onClose(); }} className="mt-6 w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg">Done</button>
-                </div>
+                 <ReceiptView 
+                    receiptData={receiptData} 
+                    user={user} 
+                    onClose={() => { onSuccess(); onClose(); }}
+                    bankDetails={{ bankName, routingNumber }}
+                />
             )}
         </div>
       </div>
@@ -421,18 +463,13 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                     </div>
                 )}
                 {step === 4 && receiptData && (
-                    <div className="text-center">
-                        <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Transfer Successful</h2>
-                        <p className="text-gray-500 dark:text-gray-300 mb-6">Your transaction has been completed.</p>
-                         <div className="space-y-3 text-sm text-left bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Amount Sent</span><span className="text-lg font-bold text-gray-900 dark:text-white">{formatCurrency(receiptData.amount, user.currencyCode)}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Date</span><span className="font-semibold text-gray-700 dark:text-gray-200">{new Date(receiptData.timestamp.toDate()).toLocaleString()}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">To</span><span className="font-semibold text-gray-700 dark:text-gray-200">{receiptData.receiverName}</span></div>
-                            <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Transaction ID</span><span className="font-mono text-gray-700 dark:text-gray-200">{receiptData.id.slice(0,10)}...</span></div>
-                        </div>
-                         <button onClick={() => { onSuccess(); onClose(); }} className="mt-6 w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg">Done</button>
-                    </div>
+                    <ReceiptView 
+                        receiptData={receiptData} 
+                        user={user} 
+                        onClose={() => { onSuccess(); onClose(); }}
+                        isInternational={true}
+                        bankDetails={{ bankName: bankName, country: country, swiftBic: swiftBic }}
+                    />
                 )}
             </div>
         </div>
@@ -572,49 +609,76 @@ const TransactionHistoryView = ({ transactions, currentUserId, currencyCode }) =
 );
 
 const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ user, onUpdate }) => {
+    const { signOut } = useAuth();
     const fileInputRef = useRef<HTMLInputElement>(null);
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
+    const [editMode, setEditMode] = useState(false);
+    const [formData, setFormData] = useState<UserProfile>(user);
+    const [saving, setSaving] = useState(false);
+
+    useEffect(() => {
+        setFormData(user);
+    }, [user]);
 
     const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
-
-        if (file.size > 1 * 1024 * 1024) { // 1MB limit for Base64
-            setError('File is too large. Max size is 1MB.');
-            return;
-        }
-
+        if (file.size > 1 * 1024 * 1024) { setError('File is too large. Max size is 1MB.'); return; }
         setUploading(true);
         setError('');
-
         const reader = new FileReader();
         reader.onloadend = async () => {
             try {
-                const base64String = reader.result as string;
-                if (!base64String) {
-                    throw new Error("File could not be converted to Base64.");
-                }
-                await updateUserProfile(user.uid, { photoURL: base64String });
+                await updateUserProfile(user.uid, { photoURL: reader.result as string });
                 onUpdate();
             } catch (err) {
-                const message = err instanceof Error ? err.message : 'An unknown error occurred.';
-                setError(`Failed to upload picture. ${message}`);
-                console.error(err);
+                setError(`Failed to upload picture.`);
             } finally {
                 setUploading(false);
             }
         };
-        reader.onerror = () => {
-            setError('Failed to read file for conversion.');
-            setUploading(false);
-        };
         reader.readAsDataURL(file);
     };
 
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        setFormData({ ...formData, [e.target.name]: e.target.value });
+    };
+
+    const handleSave = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setSaving(true);
+        setError('');
+        try {
+            const { uid, balance, isAdmin, createdAt, customerId, email, photoURL, ...updateData } = formData;
+            await updateUserProfile(user.uid, updateData);
+            setEditMode(false);
+            onUpdate();
+        } catch (err) {
+            setError('Failed to update profile.');
+        } finally {
+            setSaving(false);
+        }
+    };
+
+    // FIX: Add inline types for props to make `name` and `onChange` optional, preventing type errors on read-only rows.
+    const InfoRow = ({ label, value, name, onChange, edit, type = "text" }: { label: any; value: any; name?: any; onChange?: any; edit: any; type?: string; }) => (
+        <div className="grid grid-cols-3 gap-4 items-center">
+            <label className="text-gray-500 dark:text-gray-400 font-medium col-span-1">{label}</label>
+            {edit ? (
+                <input type={type} name={name} value={value} onChange={onChange} className="col-span-2 w-full px-3 py-1.5 border rounded-md dark:bg-gray-600 dark:border-gray-500" />
+            ) : (
+                <p className="font-semibold dark:text-white col-span-2 break-words">{value}</p>
+            )}
+        </div>
+    );
+
     return (
         <div className="p-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-6">My Profile</h2>
+            <div className="flex justify-between items-center mb-6">
+                <h2 className="text-xl font-bold text-gray-800 dark:text-white">My Profile</h2>
+                {!editMode && <button onClick={() => setEditMode(true)} className="flex items-center gap-2 text-sm font-semibold bg-white dark:bg-gray-800 px-3 py-2 rounded-lg shadow-sm text-westcoast-blue"><Edit size={16}/> Edit Profile</button>}
+            </div>
             <div className="bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-sm flex flex-col items-center">
                 <div className="relative mb-4">
                     <Avatar user={user} size="w-24 h-24 text-3xl" />
@@ -625,12 +689,34 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
                 </div>
                 <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{user.fullName}</h3>
                 <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
-                <div className="mt-6 w-full space-y-4 text-sm bg-gray-50 dark:bg-gray-700 p-4 rounded-lg">
-                    <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Account Number</span><span className="font-mono font-semibold dark:text-white">{user.accountNumber}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Phone</span><span className="font-semibold dark:text-white">{user.phone}</span></div>
-                    <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Country</span><span className="font-semibold dark:text-white">{user.country}</span></div>
+                <div className="mt-6 w-full space-y-4 text-sm">
+                    <form onSubmit={handleSave}>
+                        <InfoRow label="Full Name" name="fullName" value={formData.fullName} onChange={handleFormChange} edit={editMode} />
+                        <InfoRow label="Email" value={formData.email} edit={false} />
+                        <InfoRow label="Phone" name="phone" value={formData.phone} onChange={handleFormChange} edit={editMode} type="tel"/>
+                        <InfoRow label="Address" name="address" value={formData.address} onChange={handleFormChange} edit={editMode} />
+                        <InfoRow label="State" name="state" value={formData.state} onChange={handleFormChange} edit={editMode} />
+                        <InfoRow label="Country" name="country" value={formData.country} onChange={handleFormChange} edit={editMode} />
+                        <div className="border-t dark:border-gray-700 my-4"></div>
+                        <InfoRow label="Account Number" value={formData.accountNumber} edit={false} />
+                        <InfoRow label="Currency" value={formData.currencyCode} edit={false} />
+                        
+                        {error && <p className="mt-4 text-sm text-center text-red-600">{error}</p>}
+
+                        {editMode && (
+                            <div className="flex gap-4 mt-6">
+                                <button type="button" onClick={() => { setEditMode(false); setFormData(user); }} className="w-full py-2 bg-gray-200 dark:bg-gray-600 font-semibold rounded-lg">Cancel</button>
+                                <button type="submit" disabled={saving} className="w-full py-2 bg-westcoast-blue text-white font-semibold rounded-lg disabled:opacity-50 flex justify-center items-center">{saving ? <Loader2 className="animate-spin" /> : 'Save Changes'}</button>
+                            </div>
+                        )}
+                    </form>
                 </div>
-                {error && <p className="mt-4 text-sm text-red-600">{error}</p>}
+                 {!editMode && (
+                    <button onClick={signOut} className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors">
+                        <LogOut size={18} />
+                        Log Out
+                    </button>
+                )}
             </div>
         </div>
     );
@@ -805,6 +891,7 @@ const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-12 h-12', textClass = 'text-lg' }) => {
     const getInitials = (name: string) => {
+        if (!name) return '';
         const names = name.split(' ');
         if (names.length > 1) return `${names[0][0]}${names[names.length - 1][0]}`.toUpperCase();
         return name.substring(0, 2).toUpperCase();

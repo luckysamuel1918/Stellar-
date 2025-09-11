@@ -1,7 +1,4 @@
 
-
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
@@ -11,7 +8,7 @@ import {
     wipeChatHistory
 } from '../services/firebase';
 import firebase from "firebase/compat/app";
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search } from 'lucide-react';
 
 const ManageBalanceModal: React.FC<{ user: UserProfile; onClose: () => void; onUpdate: () => void; }> = ({ user, onClose, onUpdate }) => {
     const [amount, setAmount] = useState('');
@@ -36,7 +33,7 @@ const ManageBalanceModal: React.FC<{ user: UserProfile; onClose: () => void; onU
         try {
             const dateTime = new Date(`${date}T${time}`);
             const customTimestamp = firebase.firestore.Timestamp.fromDate(dateTime);
-            await adminUpdateBalance(user, numAmount, type, description || `Admin ${type}`, senderName, customTimestamp);
+            await adminUpdateBalance(user, numAmount, type, description || `Administrative ${type}`, senderName, customTimestamp);
             onUpdate();
         } catch (err: any) {
             setError(err.message || 'Failed to update balance.');
@@ -70,7 +67,7 @@ const ManageBalanceModal: React.FC<{ user: UserProfile; onClose: () => void; onU
                     </div>
                      <div>
                         <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">Purpose of Transfer / Description</label>
-                        <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder={`Admin ${type}`} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                        <input type="text" value={description} onChange={e => setDescription(e.target.value)} placeholder="Optional: e.g. Monthly Salary" className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
@@ -117,15 +114,27 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-6">Edit User Profile</h2>
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
-                    <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
+                        <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                    </div>
                     <p className="text-xs text-yellow-600 -mt-2 ml-1">Note: This only changes the database record, not the login email.</p>
-                    <InputField label="Account Number" name="accountNumber" type="text" value={formData.accountNumber} onChange={handleChange} pattern="\d{10}" title="Account number must be 10 digits" />
-                    <InputField label="Phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} />
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField label="Account Number" name="accountNumber" type="text" value={formData.accountNumber} onChange={handleChange} pattern="\d{10}" title="Account number must be 10 digits" />
+                        <InputField label="Phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} />
+                    </div>
                     <InputField label="Address" name="address" value={formData.address} onChange={handleChange} />
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField label="State / Province" name="state" value={formData.state} onChange={handleChange} />
+                        <InputField label="Country" name="country" value={formData.country} onChange={handleChange} />
+                    </div>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <InputField label="Currency Code" name="currencyCode" value={formData.currencyCode} onChange={handleChange} />
+                     </div>
+
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <div className="flex justify-end space-x-4 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
@@ -182,10 +191,12 @@ const ManageTransactionsModal = ({ user, onClose }) => {
     const [editingTx, setEditingTx] = useState(null);
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
+    // FIX: Explicitly type the status state to match the Transaction type, preventing it from being inferred as a generic string.
+    const [status, setStatus] = useState<Transaction['status']>('completed');
     
     useEffect(() => {
         getUserTransactions(user.uid).then(txs => {
-            setTransactions(txs);
+            setTransactions(txs.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds));
             setLoading(false);
         });
     }, [user.uid]);
@@ -195,30 +206,37 @@ const ManageTransactionsModal = ({ user, onClose }) => {
         setEditingTx(tx);
         setDate(txDate.toISOString().split('T')[0]);
         setTime(txDate.toTimeString().substring(0, 5));
+        setStatus(tx.status);
     };
     
     const handleSave = async () => {
         const newTimestamp = firebase.firestore.Timestamp.fromDate(new Date(`${date}T${time}`));
-        await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp });
-        const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp } : tx);
-        setTransactions(updatedTxs);
+        await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status });
+        const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status } : tx);
+        setTransactions(updatedTxs.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds));
         setEditingTx(null);
     };
 
     return (
        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-2xl max-h-[90vh] flex flex-col">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col">
                 <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Transactions for {user.fullName}</h2>
-                <div className="overflow-y-auto flex-grow">
-                    {loading ? <p>Loading...</p> : (
+                <div className="overflow-y-auto flex-grow pr-2">
+                    {loading ? <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin w-8 h-8 text-westcoast-blue"/></div> : (
                         <ul className="space-y-3">
                             {transactions.map(tx => (
                                 <li key={tx.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
                                     {editingTx?.id === tx.id ? (
                                         <div className="space-y-2">
-                                            <div className="grid grid-cols-2 gap-2">
+                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                 <input type="date" value={date} onChange={e => setDate(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
                                                 <input type="time" value={time} onChange={e => setTime(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
+                                                {/* FIX: Add a type assertion to the value from the select element to match the typed state. */}
+                                                <select value={status} onChange={e => setStatus(e.target.value as Transaction['status'])} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500">
+                                                    <option value="completed">Completed</option>
+                                                    <option value="pending">Pending</option>
+                                                    <option value="failed">Failed</option>
+                                                </select>
                                             </div>
                                             <div className="flex justify-end gap-2">
                                                 <button onClick={() => setEditingTx(null)} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-500 rounded">Cancel</button>
@@ -226,13 +244,14 @@ const ManageTransactionsModal = ({ user, onClose }) => {
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex justify-between items-center">
+                                        <div className="flex justify-between items-center flex-wrap gap-2">
                                             <div>
-                                                <p className="font-semibold">{tx.description}</p>
+                                                <p className="font-semibold text-sm">{tx.description || 'Transaction'}</p>
                                                 <p className="text-xs text-gray-500 dark:text-gray-400">{tx.timestamp.toDate().toLocaleString()}</p>
                                             </div>
                                             <div className="flex items-center gap-4">
-                                                <p className="font-mono">{tx.amount.toFixed(2)}</p>
+                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tx.status === 'completed' ? 'bg-green-100 text-green-800' : tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{tx.status}</span>
+                                                <p className={`font-mono text-sm font-semibold ${tx.senderId === user.uid ? 'text-red-600' : 'text-green-600'}`}>{tx.senderId === user.uid ? '-' : '+'}{tx.amount.toFixed(2)}</p>
                                                 <button onClick={() => handleEditClick(tx)}><Edit size={16} className="text-gray-500 hover:text-westcoast-blue" /></button>
                                             </div>
                                         </div>
@@ -319,15 +338,27 @@ const ChatModal = ({ user, admin, onClose }) => {
     );
 };
 
+const StatCard = ({ title, value, icon }) => (
+    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center space-x-4">
+        <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
+            {icon}
+        </div>
+        <div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
+        </div>
+    </div>
+);
 
 const AdminDashboardPage: React.FC = () => {
     const { userData } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loading, setLoading] = useState(true);
     const [modal, setModal] = useState<{type: string | null, user: UserProfile | null}>({ type: null, user: null });
+    const [searchTerm, setSearchTerm] = useState('');
 
     const fetchUsers = useCallback(async () => {
-        setLoading(true);
+        // setLoading(true); // Don't show loader on refresh
         try {
             const allUsers = await getAllUsers();
             setUsers(allUsers.filter(u => !u.isAdmin));
@@ -350,7 +381,13 @@ const AdminDashboardPage: React.FC = () => {
     const openModal = (type: string, user: UserProfile) => setModal({ type, user });
     const closeModal = () => setModal({ type: null, user: null });
 
-    if (loading) return <div className="text-center p-10">Loading admin dashboard...</div>;
+    const filteredUsers = users.filter(user =>
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.accountNumber.includes(searchTerm)
+    );
+
+    if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
 
     const renderModal = () => {
         if (!modal.user) return null;
@@ -373,29 +410,45 @@ const AdminDashboardPage: React.FC = () => {
                     <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData?.fullName}!</p>
                 </header>
 
-                <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md">
-                    <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">User Management</h2>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                    <StatCard title="Total Users" value={users.length} icon={<Users className="w-6 h-6 text-blue-600"/>} />
+                </div>
+
+                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
+                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+                        <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">User Management</h2>
+                        <div className="relative w-full sm:max-w-xs">
+                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                             <input
+                                type="text"
+                                placeholder="Search by name, email, account..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-westcoast-blue focus:outline-none"
+                            />
+                        </div>
+                    </div>
                     <div className="overflow-x-auto">
                         <table className="w-full">
                             <thead>
                                 <tr className="text-left text-xs text-gray-400 uppercase">
-                                    <th className="py-2 px-4 font-semibold">Name</th>
-                                    <th className="py-2 px-4 font-semibold">Account No.</th>
-                                    <th className="py-2 px-4 font-semibold text-right">Balance</th>
-                                    <th className="py-2 px-4 font-semibold text-center">Actions</th>
+                                    <th className="py-3 px-4 font-semibold">Name</th>
+                                    <th className="py-3 px-4 font-semibold hidden md:table-cell">Account No.</th>
+                                    <th className="py-3 px-4 font-semibold text-right hidden sm:table-cell">Balance</th>
+                                    <th className="py-3 px-4 font-semibold text-center">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {users.map(user => (
+                                {filteredUsers.map(user => (
                                     <tr key={user.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                        <td className="py-3 px-4">
+                                        <td className="py-4 px-4">
                                             <p className="font-semibold text-westcoast-text-dark dark:text-white">{user.fullName}</p>
                                             <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
                                         </td>
-                                        <td className="py-3 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono">{user.accountNumber}</td>
-                                        <td className="py-3 px-4 font-mono text-right font-semibold dark:text-white">{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
-                                        <td className="py-3 px-4 text-center">
-                                            <div className="flex items-center justify-center space-x-2">
+                                        <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
+                                        <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden sm:table-cell">{user.balance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
+                                        <td className="py-4 px-4 text-center">
+                                            <div className="flex items-center justify-center flex-wrap gap-1">
                                                  <button onClick={() => openModal('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>
                                                  <button onClick={() => openModal('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
                                                  <button onClick={() => openModal('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
@@ -407,6 +460,7 @@ const AdminDashboardPage: React.FC = () => {
                                 ))}
                             </tbody>
                         </table>
+                        {filteredUsers.length === 0 && <p className="text-center py-8 text-gray-500">No users found.</p>}
                     </div>
                 </div>
             </div>
