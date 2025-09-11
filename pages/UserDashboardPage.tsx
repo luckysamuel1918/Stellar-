@@ -9,7 +9,7 @@ import {
 import { 
     Bell, MessageSquare, CreditCard, Send, Globe, ClipboardCheck, History,
     ArrowUpRight, ArrowDownLeft, CheckCircle, Home, User as UserIcon, Landmark,
-    X, Loader2, Camera, Banknote, ShieldCheck, Edit, Lock, Mail
+    X, Loader2, UploadCloud, Banknote, ShieldCheck, Edit, Lock, Mail
 } from 'lucide-react';
 import { WestcoastLogo } from '../components/icons';
 
@@ -404,51 +404,62 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
     );
 };
 
+const FileUploadBox = ({ side, image, onFileChange }: { side: 'front' | 'back', image: string | null, onFileChange: (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => void }) => {
+    const inputId = `check-${side}-upload`;
+    return (
+        <div>
+            <label htmlFor={inputId} className="cursor-pointer">
+                <div className={`aspect-video rounded-lg border-2 border-dashed flex flex-col items-center justify-center text-center p-4 transition-colors ${image ? 'border-green-500 bg-green-50' : 'border-gray-300 hover:border-westcoast-blue hover:bg-blue-50'}`}>
+                    {image ? (
+                        <img src={image} alt={`${side} of check preview`} className="max-h-full max-w-full object-contain rounded" />
+                    ) : (
+                        <>
+                            <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
+                            <span className="text-sm font-semibold text-gray-700">Upload {side.charAt(0).toUpperCase() + side.slice(1)}</span>
+                            <span className="text-xs text-gray-500">Click to select file</span>
+                        </>
+                    )}
+                </div>
+            </label>
+            <input id={inputId} type="file" accept="image/*" className="hidden" onChange={(e) => onFileChange(e, side)} />
+            {image && <p className="text-xs text-green-600 text-center mt-1 flex items-center justify-center gap-1"><CheckCircle size={14} /> Image selected</p>}
+        </div>
+    );
+};
 
 const CheckDepositModal = ({ user, onClose, onSuccess }) => {
-    const [step, setStep] = useState(1); // 1: camera, 2: amount, 3: success
-    const [frontImage, setFrontImage] = useState(null);
-    const [backImage, setBackImage] = useState(null);
+    const [step, setStep] = useState(1); // 1: upload & amount, 2: success
+    const [frontImage, setFrontImage] = useState<string | null>(null);
+    const [backImage, setBackImage] = useState<string | null>(null);
     const [amount, setAmount] = useState('');
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const videoRef = useRef(null);
-    const canvasRef = useRef(null);
-    const streamRef = useRef(null);
 
-    const startCamera = async () => {
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
-            if (videoRef.current) videoRef.current.srcObject = stream;
-            streamRef.current = stream;
-        } catch (err) {
-            setError('Camera access is required for this feature. Please enable it in your browser settings.');
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => {
+        const file = e.target.files?.[0];
+        if (file) {
+            if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                setError('File is too large. Max size is 5MB.');
+                return;
+            }
+            const reader = new FileReader();
+            reader.onloadend = () => {
+                if (side === 'front') {
+                    setFrontImage(reader.result as string);
+                } else {
+                    setBackImage(reader.result as string);
+                }
+            };
+            reader.readAsDataURL(file);
+            setError('');
         }
-    };
-    
-    const stopCamera = () => {
-        if(streamRef.current) {
-            streamRef.current.getTracks().forEach(track => track.stop());
-        }
-    };
-
-    useEffect(() => {
-        startCamera();
-        return () => stopCamera();
-    }, []);
-
-    const captureImage = () => {
-        const video = videoRef.current;
-        const canvas = canvasRef.current;
-        canvas.width = video.videoWidth;
-        canvas.height = video.videoHeight;
-        canvas.getContext('2d').drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
-        const imageData = canvas.toDataURL('image/jpeg');
-        if (!frontImage) setFrontImage(imageData);
-        else setBackImage(imageData);
     };
 
     const handleDeposit = async () => {
+        if (!frontImage || !backImage) {
+            setError("Please upload both front and back images of the check.");
+            return;
+        }
         const numAmount = parseFloat(amount);
         if(isNaN(numAmount) || numAmount <= 0) {
             setError("Please enter a valid amount.");
@@ -458,7 +469,7 @@ const CheckDepositModal = ({ user, onClose, onSuccess }) => {
         setError('');
         try {
             await adminUpdateBalance(user, numAmount, 'credit', 'Mobile Check Deposit');
-            setStep(3);
+            setStep(2);
             setTimeout(() => {
                 onSuccess();
                 onClose();
@@ -480,32 +491,25 @@ const CheckDepositModal = ({ user, onClose, onSuccess }) => {
                  {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-4">{error}</p>}
 
                 {step === 1 && (
-                    <div className="space-y-4">
-                        <div className="bg-black rounded-lg overflow-hidden aspect-video">
-                            <video ref={videoRef} autoPlay playsInline className="w-full h-full object-cover"></video>
-                            <canvas ref={canvasRef} className="hidden"></canvas>
+                    <form onSubmit={(e) => { e.preventDefault(); handleDeposit(); }} className="space-y-4">
+                        <p className="text-sm text-gray-600">Please upload clear images of the front and back of your signed check.</p>
+                        
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <FileUploadBox side="front" image={frontImage} onFileChange={handleFileChange} />
+                            <FileUploadBox side="back" image={backImage} onFileChange={handleFileChange} />
                         </div>
-                        <p className="text-center font-semibold text-gray-700">
-                            { !frontImage ? 'Capture Front of Check' : 'Capture Back of Check' }
-                        </p>
-                        <button onClick={captureImage} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
-                            <Camera/> Capture
-                        </button>
-                        {frontImage && backImage && (
-                            <button onClick={() => setStep(2)} className="w-full bg-green-500 text-white font-bold py-3 rounded-lg">Continue</button>
-                        )}
-                    </div>
-                )}
-                {step === 2 && (
-                    <div className="space-y-4">
-                        <p className="text-sm text-gray-600">Please enter the amount written on the check.</p>
-                        <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" className="w-full p-3 border rounded-lg" />
-                        <button onClick={handleDeposit} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center">
+
+                        <div className="pt-2">
+                             <label htmlFor="deposit-amount" className="block text-sm font-medium text-gray-700 mb-1">Check Amount</label>
+                             <input id="deposit-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`Amount in ${user.currencyCode}`} className="w-full p-3 border rounded-lg" required/>
+                        </div>
+                        
+                        <button type="submit" disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center">
                             {loading ? <Loader2 className="animate-spin" /> : 'Deposit Check'}
                         </button>
-                    </div>
+                    </form>
                 )}
-                {step === 3 && (
+                {step === 2 && (
                     <div className="text-center py-8">
                         <CheckCircle className="w-16 h-16 text-green-500 mx-auto mb-4" />
                         <h3 className="text-2xl font-bold">Deposit Successful!</h3>
