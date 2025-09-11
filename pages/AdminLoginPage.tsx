@@ -13,8 +13,12 @@ const AdminLoginPage: React.FC = () => {
   const { user, userData, loading: authLoading } = useAuth();
 
   useEffect(() => {
-    if (!authLoading && user && userData?.isAdmin) {
-      navigate('/admin-dashboard', { replace: true });
+    if (!authLoading && user && userData) {
+      if (userData.isAdmin) {
+        navigate('/admin-dashboard', { replace: true });
+      } else {
+        navigate('/user-dashboard', { replace: true });
+      }
     }
   }, [user, userData, authLoading, navigate]);
 
@@ -39,7 +43,7 @@ const AdminLoginPage: React.FC = () => {
     }
   };
   
-  if (authLoading || (user && userData?.isAdmin)) {
+  if (authLoading || (user && userData)) {
       return <div className="flex items-center justify-center min-h-[calc(100vh-200px)]"><p>Loading...</p></div>;
   }
 
