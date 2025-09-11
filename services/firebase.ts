@@ -206,7 +206,8 @@ export const getUserTransactions = async (uid: string): Promise<Transaction[]> =
     receiverSnapshot.forEach((doc) => transactionsMap.set(doc.id, { id: doc.id, ...doc.data() } as Transaction));
 
     const uniqueTransactions = Array.from(transactionsMap.values());
-    return uniqueTransactions.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
+    // FIX: Made sort function null-safe to prevent errors in Safari.
+    return uniqueTransactions.sort((a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0));
 }
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {

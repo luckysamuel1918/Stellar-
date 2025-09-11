@@ -641,8 +641,8 @@ const CheckDepositModal = ({ user, onClose, onSuccess }) => {
 };
 
 const TransactionHistoryView = ({ transactions, currentUserId, currencyCode }) => (
-    <div className="p-4">
-        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Transaction History</h2>
+    <div className="p-4 md:p-0">
+        <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 md:hidden">Transaction History</h2>
         <div className="space-y-3">
             {transactions.length > 0 ? transactions.map(tx => (
                 <TransactionItem key={tx.id} tx={tx} currentUserId={currentUserId} currencyCode={currencyCode} />
@@ -720,10 +720,10 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
     );
 
     return (
-        <div className="p-4">
+        <div className="p-4 md:p-0">
             <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-sm">
                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-0">My Profile</h2>
+                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-0 md:hidden">My Profile</h2>
                     {!editMode && <button onClick={() => setEditMode(true)} className="flex items-center justify-center gap-2 text-sm font-semibold bg-blue-50 dark:bg-blue-900/40 px-4 py-2 rounded-lg text-westcoast-blue self-start sm:self-center"><Edit size={16}/> Edit Profile</button>}
                 </div>
 
@@ -761,7 +761,7 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
                                 <button type="submit" disabled={saving} className="w-full py-2 bg-westcoast-blue text-white font-semibold rounded-lg disabled:opacity-50 flex justify-center items-center">{saving ? <Loader2 className="animate-spin" /> : 'Save Changes'}</button>
                             </div>
                         ) : (
-                             <button onClick={signOut} className="mt-6 w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors">
+                             <button onClick={signOut} className="md:hidden mt-6 w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors">
                                 <LogOut size={18} />
                                 Log Out
                             </button>
@@ -776,8 +776,8 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
 
 const CardsView: React.FC<{ user: UserProfile }> = ({ user }) => {
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">My Cards</h2>
+        <div className="p-4 md:p-0">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 md:hidden">My Cards</h2>
             <div className="space-y-6">
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm text-center">
                     <p className="text-gray-500 dark:text-gray-400">No cards have been added yet.</p>
@@ -826,8 +826,8 @@ const PaymentsView: React.FC<{ user: UserProfile, onSuccess: () => void }> = ({ 
     };
     
     return (
-        <div className="p-4">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Bill Payments</h2>
+        <div className="p-4 md:p-0">
+            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 md:hidden">Bill Payments</h2>
             <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
                 <form onSubmit={handlePayment} className="space-y-4">
                     <div>
@@ -853,7 +853,7 @@ const PaymentsView: React.FC<{ user: UserProfile, onSuccess: () => void }> = ({ 
 
 const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
     <>
-        <header className="p-4 flex justify-between items-center">
+        <header className="p-4 flex justify-between items-center md:hidden">
             <div className="flex items-center gap-3">
                 <Avatar user={userData} />
                 <div>
@@ -866,7 +866,7 @@ const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
             </div>
         </header>
 
-        <section className="px-4">
+        <section className="px-4 md:px-0">
             <div className="p-5 rounded-2xl bg-gradient-to-br from-westcoast-blue to-westcoast-accent text-white shadow-lg">
                 <p className="text-sm opacity-80">Available Balance</p>
                 <div className="flex justify-between items-center mt-1">
@@ -879,9 +879,9 @@ const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
             </div>
         </section>
 
-        <section className="p-4">
+        <section className="p-4 md:p-0 md:mt-8">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-3">Quick Actions</h2>
-            <div className="grid grid-cols-4 gap-3 text-center">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 <QuickActionButton onClick={() => onActionClick('transfer')} icon={<Send className="w-6 h-6 text-westcoast-blue"/>} label="Domestic" />
                 <QuickActionButton onClick={() => onActionClick('international')} icon={<Globe className="w-6 h-6 text-westcoast-blue"/>} label="International" />
                 <QuickActionButton onClick={() => onActionClick('deposit')} icon={<ClipboardCheck className="w-6 h-6 text-westcoast-blue"/>} label="Deposit" />
@@ -889,7 +889,7 @@ const DashboardHomeView = ({ userData, transactions, onActionClick }) => (
             </div>
         </section>
 
-        <section className="p-4">
+        <section className="p-4 md:p-0 md:mt-8">
             <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-3">Recent Transactions</h2>
             <div className="space-y-3">
                 {transactions.length > 0 ? transactions.slice(0, 5).map(tx => (
@@ -915,20 +915,20 @@ const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }>
         return name.substring(0, 2).toUpperCase();
     };
 
-    if (user.photoURL) {
+    if (user?.photoURL) {
         return <img src={user.photoURL} alt={user.fullName} className={`${size} rounded-full object-cover bg-gray-200 dark:bg-gray-700`} />;
     }
     
     return (
         <div className={`${size} rounded-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-gray-500 dark:text-gray-300 font-bold ${textClass}`}>
-            {getInitials(user.fullName)}
+            {getInitials(user?.fullName)}
         </div>
     );
 };
 
 const QuickActionButton: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; }> = ({ icon, label, onClick }) => (
-    <button onClick={onClick} className="flex flex-col items-center justify-center space-y-2">
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm">
+    <button onClick={onClick} className="flex flex-col items-center justify-center space-y-2 group">
+        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm group-hover:bg-blue-50 dark:group-hover:bg-gray-700 transition-colors">
             {icon}
         </div>
         <p className="text-xs font-semibold text-gray-700 dark:text-gray-300">{label}</p>
@@ -991,7 +991,7 @@ const TransactionItem: React.FC<{ tx: Transaction, currentUserId: string, curren
     );
 };
 
-const NavItem: React.FC<{ icon: React.ReactElement<{ className?: string }>; label: string; active?: boolean; onClick: () => void; }> = ({ icon, label, active, onClick }) => (
+const BottomNavItem: React.FC<{ icon: React.ReactElement<{ className?: string }>; label: string; active?: boolean; onClick: () => void; }> = ({ icon, label, active, onClick }) => (
     <button onClick={onClick} className="flex flex-col items-center justify-center space-y-1 w-16">
         <div className={`p-2 rounded-lg ${active ? 'bg-blue-100 dark:bg-blue-900/50' : ''}`}>
              {React.cloneElement(icon, { className: `w-6 h-6 ${active ? 'text-westcoast-blue' : 'text-gray-500 dark:text-gray-400'}` })}
@@ -999,6 +999,14 @@ const NavItem: React.FC<{ icon: React.ReactElement<{ className?: string }>; labe
         <p className={`text-xs font-medium ${active ? 'text-westcoast-blue' : 'text-gray-500 dark:text-gray-400'}`}>{label}</p>
     </button>
 );
+
+const SideNavItem: React.FC<{ icon: React.ReactElement<{ className?: string }>; label: string; active?: boolean; onClick: () => void; }> = ({ icon, label, active, onClick }) => (
+    <button onClick={onClick} className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${active ? 'bg-blue-50 dark:bg-blue-900/50 text-westcoast-blue' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}>
+        {React.cloneElement(icon, { className: 'w-5 h-5' })}
+        <span>{label}</span>
+    </button>
+);
+
 
 // --- MAIN DASHBOARD PAGE ---
 
@@ -1015,8 +1023,6 @@ const UserDashboardPage: React.FC = () => {
 
     const fetchData = useCallback(async () => {
         if (user) {
-            // Don't set loading to true on refresh to avoid screen flicker
-            // setLoading(true); 
             try {
                 const profile = await getUserData(user.uid);
                 setUserData(profile);
@@ -1044,7 +1050,6 @@ const UserDashboardPage: React.FC = () => {
             const resetTimer = () => {
                 clearTimeout(inactivityTimer);
                 inactivityTimer = window.setTimeout(() => {
-                    // Logout after 5 minutes of inactivity
                     signOut();
                 }, 5 * 60 * 1000); // 5 minutes
             };
@@ -1055,7 +1060,7 @@ const UserDashboardPage: React.FC = () => {
                 window.addEventListener(event, resetTimer, { passive: true });
             });
 
-            resetTimer(); // Start the timer
+            resetTimer();
 
             return () => {
                 clearTimeout(inactivityTimer);
@@ -1099,6 +1104,14 @@ const UserDashboardPage: React.FC = () => {
             </div>
         );
     };
+
+    const navItems = [
+        { id: 'home', label: 'Home', icon: <Home /> },
+        { id: 'cards', label: 'Cards', icon: <CreditCard /> },
+        { id: 'payments', label: 'Payments', icon: <Receipt /> },
+        { id: 'history', label: 'History', icon: <History /> },
+        { id: 'me', label: 'Me', icon: <UserIcon /> },
+    ];
     
     const renderContent = () => {
         if(loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin w-8 h-8 text-westcoast-blue"/></div>
@@ -1120,24 +1133,68 @@ const UserDashboardPage: React.FC = () => {
         <div className="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans">
             {userData?.isSuspended && <SuspendedAccountModal onLogout={signOut} />}
             
-            <div className={`max-w-md mx-auto bg-gray-100 dark:bg-gray-900 pb-24 ${userData?.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
+            <div className={`flex ${userData?.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
                 
-                {showTransferModal && userData && <DomesticTransferModal user={userData} onClose={() => setShowTransferModal(false)} onSuccess={fetchData} />}
-                {showDepositModal && userData && <CheckDepositModal user={userData} onClose={() => setShowDepositModal(false)} onSuccess={fetchData} />}
-                {showInternationalModal && userData && <InternationalTransferModal user={userData} onClose={() => setShowInternationalModal(false)} onSuccess={fetchData} />}
-                
-                {renderContent()}
+                {/* --- Sidebar for Desktop --- */}
+                <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 min-h-screen p-4 flex-shrink-0">
+                    <div className="mb-8">
+                        <WestcoastLogo />
+                    </div>
+                    <nav className="flex-grow space-y-2">
+                        {navItems.map(item => (
+                            <SideNavItem 
+                                key={item.id}
+                                icon={item.icon}
+                                label={item.label}
+                                active={activeView === item.id}
+                                onClick={() => setActiveView(item.id)}
+                            />
+                        ))}
+                    </nav>
+                    <div className="mt-auto">
+                        <SideNavItem icon={<LogOut />} label="Log Out" active={false} onClick={signOut} />
+                    </div>
+                </aside>
 
+                {/* --- Main Content --- */}
+                <main className="flex-1">
+                    <div className="max-w-4xl mx-auto md:px-8 md:py-6">
+                        {/* Desktop Header */}
+                        {userData && (
+                            <header className="hidden md:flex justify-between items-center mb-8 px-4 md:px-0">
+                                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+                                    {navItems.find(item => item.id === activeView)?.label || 'Dashboard'}
+                                </h1>
+                                <div className="flex items-center gap-4">
+                                    <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
+                                    <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
+                                    <Avatar user={userData} size="w-10 h-10"/>
+                                </div>
+                            </header>
+                        )}
+
+                        {showTransferModal && userData && <DomesticTransferModal user={userData} onClose={() => setShowTransferModal(false)} onSuccess={fetchData} />}
+                        {showDepositModal && userData && <CheckDepositModal user={userData} onClose={() => setShowDepositModal(false)} onSuccess={fetchData} />}
+                        {showInternationalModal && userData && <InternationalTransferModal user={userData} onClose={() => setShowInternationalModal(false)} onSuccess={fetchData} />}
+                        
+                        {renderContent()}
+                    </div>
+                </main>
             </div>
 
+            {/* --- Bottom Bar for Mobile --- */}
             {!userData?.isSuspended && (
-                 <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700">
+                 <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700">
                     <div className="flex justify-around py-2">
-                        <NavItem icon={<Home />} label="Home" active={activeView === 'home'} onClick={() => setActiveView('home')} />
-                        <NavItem icon={<CreditCard />} label="Cards" active={activeView === 'cards'} onClick={() => setActiveView('cards')} />
-                        <NavItem icon={<Receipt />} label="Payments" active={activeView === 'payments'} onClick={() => setActiveView('payments')} />
-                        <NavItem icon={<History />} label="History" active={activeView === 'history'} onClick={() => setActiveView('history')} />
-                        <NavItem icon={<UserIcon />} label="Me" active={activeView === 'me'} onClick={() => setActiveView('me')} />
+                         {navItems.map(item => (
+                            <BottomNavItem 
+                                key={item.id}
+                                icon={item.icon}
+                                label={item.label}
+                                active={activeView === item.id}
+                                onClick={() => setActiveView(item.id)}
+                            />
+                        ))}
                     </div>
                 </footer>
             )}

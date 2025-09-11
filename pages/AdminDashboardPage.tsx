@@ -225,7 +225,7 @@ const ManageTransactionsModal = ({ user, onClose }) => {
     
     useEffect(() => {
         getUserTransactions(user.uid).then(txs => {
-            setTransactions(txs.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds));
+            setTransactions(txs);
             setLoading(false);
         });
     }, [user.uid]);
@@ -242,7 +242,7 @@ const ManageTransactionsModal = ({ user, onClose }) => {
         const newTimestamp = firebase.firestore.Timestamp.fromDate(new Date(`${date}T${time}`));
         await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status });
         const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status } : tx);
-        setTransactions(updatedTxs.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds));
+        setTransactions(updatedTxs.sort((a, b) => (b.timestamp?.seconds ?? 0) - (a.timestamp?.seconds ?? 0)));
         setEditingTx(null);
     };
 
