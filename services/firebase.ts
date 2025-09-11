@@ -118,11 +118,14 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
 
     // Debit sender
     const senderRef = db.doc(`users/${sender.uid}`);
-    batch.update(senderRef, { balance: sender.balance - amount });
+    batch.update(senderRef, { balance: firebase.firestore.FieldValue.increment(-amount) });
 
-    // Credit receiver
-    const receiverRef = db.doc(`users/${receiver.uid}`);
-    batch.update(receiverRef, { balance: receiver.balance + amount });
+    // Credit receiver only if they are an internal user (don't have a special UID prefix)
+    const isInternal = receiver.uid && !receiver.uid.startsWith('EXT-') && !receiver.uid.startsWith('INTL-');
+    if (isInternal) {
+        const receiverRef = db.doc(`users/${receiver.uid}`);
+        batch.update(receiverRef, { balance: firebase.firestore.FieldValue.increment(amount) });
+    }
     
     await batch.commit();
 

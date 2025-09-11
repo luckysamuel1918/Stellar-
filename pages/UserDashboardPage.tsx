@@ -151,6 +151,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const [step, setStep] = useState(1);
     const [recipient, setRecipient] = useState(null);
     const [accountNumber, setAccountNumber] = useState('');
+    const [beneficiaryName, setBeneficiaryName] = useState('');
     const [bankName, setBankName] = useState(localBanks[0]);
     const [routingNumber, setRoutingNumber] = useState('');
     const [amount, setAmount] = useState('');
@@ -178,6 +179,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         e.preventDefault();
         setError('');
         if (!accountNumber || !/^\d{10}$/.test(accountNumber)) return setError('Account number must be 10 digits.');
+        if (!beneficiaryName) return setError('Beneficiary name is required.');
         if (!routingNumber || !/^\d{9}$/.test(routingNumber)) return setError('Routing number must be 9 digits.');
         if (total <= 0) return setError('Please enter a valid amount.');
         if (total > user.balance) return setError('Insufficient funds for this transfer.');
@@ -185,9 +187,29 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         setLoading(true);
         try {
             const recipientData = await getUserByAccountNumber(accountNumber);
-            if (!recipientData) return setError('Beneficiary account not found.');
-            if (recipientData.uid === user.uid) return setError("You cannot transfer to your own account.");
-            setRecipient(recipientData);
+            if (recipientData && recipientData.uid === user.uid) {
+                setLoading(false);
+                return setError("You cannot transfer to your own account.");
+            }
+
+            const finalRecipient = recipientData || {
+                uid: `EXT-${accountNumber}`,
+                fullName: beneficiaryName,
+                accountNumber: accountNumber,
+                // Dummy data for the rest of the profile
+                balance: 0,
+                email: '',
+                phone: '',
+                address: '',
+                state: '',
+                country: '',
+                currencyCode: user.currencyCode,
+                isAdmin: false,
+                createdAt: new Date(),
+                customerId: '',
+            };
+            
+            setRecipient(finalRecipient);
             setStep(2);
         } catch (e) {
             setError('An error occurred while verifying the account.');
@@ -252,6 +274,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                         <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Beneficiary Details</h3>
                         <div className="space-y-4">
                            <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account Number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                           <input value={beneficiaryName} onChange={e => setBeneficiaryName(e.target.value)} placeholder="Beneficiary Full Name" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
                            <select value={bankName} onChange={e => setBankName(e.target.value)} className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base"><option disabled>Bank Name</option>{localBanks.map(b=><option key={b}>{b}</option>)}</select>
                            <input value={routingNumber} onChange={e => setRoutingNumber(e.target.value)} placeholder="Routing Number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
                         </div>
