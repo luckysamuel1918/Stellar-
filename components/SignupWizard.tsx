@@ -1,9 +1,10 @@
 
+
 import React, { useState } from 'react';
 import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { auth, createUserProfileDocument } from '../services/firebase';
-// FIX: Changed react-router-dom import to namespace import to fix module resolution errors.
-import * as ReactRouterDom from 'react-router-dom';
+// FIX: Changed react-router-dom import to a named import to fix module resolution errors.
+import { useNavigate } from 'react-router-dom';
 
 const countryData = [
     { name: 'Afghanistan', currency: 'AFN' },
@@ -175,7 +176,7 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
     const [accountNumber, setAccountNumber] = useState('');
     const [loading, setLoading] = useState(false);
     const [firebaseError, setFirebaseError] = useState('');
-    const navigate = ReactRouterDom.useNavigate();
+    const navigate = useNavigate();
 
     const validateStep = () => {
         const newErrors: any = {};

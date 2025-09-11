@@ -1,7 +1,8 @@
 
+
 import React, { useState } from 'react';
-// FIX: Changed react-router-dom import to namespace import to fix module resolution errors.
-import * as ReactRouterDom from 'react-router-dom';
+// FIX: Changed react-router-dom import to a named import to fix module resolution errors.
+import { useNavigate } from 'react-router-dom';
 import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
 import SignupWizard from '../components/SignupWizard';
 
@@ -20,7 +21,7 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = ReactRouterDom.useNavigate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
