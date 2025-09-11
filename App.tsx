@@ -1,9 +1,4 @@
 
-
-
-
-
-
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
@@ -235,16 +230,18 @@ const App: React.FC = () => {
     return (
         <AuthProvider>
             <Routes>
+                {/* Public routes with Header and Footer */}
                 <Route element={<AppLayout />}>
                     <Route path="/" element={<HomePage />} />
                     <Route path="/user" element={<AuthPage />} />
-                    <Route path="/admin-login" element={<AdminLoginPage />} />
-                    <Route
-                        path="/admin-dashboard"
-                        element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
-                    />
                 </Route>
                 
+                {/* Standalone routes without the main layout */}
+                <Route path="/admin-login" element={<AdminLoginPage />} />
+                <Route
+                    path="/admin-dashboard"
+                    element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
+                />
                 <Route
                     path="/user-dashboard"
                     element={<UserRoute><UserDashboardPage /></UserRoute>}

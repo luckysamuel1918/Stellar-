@@ -1,8 +1,8 @@
 
-
-import React from 'react';
+import React, { useEffect } from 'react';
 import { ChevronRight, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../App';
 
 const MarketTicker: React.FC = () => {
     const stocks = [
@@ -173,6 +173,21 @@ const FinalCTASection: React.FC = () => {
 
 
 const HomePage: React.FC = () => {
+    const { userData, loading } = useAuth();
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        // If the user is an admin, redirect them away from the homepage
+        if (!loading && userData?.isAdmin) {
+            navigate('/admin-dashboard', { replace: true });
+        }
+    }, [userData, loading, navigate]);
+
+    // Prevent rendering the homepage for admins while redirecting
+    if (loading || userData?.isAdmin) {
+        return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    }
+
     return (
         <>
             <HeroSection />
