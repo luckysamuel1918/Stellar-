@@ -128,7 +128,9 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
               className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white"
             />
           </div>
-          {error && <p className="text-sm text-red-600">{error}</p>}
+          <div className="min-h-[20px]">
+            {error && <p className="text-sm text-red-600">{error}</p>}
+          </div>
           <div>
             <button
               type="submit"

@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState } from 'react';
 import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { auth, createUserProfileDocument } from '../services/firebase';
@@ -153,7 +154,9 @@ const InputField = ({ id, label, error, ...props }) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
     <input id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}`} />
-    {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    <div className="min-h-[20px]">
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   </div>
 );
 
@@ -163,7 +166,9 @@ const SelectField = ({ id, label, error, children, ...props }) => (
     <select id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}`}>
       {children}
     </select>
-    {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    <div className="min-h-[20px]">
+      {error && <p className="mt-1 text-xs text-red-600">{error}</p>}
+    </div>
   </div>
 );
 

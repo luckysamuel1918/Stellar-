@@ -4,7 +4,7 @@ import { UserProfile, Transaction } from '../types';
 import { 
     getUserData, getUserTransactions, getUserByAccountNumber, 
     performTransfer, adminUpdateBalance,
-    uploadProfilePicture, updateUserProfile
+    updateUserProfile, generateAndSendOtp, verifyOtp, deleteOtp
 } from '../services/firebase';
 import { 
     Bell, MessageSquare, CreditCard, Send, Globe, ClipboardCheck, History,
@@ -83,7 +83,6 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const [purpose, setPurpose] = useState('');
     const [fee, setFee] = useState(0);
     const [total, setTotal] = useState(0);
-    const [generatedOtp, setGeneratedOtp] = useState('');
     const [userOtp, setUserOtp] = useState(new Array(6).fill(""));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -123,22 +122,38 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         }
     };
     
-    const handleProceedToOtp = () => {
-        const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        setGeneratedOtp(newOtp);
-        console.log(`[DEVELOPMENT] Simulated OTP for ${user.email}: ${newOtp}`);
-        setStep(3);
+    const handleProceedToOtp = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            await generateAndSendOtp(user.uid, user.email, user.fullName);
+            setStep(3);
+        } catch(e) {
+            setError("Failed to send OTP. Please try again later.");
+            console.error("OTP Error:", e);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleTransfer = async () => {
-        if (userOtp.join('') !== generatedOtp) {
-            return setError('Invalid OTP. Please try again.');
+        const otpString = userOtp.join('');
+        if (otpString.length !== 6) {
+            return setError("Please enter the 6-digit OTP.");
         }
         setLoading(true);
         setError('');
         try {
+            const otpResult = await verifyOtp(user.uid, otpString);
+            if (!otpResult.valid) {
+                setError(otpResult.message);
+                setLoading(false);
+                return;
+            }
+
             const transaction = await performTransfer(user, recipient, parseFloat(amount), purpose);
             if (transaction) {
+                await deleteOtp(user.uid);
                 setReceiptData(transaction);
                 setStep(4);
             } else {
@@ -164,16 +179,16 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                     <div>
                         <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Beneficiary Details</h3>
                         <div className="space-y-4">
-                           <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account Number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                           <select value={bankName} onChange={e => setBankName(e.target.value)} className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option disabled>Bank Name</option>{localBanks.map(b=><option key={b}>{b}</option>)}</select>
-                           <input value={routingNumber} onChange={e => setRoutingNumber(e.target.value)} placeholder="Routing Number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                           <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account Number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                           <select value={bankName} onChange={e => setBankName(e.target.value)} className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base"><option disabled>Bank Name</option>{localBanks.map(b=><option key={b}>{b}</option>)}</select>
+                           <input value={routingNumber} onChange={e => setRoutingNumber(e.target.value)} placeholder="Routing Number" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
                         </div>
                     </div>
                      <div>
                         <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Transfer Details</h3>
                          <div className="space-y-4">
-                            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                            <input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Purpose of Transfer" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                            <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                            <input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Purpose of Transfer" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
                         </div>
                         {amount && <div className="text-sm text-gray-600 dark:text-gray-300 mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-1">
                             <div className="flex justify-between"><span>Transfer Fee:</span><span className="font-medium">{formatCurrency(fee, user.currencyCode)}</span></div>
@@ -192,6 +207,7 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                     <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-left space-y-3">
                         <div><span className="text-gray-500 dark:text-gray-400 text-sm">To:</span><p className="font-semibold dark:text-white">{recipient.fullName}</p></div>
                         <div><span className="text-gray-500 dark:text-gray-400 text-sm">Bank:</span><p className="font-semibold dark:text-white">{bankName}</p></div>
+                        <div><span className="text-gray-500 dark:text-gray-400 text-sm">Routing Number:</span><p className="font-semibold dark:text-white">{routingNumber}</p></div>
                         <div className="border-t my-2 dark:border-gray-600"></div>
                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Amount:</span><span className="font-semibold dark:text-white">{formatCurrency(parseFloat(amount), user.currencyCode)}</span></div>
                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Fee:</span><span className="font-semibold dark:text-white">{formatCurrency(fee, user.currencyCode)}</span></div>
@@ -199,16 +215,18 @@ const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                     </div>
                     <div className="flex gap-4">
                         <button onClick={() => setStep(1)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
-                        <button onClick={handleProceedToOtp} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg">Confirm</button>
+                        <button onClick={handleProceedToOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
+                           {loading ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                        </button>
                     </div>
                 </div>
             )}
             
             {step === 3 && (
                 <div className="text-center">
-                    <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <div className="flex justify-center mb-4"><Avatar user={user} size="w-16 h-16" /></div>
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-white">OTP Verification</h2>
-                    <p className="text-gray-600 dark:text-gray-300 mt-2">A 6-digit code has been sent to your registered contact method.</p>
+                    <p className="text-gray-600 dark:text-gray-300 mt-2 px-2">Hello, {user.fullName}, we've sent a 6-digit verification code to your ({user.phone}) and ({user.email})</p>
                     <OtpInput otp={userOtp} setOtp={setUserOtp} />
                     {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
                     <button onClick={handleTransfer} disabled={loading} className="w-full bg-green-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
@@ -248,7 +266,6 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
     const [purpose, setPurpose] = useState('');
     const [fee, setFee] = useState(0);
     const [total, setTotal] = useState(0);
-    const [generatedOtp, setGeneratedOtp] = useState('');
     const [userOtp, setUserOtp] = useState(new Array(6).fill(""));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
@@ -275,22 +292,35 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
         setStep(2);
     };
 
-    const handleProceedToOtp = () => {
-        const newOtp = Math.floor(100000 + Math.random() * 900000).toString();
-        setGeneratedOtp(newOtp);
-        console.log(`[DEVELOPMENT] Simulated OTP for ${user.email}: ${newOtp}`);
-        setStep(3);
+    const handleProceedToOtp = async () => {
+        setLoading(true);
+        setError('');
+        try {
+            await generateAndSendOtp(user.uid, user.email, user.fullName);
+            setStep(3);
+        } catch(e) {
+            setError("Failed to send OTP. Please try again later.");
+            console.error("OTP Error:", e);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const handleTransfer = async () => {
-        if (userOtp.join('') !== generatedOtp) {
-            return setError('Invalid OTP. Please try again.');
+        const otpString = userOtp.join('');
+        if (otpString.length !== 6) {
+            return setError("Please enter the 6-digit OTP.");
         }
         setLoading(true);
         setError('');
         try {
-            // NOTE: This uses the domestic transfer logic for simulation. A real app would have a different backend function.
-            // FIX: The tempRecipient object must satisfy the UserProfile interface for the simulation.
+            const otpResult = await verifyOtp(user.uid, otpString);
+            if (!otpResult.valid) {
+                setError(otpResult.message);
+                setLoading(false);
+                return;
+            }
+
             const selectedCountryData = countryData.find(c => c.name === country);
             const tempRecipient: UserProfile = {
                 uid: `INTL-${swiftBic}`,
@@ -305,9 +335,11 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                 currencyCode: selectedCountryData?.currency || '',
                 isAdmin: false,
                 createdAt: new Date(),
+                customerId: '',
             };
             const transaction = await performTransfer(user, tempRecipient, parseFloat(amount), purpose);
             if (transaction) {
+                await deleteOtp(user.uid);
                 setReceiptData(transaction);
                 setStep(4);
             } else {
@@ -330,21 +362,21 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                          <div>
                             <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Beneficiary Details</h3>
                             <div className="space-y-4">
-                               <input value={beneficiaryName} onChange={e => setBeneficiaryName(e.target.value)} placeholder="Beneficiary Full Name" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                               <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account Number / IBAN" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                               <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank Name" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                               <input value={swiftBic} onChange={e => setSwiftBic(e.target.value)} placeholder="SWIFT / BIC Code" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                               <select value={country} onChange={e => setCountry(e.target.value)} className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white"><option disabled>Country</option>{countryData.map(c=><option key={c.name}>{c.name}</option>)}</select>
+                               <input value={beneficiaryName} onChange={e => setBeneficiaryName(e.target.value)} placeholder="Beneficiary Full Name" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                               <input value={accountNumber} onChange={e => setAccountNumber(e.target.value)} placeholder="Account Number / IBAN" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                               <input value={bankName} onChange={e => setBankName(e.target.value)} placeholder="Bank Name" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                               <input value={swiftBic} onChange={e => setSwiftBic(e.target.value)} placeholder="SWIFT / BIC Code" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
+                               <select value={country} onChange={e => setCountry(e.target.value)} className="w-full p-3 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base"><option disabled>Country</option>{countryData.map(c=><option key={c.name}>{c.name}</option>)}</select>
                             </div>
                         </div>
                          <div>
                             <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Transfer Details</h3>
                             <div className="space-y-4">
                                 <div className="relative">
-                                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" className="w-full p-3 border rounded-lg pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                                    <input type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder="Amount" className="w-full p-3 border rounded-lg pl-10 dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
                                     <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">{user.currencyCode}</span>
                                 </div>
-                                <input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Purpose of Transfer" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                                <input value={purpose} onChange={e => setPurpose(e.target.value)} placeholder="Purpose of Transfer" className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white text-base" required />
                             </div>
                             {amount && <div className="text-sm text-gray-600 dark:text-gray-300 mt-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg space-y-1">
                                 <div className="flex justify-between"><span>Transfer Fee:</span><span className="font-medium">{formatCurrency(fee, user.currencyCode)}</span></div>
@@ -369,15 +401,17 @@ const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                         </div>
                          <div className="flex gap-4">
                             <button onClick={() => setStep(1)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
-                            <button onClick={handleProceedToOtp} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg">Confirm</button>
+                            <button onClick={handleProceedToOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
+                                {loading ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                            </button>
                         </div>
                     </div>
                 )}
                  {step === 3 && (
                     <div className="text-center">
-                        <Lock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                        <div className="flex justify-center mb-4"><Avatar user={user} size="w-16 h-16" /></div>
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">OTP Verification</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mt-2">A 6-digit code has been sent to your registered contact method.</p>
+                        <p className="text-gray-600 dark:text-gray-300 mt-2 px-2">Hello, {user.fullName}, we've sent a 6-digit verification code to your ({user.phone}) and ({user.email})</p>
                         <OtpInput otp={userOtp} setOtp={setUserOtp} />
                         {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
                          <button onClick={handleTransfer} disabled={loading} className="w-full bg-green-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
@@ -542,27 +576,40 @@ const ProfileView: React.FC<{ user: UserProfile, onUpdate: () => void }> = ({ us
     const [uploading, setUploading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         const file = event.target.files?.[0];
         if (!file) return;
 
-        if (file.size > 2 * 1024 * 1024) { // 2MB limit
-            setError('File is too large. Max size is 2MB.');
+        if (file.size > 1 * 1024 * 1024) { // 1MB limit for Base64
+            setError('File is too large. Max size is 1MB.');
             return;
         }
 
         setUploading(true);
         setError('');
-        try {
-            const downloadURL = await uploadProfilePicture(user.uid, file);
-            await updateUserProfile(user.uid, { photoURL: downloadURL });
-            onUpdate(); // This will call fetchData in parent
-        } catch (err) {
-            setError('Failed to upload picture. Please try again.');
-            console.error(err);
-        } finally {
+
+        const reader = new FileReader();
+        reader.onloadend = async () => {
+            try {
+                const base64String = reader.result as string;
+                if (!base64String) {
+                    throw new Error("File could not be converted to Base64.");
+                }
+                await updateUserProfile(user.uid, { photoURL: base64String });
+                onUpdate();
+            } catch (err) {
+                const message = err instanceof Error ? err.message : 'An unknown error occurred.';
+                setError(`Failed to upload picture. ${message}`);
+                console.error(err);
+            } finally {
+                setUploading(false);
+            }
+        };
+        reader.onerror = () => {
+            setError('Failed to read file for conversion.');
             setUploading(false);
-        }
+        };
+        reader.readAsDataURL(file);
     };
 
     return (

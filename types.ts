@@ -11,6 +11,7 @@ export interface UserProfile {
   country: string;
   currencyCode: string;
   accountNumber: string;
+  customerId: string;
   balance: number;
   isAdmin: boolean;
   createdAt: any; // Firestore timestamp

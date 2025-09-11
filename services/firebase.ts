@@ -2,7 +2,6 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/firestore";
-import "firebase/compat/storage";
 import { UserProfile, Transaction } from "../types";
 
 const firebaseConfig = {
@@ -22,7 +21,6 @@ if (!firebase.apps.length) {
 }
 const auth: firebase.auth.Auth = firebase.auth();
 const db = firebase.firestore();
-const storage = firebase.storage();
 const Timestamp = firebase.firestore.Timestamp;
 
 // FIX: Refactored to use Firebase v8 API.
@@ -45,6 +43,7 @@ export const createUserProfileDocument = async (userAuth: firebase.User, additio
         country,
         currencyCode,
         accountNumber,
+        customerId: `WCB-${userAuth.uid.slice(-8).toUpperCase()}`,
         pin, // Note: Storing a PIN directly is insecure. This is for demonstration only.
         balance: 1000, // Starting balance for new users for demo purposes
         isAdmin: email === 'admin@westcoasttrust.com', // Example admin setup
@@ -210,15 +209,6 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
     await userRef.update(data);
 };
 
-export const uploadProfilePicture = async (uid: string, file: File): Promise<string> => {
-    if (!uid || !file) throw new Error("User ID and file are required.");
-    const filePath = `profile_pictures/${uid}/${file.name}`;
-    const fileRef = storage.ref(filePath);
-    const snapshot = await fileRef.put(file);
-    const downloadURL = await snapshot.ref.getDownloadURL();
-    return downloadURL;
-};
-
 export const adminDeleteUser = async (uid: string): Promise<void> => {
     if (!uid) throw new Error("User ID is required.");
     const batch = db.batch();
@@ -277,6 +267,68 @@ export const wipeChatHistory = async (userId:string) => {
     snapshot.docs.forEach(doc => batch.delete(doc.ref));
     await batch.commit();
 };
+
+export const generateAndSendOtp = async (uid: string, email: string, name: string): Promise<void> => {
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpRef = db.doc(`otps/${uid}`);
+    const expiresAt = firebase.firestore.Timestamp.fromMillis(Date.now() + 5 * 60 * 1000); // 5 minutes
+
+    await otpRef.set({
+        otp,
+        email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+        expiresAt,
+        verified: false
+    });
+
+    // Use EmailJS to send the email
+    const templateParams = {
+        otp_code: otp,
+        to_email: email,
+        to_name: name,
+        from_email: 'support@westcoasttrusts.com'
+    };
+
+    await (window as any).emailjs.send(
+        'service_ddqz3a6', // Service ID
+        'template_zsv0alp', // Template ID
+        templateParams,
+        'VYfq3eW-NMpJkm35M' // Public Key
+    );
+};
+
+export const verifyOtp = async (uid: string, userOtp: string): Promise<{ valid: boolean; message: string; }> => {
+    const otpRef = db.doc(`otps/${uid}`);
+    const snapshot = await otpRef.get();
+
+    if (!snapshot.exists) {
+        return { valid: false, message: 'OTP not found. Please request a new one.' };
+    }
+
+    const data = snapshot.data();
+    if (!data) {
+        return { valid: false, message: 'Invalid OTP document.' };
+    }
+    const now = Date.now();
+
+    if (data.expiresAt.toMillis() < now) {
+        return { valid: false, message: 'OTP has expired. Please request a new one.' };
+    }
+
+    if (data.otp !== userOtp) {
+        return { valid: false, message: 'Invalid OTP. Please try again.' };
+    }
+
+    // OTP is valid
+    await otpRef.update({ verified: true });
+    return { valid: true, message: 'OTP verified successfully.' };
+};
+
+export const deleteOtp = async (uid: string): Promise<void> => {
+    const otpRef = db.doc(`otps/${uid}`);
+    await otpRef.delete();
+};
+
 
 // FIX: Export auth and db objects directly for v8 compatibility.
 // Other functions like signInWithEmailAndPassword are now methods on the auth object.

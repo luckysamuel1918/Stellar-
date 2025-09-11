@@ -1,6 +1,7 @@
 
 
 
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
@@ -121,6 +122,8 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <InputField label="Full Name" name="fullName" value={formData.fullName} onChange={handleChange} />
                     <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
+                    <p className="text-xs text-yellow-600 -mt-2 ml-1">Note: This only changes the database record, not the login email.</p>
+                    <InputField label="Account Number" name="accountNumber" type="text" value={formData.accountNumber} onChange={handleChange} pattern="\d{10}" title="Account number must be 10 digits" />
                     <InputField label="Phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} />
                     <InputField label="Address" name="address" value={formData.address} onChange={handleChange} />
                     {error && <p className="text-red-500 text-sm">{error}</p>}
