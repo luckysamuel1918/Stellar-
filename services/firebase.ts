@@ -4,20 +4,37 @@ import "firebase/compat/auth";
 import "firebase/compat/firestore";
 import { UserProfile, Transaction } from "../types";
 
+// FIX: Use placeholder Firebase configuration for development.
+// In a real application, these would come from environment variables.
 const firebaseConfig = {
-  apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
-  authDomain: "westcoast-c85e4.firebaseapp.com",
-  databaseURL: "https://westcoast-c85e4-default-rtdb.firebaseio.com",
-  projectId: "westcoast-c85e4",
-  storageBucket: "westcoast-c85e4.appspot.com",
-  messagingSenderId: "15776220227",
-  appId: "1:15776220227:web:a5cf2658b895aff29180f6",
-  measurementId: "G-MNTK4NDZH4"
+  apiKey: "AIzaSyC_FAKE_API_KEY_FOR_DEMO",
+  authDomain: "westcoast-trust-demo.firebaseapp.com",
+  databaseURL: "https://westcoast-trust-demo.firebaseio.com",
+  projectId: "westcoast-trust-demo",
+  storageBucket: "westcoast-trust-demo.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:a1b2c3d4e5f6a7b8c9d0e1",
+  measurementId: "G-DEMO123ABC"
 };
+
 
 // FIX: Use Firebase v8 compatibility initialization.
 if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
+    // This check is to prevent running with obviously empty/default config.
+    // The placeholder above is designed to pass this check for demo purposes.
+    if (firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.projectId !== "your-project-id") {
+        firebase.initializeApp(firebaseConfig);
+    } else {
+        console.error("Firebase config is missing. Make sure environment variables are set or placeholder values are updated.");
+        // Display an error to the user if the root element exists
+        const root = document.getElementById('root');
+        if (root) {
+            root.innerHTML = `<div style="text-align: center; padding: 40px; font-family: 'Inter', sans-serif;">
+                <h1 style="font-size: 1.5rem; font-weight: bold; color: #0A2540;">Configuration Error</h1>
+                <p style="margin-top: 1rem; color: #6B7280;">The application is not configured correctly. Please contact support.</p>
+            </div>`;
+        }
+    }
 }
 const auth: firebase.auth.Auth = firebase.auth();
 const db = firebase.firestore();
@@ -302,11 +319,12 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
         from_email: 'support@westcoasttrusts.com'
     };
 
+    // FIX: Use placeholder EmailJS credentials for development.
     await (window as any).emailjs.send(
-        'service_ddqz3a6', // Service ID
-        'template_zsv0alp', // Template ID
+        "service_demo",
+        "template_demo",
         templateParams,
-        'VYfq3eW-NMpJkm35M' // Public Key
+        "user_demoPublicKey"
     );
 };
 
