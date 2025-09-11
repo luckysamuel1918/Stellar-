@@ -62,7 +62,7 @@ const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bank
                     {/* Summary */}
                     <div className="text-center my-8">
                         <p className="text-gray-500 dark:text-gray-400">Amount Sent</p>
-                        <p className="text-5xl font-bold text-gray-900 dark:text-white tracking-tighter">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
+                        <p className="text-4xl font-bold text-gray-900 dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
                         <div className="inline-flex items-center gap-2 mt-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 font-semibold px-3 py-1 rounded-full text-sm">
                             <CheckCircle size={16}/>
                             <span>Transaction Completed</span>
