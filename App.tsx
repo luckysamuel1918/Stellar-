@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
@@ -172,7 +166,7 @@ const Header: React.FC = () => {
                 </div>
                  <div className="md:hidden flex items-center space-x-2">
                     <ThemeToggleButton />
-                    <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu" className="p-2 rounded-full bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors">
+                    <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu" className="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                         <Menu className="h-6 w-6 text-westcoast-dark dark:text-white" />
                     </button>
                 </div>

@@ -1014,7 +1014,7 @@ const NavItem: React.FC<{ icon: React.ReactElement<{ className?: string }>; labe
 // --- MAIN DASHBOARD PAGE ---
 
 const UserDashboardPage: React.FC = () => {
-    const { user } = useAuth();
+    const { user, signOut } = useAuth();
     const [userData, setUserData] = useState<UserProfile | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loading, setLoading] = useState(true);
@@ -1048,6 +1048,35 @@ const UserDashboardPage: React.FC = () => {
         fetchData();
     }, [fetchData]);
 
+    useEffect(() => {
+        if (userData?.isSuspended) {
+            let inactivityTimer: number;
+
+            const resetTimer = () => {
+                clearTimeout(inactivityTimer);
+                inactivityTimer = window.setTimeout(() => {
+                    // Logout after 5 minutes of inactivity
+                    signOut();
+                }, 5 * 60 * 1000); // 5 minutes
+            };
+
+            const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+            
+            activityEvents.forEach(event => {
+                window.addEventListener(event, resetTimer, { passive: true });
+            });
+
+            resetTimer(); // Start the timer
+
+            return () => {
+                clearTimeout(inactivityTimer);
+                activityEvents.forEach(event => {
+                    window.removeEventListener(event, resetTimer);
+                });
+            };
+        }
+    }, [userData, signOut]);
+
     const handleQuickAction = (action: string) => {
         switch(action) {
             case 'transfer': setShowTransferModal(true); break;
@@ -1057,6 +1086,30 @@ const UserDashboardPage: React.FC = () => {
             default: break;
         }
     }
+
+    const SuspendedAccountModal: React.FC<{ onLogout: () => void }> = ({ onLogout }) => {
+        return (
+            <div className="fixed inset-0 bg-blue-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+                <div className="bg-white/90 dark:bg-gray-800/90 p-6 sm:p-8 rounded-2xl max-w-md w-full text-center shadow-2xl border border-gray-200 dark:border-gray-700">
+                    <h1 className="text-2xl font-bold text-gray-800 dark:text-white">We locked your account due to unusual activity.</h1>
+                    <p className="text-gray-600 dark:text-gray-300 mt-4">
+                        Email us to unlock it. If you're a commercial client, reach out to your servicing team.
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400 mt-4">
+                        Please note that you will not be able to access your account information, documents or statements online or on the mobile app until we unlock your account.
+                    </p>
+                    <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                        <a href="mailto:support@westcoasttrusts.com" className="w-full px-4 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90 transition-opacity flex-1">
+                            Email us
+                        </a>
+                        <button onClick={onLogout} className="w-full px-4 py-3 font-bold text-gray-700 bg-gray-200 dark:bg-gray-600 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors flex-1">
+                            Logout
+                        </button>
+                    </div>
+                </div>
+            </div>
+        );
+    };
     
     const renderContent = () => {
         if(loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin w-8 h-8 text-westcoast-blue"/></div>
@@ -1077,7 +1130,9 @@ const UserDashboardPage: React.FC = () => {
     
     return (
         <div className="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans">
-            <div className="max-w-md mx-auto bg-gray-100 dark:bg-gray-900 pb-24">
+            {userData?.isSuspended && <SuspendedAccountModal onLogout={signOut} />}
+            
+            <div className={`max-w-md mx-auto bg-gray-100 dark:bg-gray-900 pb-24 ${userData?.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
                 
                 {showTransferModal && userData && <DomesticTransferModal user={userData} onClose={() => setShowTransferModal(false)} onSuccess={fetchData} />}
                 {showDepositModal && userData && <CheckDepositModal user={userData} onClose={() => setShowDepositModal(false)} onSuccess={fetchData} />}
@@ -1087,15 +1142,17 @@ const UserDashboardPage: React.FC = () => {
 
             </div>
 
-            <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700">
-                <div className="flex justify-around py-2">
-                    <NavItem icon={<Home />} label="Home" active={activeView === 'home'} onClick={() => setActiveView('home')} />
-                    <NavItem icon={<CreditCard />} label="Cards" active={activeView === 'cards'} onClick={() => setActiveView('cards')} />
-                    <NavItem icon={<Send />} label="Payments" active={activeView === 'payments'} onClick={() => setActiveView('payments')} />
-                    <NavItem icon={<Landmark />} label="Loan" active={activeView === 'loan'} onClick={() => setActiveView('loan')} />
-                    <NavItem icon={<UserIcon />} label="Me" active={activeView === 'me'} onClick={() => setActiveView('me')} />
-                </div>
-            </footer>
+            {!userData?.isSuspended && (
+                 <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700">
+                    <div className="flex justify-around py-2">
+                        <NavItem icon={<Home />} label="Home" active={activeView === 'home'} onClick={() => setActiveView('home')} />
+                        <NavItem icon={<CreditCard />} label="Cards" active={activeView === 'cards'} onClick={() => setActiveView('cards')} />
+                        <NavItem icon={<Send />} label="Payments" active={activeView === 'payments'} onClick={() => setActiveView('payments')} />
+                        <NavItem icon={<Landmark />} label="Loan" active={activeView === 'loan'} onClick={() => setActiveView('loan')} />
+                        <NavItem icon={<UserIcon />} label="Me" active={activeView === 'me'} onClick={() => setActiveView('me')} />
+                    </div>
+                </footer>
+            )}
         </div>
     );
 };

@@ -14,6 +14,7 @@ export interface UserProfile {
   customerId: string;
   balance: number;
   isAdmin: boolean;
+  isSuspended?: boolean;
   createdAt: any; // Firestore timestamp
   photoURL?: string;
 }

@@ -47,6 +47,7 @@ export const createUserProfileDocument = async (userAuth: firebase.User, additio
         pin, // Note: Storing a PIN directly is insecure. This is for demonstration only.
         balance: 1000, // Starting balance for new users for demo purposes
         isAdmin: email === 'admin@westcoasttrust.com', // Example admin setup
+        isSuspended: false,
         createdAt,
         photoURL: '',
       };
@@ -159,8 +160,9 @@ export const adminUpdateBalance = async (
 ) => {
     const batch = db.batch();
     const userRef = db.doc(`users/${user.uid}`);
-    // FIX: Explicitly cast balance to a Number to prevent calculation errors.
-    const newBalance = type === 'credit' ? Number(user.balance) + amount : Number(user.balance) - amount;
+    // FIX: Make balance calculation more robust to handle potential non-numeric values from Firestore.
+    const currentBalance = Number(user.balance) || 0;
+    const newBalance = type === 'credit' ? currentBalance + amount : currentBalance - amount;
     
     if(newBalance < 0) throw new Error("Debit amount exceeds user balance.");
 

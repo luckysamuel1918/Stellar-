@@ -1,5 +1,3 @@
-
-
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
@@ -115,7 +113,13 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
 
-    const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+    const handleChange = (e) => {
+        const { name, value, type, checked } = e.target;
+        setFormData({
+            ...formData,
+            [name]: type === 'checkbox' ? checked : value
+        });
+    };
     
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -154,6 +158,11 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                          <InputField label="Currency Code" name="currencyCode" value={formData.currencyCode} onChange={handleChange} />
                      </div>
+
+                    <div className="flex items-center justify-between mt-4 p-3 bg-red-50 dark:bg-red-900/40 rounded-lg">
+                        <label htmlFor="isSuspended" className="font-medium text-red-700 dark:text-red-300 flex items-center gap-2"><AlertTriangle size={18}/> Suspend Account</label>
+                        <input id="isSuspended" name="isSuspended" type="checkbox" checked={!!formData.isSuspended} onChange={handleChange} className="h-5 w-5 rounded text-red-600 focus:ring-red-500 border-gray-300" />
+                    </div>
 
                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <div className="flex justify-end space-x-4 pt-4">
@@ -468,7 +477,14 @@ const AdminDashboardPage: React.FC = () => {
                                             <div className="flex items-center gap-3">
                                                 <Avatar user={user} />
                                                 <div>
-                                                    <p className="font-semibold text-westcoast-text-dark dark:text-white">{user.fullName}</p>
+                                                    <p className="font-semibold text-westcoast-text-dark dark:text-white flex items-center gap-2">
+                                                        {user.fullName}
+                                                        {user.isSuspended && (
+                                                            <span className="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
+                                                                SUSPENDED
+                                                            </span>
+                                                        )}
+                                                    </p>
                                                     <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
                                                 </div>
                                             </div>
