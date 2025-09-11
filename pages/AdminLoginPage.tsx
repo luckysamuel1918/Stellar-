@@ -32,12 +32,12 @@ const AdminLoginPage: React.FC = () => {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-stellar-bg">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-stellar-dark">Admin Sign In</h2>
+        <h2 className="text-3xl font-bold text-center text-westcoast-dark">Admin Sign In</h2>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-stellar-text-light">
+            <label htmlFor="email" className="block text-sm font-medium text-westcoast-text-light">
               Admin Email
             </label>
             <input
@@ -48,11 +48,11 @@ const AdminLoginPage: React.FC = () => {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-stellar-blue focus:border-stellar-blue"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-stellar-text-light">
+            <label htmlFor="password" className="block text-sm font-medium text-westcoast-text-light">
               Password
             </label>
             <input
@@ -63,7 +63,7 @@ const AdminLoginPage: React.FC = () => {
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-stellar-blue focus:border-stellar-blue"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue"
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -71,7 +71,7 @@ const AdminLoginPage: React.FC = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-4 py-3 font-bold text-white bg-stellar-blue rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stellar-blue disabled:opacity-50"
+              className="w-full px-4 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-westcoast-blue disabled:opacity-50"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>

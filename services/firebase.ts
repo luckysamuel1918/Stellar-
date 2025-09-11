@@ -45,7 +45,7 @@ export const createUserProfileDocument = async (userAuth: firebase.User, additio
         accountNumber,
         pin, // Note: Storing a PIN directly is insecure. This is for demonstration only.
         balance: 1000, // Starting balance for new users for demo purposes
-        isAdmin: email === 'admin@lloyds.com', // Example admin setup
+        isAdmin: email === 'admin@westcoast.com', // Example admin setup
         createdAt,
       };
       await userRef.set(newUserProfile);
@@ -146,7 +146,7 @@ export const adminUpdateBalance = async (user: UserProfile, amount: number, type
         status: 'completed',
         type,
         senderId: 'admin',
-        senderName: 'Lloyds Bank Admin',
+        senderName: 'Westcoast Trust Bank Admin',
         receiverId: user.uid,
         receiverName: user.fullName,
         receiverAccountNumber: user.accountNumber,

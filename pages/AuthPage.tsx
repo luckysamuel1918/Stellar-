@@ -1,7 +1,8 @@
+
 import React, { useState } from 'react';
 // FIX: Changed react-router-dom import to namespace import to fix module resolution errors.
 import * as ReactRouterDom from 'react-router-dom';
-import { auth } from '../services/firebase';
+import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
 import SignupWizard from '../components/SignupWizard';
 
 const AuthPage: React.FC = () => {
@@ -15,7 +16,7 @@ const AuthPage: React.FC = () => {
 };
 
 const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch }) => {
-  const [email, setEmail] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
@@ -27,11 +28,37 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
     setError(null);
 
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
-      // Logic in App.tsx will redirect based on role
+      let userEmail = identifier;
+      
+      // Check if identifier is an account number (10 digits)
+      if (!identifier.includes('@') && /^\d{10}$/.test(identifier)) {
+        const userProfile = await getUserByAccountNumber(identifier);
+        if (userProfile) {
+          if (userProfile.isAdmin) {
+            setError("Admin accounts should use the admin sign-in page.");
+            setLoading(false);
+            return;
+          }
+          userEmail = userProfile.email;
+        } else {
+          setError("Invalid account number or password.");
+          setLoading(false);
+          return;
+        }
+      }
+
+      const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
+      const profile = await getUserData(userCredential.user!.uid);
+
+      if (profile && profile.isAdmin) {
+        setError('Admin accounts should use the admin sign-in page.');
+        await auth.signOut();
+      } else {
+        navigate('/user-dashboard'); // Redirect to user dashboard on success
+      }
     } catch (err: any) {
-      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password') {
-          setError("Invalid email or password.");
+      if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError("Invalid email/account number or password.");
       } else {
         setError(err.message);
       }
@@ -41,27 +68,32 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
   };
 
   return (
-    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-stellar-bg">
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg">
       <div className="w-full max-w-md p-8 space-y-6 bg-white rounded-xl shadow-lg">
-        <h2 className="text-3xl font-bold text-center text-stellar-dark">Sign In</h2>
+        <div className="text-center">
+            <h2 className="text-3xl font-bold text-westcoast-dark">Sign In</h2>
+            <p className="mt-2 text-sm text-westcoast-text-light">
+                Please use your registered email/account number and password.
+            </p>
+        </div>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-stellar-text-light">
-              Email Address
+            <label htmlFor="identifier" className="block text-sm font-medium text-westcoast-text-light">
+              Email or Account Number
             </label>
             <input
-              id="email"
-              name="email"
-              type="email"
-              autoComplete="email"
+              id="identifier"
+              name="identifier"
+              type="text"
+              autoComplete="username"
               required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-stellar-blue focus:border-stellar-blue"
+              value={identifier}
+              onChange={(e) => setIdentifier(e.target.value)}
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue"
             />
           </div>
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-stellar-text-light">
+            <label htmlFor="password" className="block text-sm font-medium text-westcoast-text-light">
               Password
             </label>
             <input
@@ -72,7 +104,7 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
               required
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-stellar-blue focus:border-stellar-blue"
+              className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue"
             />
           </div>
           {error && <p className="text-sm text-red-600">{error}</p>}
@@ -80,13 +112,13 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
             <button
               type="submit"
               disabled={loading}
-              className="w-full px-4 py-3 font-bold text-white bg-stellar-blue rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-stellar-blue disabled:opacity-50"
+              className="w-full px-4 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-westcoast-blue disabled:opacity-50"
             >
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
           <div className="text-sm text-center">
-            <button type="button" onClick={onSignupSwitch} className="font-medium text-stellar-blue hover:underline">
+            <button type="button" onClick={onSignupSwitch} className="font-medium text-westcoast-blue hover:underline">
               Don't have an account? Sign up
             </button>
           </div>

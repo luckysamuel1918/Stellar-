@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to namespace import to fix module resolution errors.
 import * as ReactRouterDom from 'react-router-dom';
@@ -8,7 +9,7 @@ import AuthPage from './pages/AuthPage';
 import UserDashboardPage from './pages/UserDashboardPage';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
-import { StellarLogo } from './components/icons';
+import { WestcoastLogo } from './components/icons';
 import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark } from 'lucide-react';
 
 // --- AUTH CONTEXT ---
@@ -60,6 +61,7 @@ export const useAuth = () => useContext(AuthContext);
 const Header: React.FC = () => {
     const { user, userData, signOut } = useAuth();
     const navigate = ReactRouterDom.useNavigate();
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleDashboardRedirect = () => {
       if(user && userData) {
@@ -79,50 +81,95 @@ const Header: React.FC = () => {
             <nav className="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div className="flex items-center space-x-8">
                     <ReactRouterDom.Link to="/">
-                        <StellarLogo />
+                        <WestcoastLogo />
                     </ReactRouterDom.Link>
-                    <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-stellar-text-light">
+                    <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-westcoast-text-light">
                         {navLinks.map(link => (
-                            <a key={link.name} href={link.href} className="hover:text-stellar-blue transition-colors flex items-center">
+                            <a key={link.name} href={link.href} className="hover:text-westcoast-blue transition-colors flex items-center">
                                 {link.icon}{link.name}
                             </a>
                         ))}
                     </div>
                 </div>
-                <div className="flex items-center space-x-2">
+                <div className="hidden md:flex items-center space-x-2">
                     {user ? (
                          <div className="flex items-center space-x-2">
-                             <button onClick={handleDashboardRedirect} className="bg-stellar-blue text-white font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-opacity flex items-center">
+                             <button onClick={handleDashboardRedirect} className="bg-westcoast-blue text-white font-semibold px-4 py-2 rounded-full text-sm hover:opacity-90 transition-opacity flex items-center">
                                 <UserIcon size={16} className="mr-2"/>
                                 <span>Dashboard</span>
                             </button>
-                            <button onClick={signOut} className="bg-gray-200 text-stellar-text-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-300 transition-colors flex items-center">
+                            <button onClick={signOut} className="bg-gray-200 text-westcoast-text-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-300 transition-colors flex items-center">
                                 <LogOut size={16} className="mr-2"/>
                                 <span>Log Out</span>
                             </button>
                         </div>
                     ) : (
                         <>
-                         <button onClick={() => navigate('/user')} className="text-stellar-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-100 transition-colors">
+                         <button onClick={() => navigate('/user')} className="text-westcoast-dark font-semibold px-4 py-2 rounded-full text-sm hover:bg-gray-100 transition-colors">
                             Sign In
                         </button>
-                        <button onClick={() => navigate('/user')} className="bg-stellar-dark text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-stellar-blue transition-colors">
+                        <button onClick={() => navigate('/user')} className="bg-westcoast-dark text-white font-semibold px-4 py-2 rounded-full text-sm hover:bg-westcoast-blue transition-colors">
                             Open an Account
                         </button>
                         </>
                     )}
                 </div>
+                 <div className="md:hidden">
+                    <button onClick={() => setIsMobileMenuOpen(true)} aria-label="Open menu">
+                        <Menu className="h-6 w-6 text-westcoast-dark" />
+                    </button>
+                </div>
             </nav>
+
+             {isMobileMenuOpen && (
+                 <div className="fixed inset-0 bg-white z-50 p-4 md:hidden">
+                    <div className="flex justify-between items-center mb-8">
+                        <WestcoastLogo />
+                        <button onClick={() => setIsMobileMenuOpen(false)} aria-label="Close menu">
+                            <X className="h-6 w-6 text-westcoast-dark" />
+                        </button>
+                    </div>
+                    <div className="flex flex-col space-y-4">
+                        {navLinks.map(link => (
+                             <a key={link.name} href={link.href} onClick={() => setIsMobileMenuOpen(false)} className="text-lg font-semibold text-westcoast-text-dark hover:text-westcoast-blue transition-colors flex items-center p-2 rounded-md">
+                                {link.icon}{link.name}
+                            </a>
+                        ))}
+                        <hr className="my-4" />
+                        {user ? (
+                            <div className="flex flex-col space-y-3">
+                                <button onClick={() => { handleDashboardRedirect(); setIsMobileMenuOpen(false); }} className="bg-westcoast-blue text-white font-semibold px-4 py-3 rounded-full text-base hover:opacity-90 transition-opacity flex items-center justify-center">
+                                    <UserIcon size={16} className="mr-2"/>
+                                    <span>Dashboard</span>
+                                </button>
+                                <button onClick={() => { signOut(); setIsMobileMenuOpen(false); }} className="bg-gray-200 text-westcoast-text-dark font-semibold px-4 py-3 rounded-full text-base hover:bg-gray-300 transition-colors flex items-center justify-center">
+                                    <LogOut size={16} className="mr-2"/>
+                                    <span>Log Out</span>
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col space-y-3">
+                                <button onClick={() => { navigate('/user'); setIsMobileMenuOpen(false); }} className="bg-gray-100 text-westcoast-dark font-semibold px-4 py-3 rounded-full text-base hover:bg-gray-200 transition-colors">
+                                    Sign In
+                                </button>
+                                <button onClick={() => { navigate('/user'); setIsMobileMenuOpen(false); }} className="bg-westcoast-dark text-white font-semibold px-4 py-3 rounded-full text-base hover:bg-westcoast-blue transition-colors">
+                                    Open an Account
+                                </button>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            )}
         </header>
     );
 };
 
 const Footer: React.FC = () => (
-    <footer className="bg-stellar-dark text-white">
+    <footer className="bg-westcoast-dark text-white">
         <div className="container mx-auto px-4 pt-16 pb-8">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
                 <div className="col-span-2 lg:col-span-1">
-                    <StellarLogo className="text-white" />
+                    <WestcoastLogo className="text-white" />
                     <p className="text-sm text-gray-400 mt-4">Your Financial Future, Elevated.</p>
                 </div>
                 {[{title: 'Personal', items: ['Checking', 'Savings', 'Credit Cards', 'Personal Loans']},
@@ -132,13 +179,13 @@ const Footer: React.FC = () => (
                     <div key={section.title}>
                         <h3 className="font-semibold mb-4">{section.title}</h3>
                         <ul className="space-y-3 text-sm text-gray-300">
-                            {section.items.map(item => <li key={item}><a href="#" className="hover:text-stellar-accent transition-colors">{item}</a></li>)}
+                            {section.items.map(item => <li key={item}><a href="#" className="hover:text-westcoast-accent transition-colors">{item}</a></li>)}
                         </ul>
                     </div>
                 ))}
             </div>
             <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-                 <p className="text-gray-400 mb-4 md:mb-0">&copy; {new Date().getFullYear()} Stellar Bank & Capital. All rights reserved.</p>
+                 <p className="text-gray-400 mb-4 md:mb-0">&copy; {new Date().getFullYear()} Westcoast Trust Bank. All rights reserved.</p>
                  <div className="flex items-center space-x-5">
                     <a href="#" className="text-gray-400 hover:text-white"><Twitter size={20}/></a>
                     <a href="#" className="text-gray-400 hover:text-white"><Facebook size={20}/></a>
