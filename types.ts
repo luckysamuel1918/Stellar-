@@ -14,6 +14,7 @@ export interface UserProfile {
   balance: number;
   isAdmin: boolean;
   createdAt: any; // Firestore timestamp
+  photoURL?: string;
 }
 
 export interface Transaction {

@@ -1,5 +1,7 @@
 {
   "name": "Westcoast Trust Bank",
   "description": "A modern banking and investment platform built with React, TypeScript, and Tailwind CSS, featuring user authentication, financial dashboards, and investment tracking with Firebase.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "camera"
+  ]
 }

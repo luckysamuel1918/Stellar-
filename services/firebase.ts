@@ -2,6 +2,7 @@
 import firebase from "firebase/compat/app";
 import "firebase/compat/auth";
 import "firebase/compat/firestore";
+import "firebase/compat/storage";
 import { UserProfile, Transaction } from "../types";
 
 const firebaseConfig = {
@@ -9,7 +10,7 @@ const firebaseConfig = {
   authDomain: "westcoast-c85e4.firebaseapp.com",
   databaseURL: "https://westcoast-c85e4-default-rtdb.firebaseio.com",
   projectId: "westcoast-c85e4",
-  storageBucket: "westcoast-c85e4.firebasestorage.app",
+  storageBucket: "westcoast-c85e4.appspot.com",
   messagingSenderId: "15776220227",
   appId: "1:15776220227:web:a5cf2658b895aff29180f6",
   measurementId: "G-MNTK4NDZH4"
@@ -21,6 +22,7 @@ if (!firebase.apps.length) {
 }
 const auth: firebase.auth.Auth = firebase.auth();
 const db = firebase.firestore();
+const storage = firebase.storage();
 const Timestamp = firebase.firestore.Timestamp;
 
 // FIX: Refactored to use Firebase v8 API.
@@ -47,6 +49,7 @@ export const createUserProfileDocument = async (userAuth: firebase.User, additio
         balance: 1000, // Starting balance for new users for demo purposes
         isAdmin: email === 'admin@westcoast.com', // Example admin setup
         createdAt,
+        photoURL: '',
       };
       await userRef.set(newUserProfile);
     } catch (error) {
@@ -63,6 +66,16 @@ export const getUserData = async (uid: string): Promise<UserProfile | null> => {
     const snapshot = await userRef.get();
     if (snapshot.exists) {
         return { uid, ...snapshot.data() } as UserProfile;
+    }
+    return null;
+}
+
+export const getUserDataWithPin = async (uid: string): Promise<(UserProfile & { pin: string }) | null> => {
+    if (!uid) return null;
+    const userRef = db.doc(`users/${uid}`);
+    const snapshot = await userRef.get();
+    if (snapshot.exists) {
+        return { uid, ...snapshot.data() } as UserProfile & { pin: string };
     }
     return null;
 }
@@ -86,7 +99,8 @@ export const createTransaction = async (transactionData: Omit<Transaction, 'id' 
             ...transactionData,
             timestamp: firebase.firestore.FieldValue.serverTimestamp()
         });
-        return { id: docRef.id, ...transactionData, timestamp: Timestamp.now() };
+        const doc = await docRef.get();
+        return { id: doc.id, ...doc.data() } as Transaction;
     } catch (error) {
         console.error("Error creating transaction:", error);
         return null;
@@ -94,7 +108,7 @@ export const createTransaction = async (transactionData: Omit<Transaction, 'id' 
 };
 
 // FIX: Refactored to use Firebase v8 API.
-export const performTransfer = async (sender: UserProfile, receiver: UserProfile, amount: number, description: string) => {
+export const performTransfer = async (sender: UserProfile, receiver: UserProfile, amount: number, description: string): Promise<Transaction | null> => {
     if (sender.balance < amount) {
         throw new Error("Insufficient funds.");
     }
@@ -120,13 +134,15 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
         receiverName: receiver.fullName
     };
 
-    await createTransaction({
+    const transaction = await createTransaction({
         ...commonDetails,
         senderId: sender.uid,
         senderName: sender.fullName,
         receiverId: receiver.uid,
         type: 'transfer',
     });
+
+    return transaction;
 };
 
 // FIX: Refactored to use Firebase v8 API.
@@ -163,20 +179,33 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 // FIX: Refactored to use Firebase v8 API.
 export const getUserTransactions = async (uid: string): Promise<Transaction[]> => {
     const transactionsRef = db.collection("transactions");
-    const q = transactionsRef.where("senderId", "==", uid);
-    const q2 = transactionsRef.where("receiverId", "==", uid);
+    const q = transactionsRef.where("senderId", "==", uid).orderBy("timestamp", "desc");
+    const q2 = transactionsRef.where("receiverId", "==", uid).orderBy("timestamp", "desc");
     
     const [senderSnapshot, receiverSnapshot] = await Promise.all([q.get(), q2.get()]);
 
-    const transactions: Transaction[] = [];
-    senderSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() } as Transaction));
-    receiverSnapshot.forEach((doc) => transactions.push({ id: doc.id, ...doc.data() } as Transaction));
+    const transactionsMap = new Map<string, Transaction>();
+    senderSnapshot.forEach((doc) => transactionsMap.set(doc.id, { id: doc.id, ...doc.data() } as Transaction));
+    receiverSnapshot.forEach((doc) => transactionsMap.set(doc.id, { id: doc.id, ...doc.data() } as Transaction));
 
-    // Simple deduplication and sort by date
-    const uniqueTransactions = Array.from(new Map(transactions.map(item => [item.id, item])).values());
+    const uniqueTransactions = Array.from(transactionsMap.values());
     return uniqueTransactions.sort((a, b) => b.timestamp?.seconds - a.timestamp?.seconds);
 }
 
+export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {
+    if (!uid) return;
+    const userRef = db.doc(`users/${uid}`);
+    await userRef.update(data);
+};
+
+export const uploadProfilePicture = async (uid: string, file: File): Promise<string> => {
+    if (!uid || !file) throw new Error("User ID and file are required.");
+    const filePath = `profile_pictures/${uid}/${file.name}`;
+    const fileRef = storage.ref(filePath);
+    const snapshot = await fileRef.put(file);
+    const downloadURL = await snapshot.ref.getDownloadURL();
+    return downloadURL;
+};
 
 // FIX: Export auth and db objects directly for v8 compatibility.
 // Other functions like signInWithEmailAndPassword are now methods on the auth object.
