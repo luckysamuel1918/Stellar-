@@ -7,6 +7,7 @@ import {
     wipeChatHistory
 } from '../services/firebase';
 import firebase from "firebase/compat/app";
+import "firebase/compat/firestore";
 import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp } from 'lucide-react';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
@@ -429,9 +430,9 @@ const AdminDashboardPage: React.FC = () => {
     const closeModal = () => setModal({ type: null, user: null });
 
     const filteredUsers = users.filter(user =>
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.accountNumber.includes(searchTerm)
+        String(user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+        String(user.accountNumber || '').includes(searchTerm)
     );
 
     if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
