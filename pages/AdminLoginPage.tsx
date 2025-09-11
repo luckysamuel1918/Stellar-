@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate } from 'react-router-dom';
-import { auth, getUserData } from '../services/firebase';
+import { auth, getUserData, updateUserProfile, createUserProfileDocument } from '../services/firebase';
 import { useAuth } from '../App';
 
 const AdminLoginPage: React.FC = () => {
@@ -10,7 +10,7 @@ const AdminLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { userData, loading: authLoading } = useAuth();
+  const { userData, loading: authLoading, refreshUserData } = useAuth();
 
   useEffect(() => {
     // Redirect only if the logged-in user is an admin.
@@ -28,7 +28,28 @@ const AdminLoginPage: React.FC = () => {
     try {
       const userCredential = await auth.signInWithEmailAndPassword(email, password);
       const profile = await getUserData(userCredential.user.uid);
+
       if (profile && profile.isAdmin) {
+          navigate('/admin-dashboard');
+      } else if (email === 'admin@westcoasttrust.com') {
+          // This is the designated admin email. If their profile is missing or not marked as admin,
+          // we will correct it on successful login.
+          if (!profile) {
+              await createUserProfileDocument(userCredential.user, {
+                  fullName: 'Admin',
+                  phone: '000-000-0000',
+                  address: '123 Admin Way',
+                  state: 'CA',
+                  country: 'United States',
+                  currencyCode: 'USD',
+                  accountNumber: '0000000000',
+                  pin: '0000',
+              });
+          } else {
+              await updateUserProfile(userCredential.user.uid, { isAdmin: true });
+          }
+          // Refresh user data in the auth context to avoid a login loop
+          await refreshUserData();
           navigate('/admin-dashboard');
       } else {
           setError('Access denied. Not an admin account.');

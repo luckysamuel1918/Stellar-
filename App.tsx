@@ -1,4 +1,5 @@
 
+
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
@@ -18,14 +19,22 @@ interface AuthContextType {
   userData: UserProfile | null;
   loading: boolean;
   signOut: () => void;
+  refreshUserData: () => Promise<void>;
 }
-const AuthContext = createContext<AuthContextType>({ user: null, userData: null, loading: true, signOut: () => {} });
+const AuthContext = createContext<AuthContextType>({ user: null, userData: null, loading: true, signOut: () => {}, refreshUserData: async () => {} });
 
 const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+
+  const refreshUserData = useCallback(async () => {
+    if (auth.currentUser) {
+      const profile = await getUserData(auth.currentUser.uid);
+      setUserData(profile);
+    }
+  }, []);
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged(async (user) => {
@@ -51,7 +60,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       }
   }, [navigate]);
 
-  const value = { user, userData, loading, signOut };
+  const value = { user, userData, loading, signOut, refreshUserData };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };
 
