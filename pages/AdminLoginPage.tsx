@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate } from 'react-router-dom';
 import { auth, getUserData } from '../services/firebase';
+import { useAuth } from '../App';
 
 const AdminLoginPage: React.FC = () => {
   const [email, setEmail] = useState('');
@@ -9,6 +10,13 @@ const AdminLoginPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { user, userData, loading: authLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authLoading && user && userData?.isAdmin) {
+      navigate('/admin-dashboard', { replace: true });
+    }
+  }, [user, userData, authLoading, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -30,6 +38,10 @@ const AdminLoginPage: React.FC = () => {
       setLoading(false);
     }
   };
+  
+  if (authLoading || (user && userData?.isAdmin)) {
+      return <div className="flex items-center justify-center min-h-[calc(100vh-200px)]"><p>Loading...</p></div>;
+  }
 
   return (
     <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg">

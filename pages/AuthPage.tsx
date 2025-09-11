@@ -1,16 +1,32 @@
 
 
 
-import React, { useState } from 'react';
+
+
+import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate, useLocation } from 'react-router-dom';
 import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
 import SignupWizard from '../components/SignupWizard';
+import { useAuth } from '../App';
 
 const AuthPage: React.FC = () => {
+  const { user, userData, loading } = useAuth();
+  const navigate = useNavigate();
   const location = useLocation();
   const initialIsLogin = new URLSearchParams(location.search).get('action') !== 'signup';
   const [isLogin, setIsLogin] = useState(initialIsLogin);
+
+  useEffect(() => {
+    if (!loading && user && userData) {
+      navigate(userData.isAdmin ? '/admin-dashboard' : '/user-dashboard', { replace: true });
+    }
+  }, [user, userData, loading, navigate]);
+
+  // Show a loading screen while checking for an active session to prevent form flicker
+  if (loading || (user && userData)) {
+    return <div className="flex items-center justify-center min-h-[calc(100vh-200px)]"><p>Loading...</p></div>;
+  }
 
   if (!isLogin) {
     return <SignupWizard onLoginSwitch={() => setIsLogin(true)} />;

@@ -216,6 +216,8 @@ const AppLayout: React.FC = () => (
 const UserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
     if (loading) return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    // Add a check for userData loading state to prevent race conditions on login
+    if (user && !userData) return <div className="flex justify-center items-center h-screen"><p>Loading user profile...</p></div>;
     if (user && userData && !userData.isAdmin) return <>{children}</>;
     return <Navigate to="/user" replace />;
 };
@@ -223,6 +225,8 @@ const UserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
     if (loading) return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    // Add a check for userData loading state to prevent race conditions on login
+    if (user && !userData) return <div className="flex justify-center items-center h-screen"><p>Loading user profile...</p></div>;
     if (user && userData && userData.isAdmin) return <>{children}</>;
     return <Navigate to="/admin-login" replace />;
 };
