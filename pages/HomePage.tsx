@@ -59,19 +59,37 @@ const HeroSection: React.FC = () => (
 
 const FeaturesSection: React.FC = () => {
     const features = [
-        { icon: <Landmark size={28} className="text-westcoast-blue" />, title: 'Smart Banking', description: 'Effortless payments, advanced budgeting, and global support, all in one place.' },
-        { icon: <TrendingUp size={28} className="text-westcoast-blue" />, title: 'Powerful Investing', description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.' },
-        { icon: <ShieldCheck size={28} className="text-westcoast-blue" />, title: 'Total Security', description: 'Your assets are protected with bank-grade security and FDIC insurance.' },
+        { 
+            icon: <Landmark size={28} className="text-westcoast-blue" />, 
+            title: 'Smart Banking', 
+            description: 'Effortless payments, advanced budgeting, and global support, all in one place.',
+            imgSrc: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2940&auto=format&fit=crop'
+        },
+        { 
+            icon: <TrendingUp size={28} className="text-westcoast-blue" />, 
+            title: 'Powerful Investing', 
+            description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.',
+            imgSrc: 'https://images.unsplash.com/photo-1640622300473-977435c38c04?q=80&w=2940&auto=format&fit=crop'
+        },
+        { 
+            icon: <ShieldCheck size={28} className="text-westcoast-blue" />, 
+            title: 'Total Security', 
+            description: 'Your assets are protected with bank-grade security and FDIC insurance.',
+            imgSrc: 'https://images.unsplash.com/photo-1585224329602-3f721d3ba3e7?q=80&w=2940&auto=format&fit=crop'
+        },
     ];
     return (
         <div className="bg-white py-20">
-            <div className="container mx-auto px-4 text-center">
-                 <div className="grid md:grid-cols-3 gap-12">
+            <div className="container mx-auto px-4">
+                 <div className="grid md:grid-cols-3 gap-8">
                      {features.map(feature => (
-                        <div key={feature.title} className="text-left">
-                            <div className="mb-4">{feature.icon}</div>
-                            <h3 className="text-2xl font-bold text-westcoast-text-dark mb-2">{feature.title}</h3>
-                            <p className="text-westcoast-text-light">{feature.description}</p>
+                        <div key={feature.title} className="bg-gray-50 rounded-xl shadow-md overflow-hidden hover:shadow-xl hover:-translate-y-1 transition-all">
+                            <img src={feature.imgSrc} alt={feature.title} className="w-full h-48 object-cover" />
+                            <div className="p-6">
+                                <div className="mb-4">{feature.icon}</div>
+                                <h3 className="text-2xl font-bold text-westcoast-text-dark mb-2">{feature.title}</h3>
+                                <p className="text-westcoast-text-light">{feature.description}</p>
+                            </div>
                         </div>
                      ))}
                  </div>
@@ -91,10 +109,15 @@ const ProductsSection: React.FC = () => {
     return (
         <div className="bg-westcoast-bg py-20">
             <div className="container mx-auto px-4">
-                 <div className="text-center max-w-2xl mx-auto mb-12">
-                    <h2 className="text-4xl font-bold text-westcoast-text-dark mb-4">One Platform, Every Financial Need</h2>
-                    <p className="text-lg text-westcoast-text-light">From daily spending to long-term investing, our integrated products are designed to work together seamlessly.</p>
-                </div>
+                 <div className="grid lg:grid-cols-2 gap-12 items-center mb-16">
+                    <div className="text-center lg:text-left">
+                        <h2 className="text-4xl font-bold text-westcoast-text-dark mb-4">One Platform, Every Financial Need</h2>
+                        <p className="text-lg text-westcoast-text-light">From daily spending to long-term investing, our integrated products are designed to work together seamlessly.</p>
+                    </div>
+                    <div className="flex justify-center">
+                        <img src="https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2940&auto=format&fit=crop" alt="Financial planning on a laptop" className="rounded-xl shadow-lg w-full max-w-lg object-cover" />
+                    </div>
+                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     {products.map(product => (
                         <div key={product.title} className="bg-white p-8 rounded-xl shadow-md flex items-start space-x-6 hover:shadow-xl hover:-translate-y-1 transition-all">
@@ -118,12 +141,16 @@ const ProductsSection: React.FC = () => {
 const FinalCTASection: React.FC = () => (
     <div className="bg-white py-20">
         <div className="container mx-auto px-4">
-            <div className="bg-westcoast-dark text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden">
+            <div 
+                className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden bg-cover bg-center"
+                style={{ backgroundImage: "url('https://images.unsplash.com/photo-1521791136064-7986c2920216?q=80&w=2938&auto=format&fit=crop')" }}
+            >
+                <div className="absolute inset-0 bg-westcoast-dark/70 backdrop-blur-sm"></div>
                 <div className="absolute -top-16 -left-16 w-48 h-48 bg-westcoast-blue/20 rounded-full"></div>
                 <div className="absolute -bottom-24 -right-16 w-64 h-64 bg-westcoast-accent/20 rounded-full"></div>
                 <div className="relative z-10">
                     <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to build your wealth?</h2>
-                    <p className="text-lg text-gray-300 max-w-2xl mx-auto mb-8">Join thousands of users who trust Westcoast to manage their banking and investments. Sign up in minutes.</p>
+                    <p className="text-lg text-gray-200 max-w-2xl mx-auto mb-8">Join thousands of users who trust Westcoast to manage their banking and investments. Sign up in minutes.</p>
                     <button className="bg-westcoast-accent text-westcoast-dark font-bold py-3 px-8 rounded-full hover:opacity-90 transition-opacity text-lg">
                         Get Started Today
                     </button>
