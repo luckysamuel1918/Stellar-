@@ -82,7 +82,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
     });
     return () => unsubscribe();
   }, []);
-  
+
   const signOut = useCallback(async () => {
       try {
           await auth.signOut();
