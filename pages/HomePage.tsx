@@ -1,5 +1,5 @@
-import React, { useEffect } from 'react';
-import { ChevronRight, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 
@@ -80,13 +80,13 @@ const FeaturesSection: React.FC = () => {
             icon: <TrendingUp size={28} className="text-westcoast-blue" />, 
             title: 'Powerful Investing', 
             description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.',
-            imgSrc: 'https://images.unsplash.com/photo-1640622300473-977435c26c04?q=80&w=2072&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=2070&auto=format&fit=crop'
         },
         { 
             icon: <ShieldCheck size={28} className="text-westcoast-blue" />, 
             title: 'Total Security', 
             description: 'Your assets are protected with bank-grade security and FDIC insurance.',
-            imgSrc: 'https://images.unsplash.com/photo-1562826335-70e283901b5a?q=80&w=2070&auto=format&fit=crop'
+            imgSrc: 'https://images.unsplash.com/photo-1614064548237-02f15507b341?q=80&w=2070&auto=format&fit=crop'
         },
     ];
     return (
@@ -151,11 +151,106 @@ const ProductsSection: React.FC = () => {
     );
 };
 
+const TeamSection: React.FC = () => {
+    const staffData = [
+        { name: 'Dr. Evelyn Reed', title: 'Chief Executive Officer', description: 'With over 20 years in finance, Evelyn guides our strategic vision, ensuring sustainable growth and innovation while fostering a customer-centric culture.', imgSrc: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+        { name: 'Benjamin Carter', title: 'Chief Financial Officer', description: 'Ben oversees all financial operations, leveraging data-driven insights to maintain our fiscal health, manage risk, and drive shareholder value.', imgSrc: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+        { name: 'Olivia Martinez', title: 'Head of Investment Strategy', description: 'Olivia leads our investment team, crafting bespoke portfolios that help clients navigate complex markets and achieve their long-term wealth goals.', imgSrc: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+        { name: 'Samuel Chen', title: 'Chief Technology Officer', description: 'Samuel drives our digital transformation. He focuses on building the secure and intuitive platform our customers rely on for seamless banking.', imgSrc: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+        { name: 'Aisha Khan', title: 'Head of Personal Banking', description: 'Aisha is dedicated to providing exceptional customer service and tailored banking solutions for individuals and families, making banking simple and personal.', imgSrc: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+        { name: 'Marcus Holloway', title: 'Director of Compliance', description: 'Marcus ensures our operations adhere to the highest standards of regulatory compliance and security, safeguarding our clients and the institution.', imgSrc: 'https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' }
+    ];
+    
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const scrollContainerRef = useRef<HTMLDivElement>(null);
+    const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
+    const isInitialMount = useRef(true);
+
+    useEffect(() => {
+        itemRefs.current = itemRefs.current.slice(0, staffData.length);
+    }, [staffData.length]);
+
+    useEffect(() => {
+        const timer = setTimeout(() => {
+            const nextIndex = (currentIndex + 1) % staffData.length;
+            setCurrentIndex(nextIndex);
+        }, 6000); // Auto-swipe every 6 seconds
+        return () => clearTimeout(timer);
+    }, [currentIndex, staffData.length]);
+
+    useEffect(() => {
+        if (isInitialMount.current) {
+            isInitialMount.current = false;
+            return;
+        }
+
+        const container = scrollContainerRef.current;
+        const card = itemRefs.current[currentIndex];
+
+        if (container && card) {
+            const scrollLeft = card.offsetLeft - container.offsetLeft;
+            container.scrollTo({
+                left: scrollLeft,
+                behavior: 'smooth',
+            });
+        }
+    }, [currentIndex]);
+    
+    const scroll = (direction: 'left' | 'right') => {
+        let nextIndex;
+        if (direction === 'left') {
+            nextIndex = (currentIndex - 1 + staffData.length) % staffData.length;
+        } else {
+            nextIndex = (currentIndex + 1) % staffData.length;
+        }
+        setCurrentIndex(nextIndex);
+    };
+
+    const StaffCard: React.FC<{ staff: typeof staffData[0], cardRef: (el: HTMLDivElement | null) => void }> = ({ staff, cardRef }) => (
+        <div ref={cardRef} className="snap-start flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-full flex flex-col items-center text-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <img src={staff.imgSrc} alt={staff.name} onError={handleImageError} className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-white dark:border-gray-700 shadow-md" />
+                <h3 className="text-xl font-bold text-westcoast-text-dark dark:text-white">{staff.name}</h3>
+                <p className="italic text-westcoast-blue dark:text-westcoast-accent my-1">{staff.title}</p>
+                <p className="text-sm text-westcoast-text-light dark:text-gray-300 mt-2 flex-grow">{staff.description}</p>
+            </div>
+        </div>
+    );
+
+    return (
+        <div className="bg-white dark:bg-gray-800 py-20">
+            <style>{`
+                .scrollbar-hide::-webkit-scrollbar { display: none; }
+                .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+            `}</style>
+            <div className="container mx-auto px-4">
+                 <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-westcoast-text-dark dark:text-white mb-4">Meet Our Team</h2>
+                    <p className="text-lg text-westcoast-text-light dark:text-gray-300 max-w-3xl mx-auto">The driving force behind your financial success. Our experts are dedicated to providing you with unparalleled service and guidance.</p>
+                 </div>
+                 <div className="relative">
+                     <div ref={scrollContainerRef} className="flex overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-hide -m-4 p-4">
+                        {staffData.map((staff, index) => (
+                            <StaffCard key={index} staff={staff} cardRef={el => itemRefs.current[index] = el} />
+                        ))}
+                    </div>
+                    <button onClick={() => scroll('left')} aria-label="Previous" className="absolute top-1/2 -left-4 -translate-y-1/2 bg-white/80 dark:bg-black/80 p-2 rounded-full shadow-md hover:bg-white dark:hover:bg-black transition z-10 hidden md:block">
+                        <ChevronLeft className="h-6 w-6 text-westcoast-dark dark:text-white" />
+                    </button>
+                    <button onClick={() => scroll('right')} aria-label="Next" className="absolute top-1/2 -right-4 -translate-y-1/2 bg-white/80 dark:bg-black/80 p-2 rounded-full shadow-md hover:bg-white dark:hover:bg-black transition z-10 hidden md:block">
+                        <ChevronRight className="h-6 w-6 text-westcoast-dark dark:text-white" />
+                    </button>
+                 </div>
+            </div>
+        </div>
+    );
+};
+
 
 const FinalCTASection: React.FC = () => {
     const navigate = useNavigate();
     return (
-        <div className="bg-white dark:bg-gray-800 py-20">
+        <div className="bg-westcoast-bg dark:bg-gray-900 py-20">
             <div className="container mx-auto px-4">
                 <div 
                     className="text-white rounded-xl shadow-lg text-center p-8 md:p-12 relative overflow-hidden"
@@ -189,15 +284,23 @@ const HomePage: React.FC = () => {
     const navigate = useNavigate();
 
     useEffect(() => {
-        // If the user is an admin, redirect them away from the homepage
-        if (!loading && userData && userData.isAdmin) {
-            navigate('/admin-dashboard', { replace: true });
+        // If the user is logged in, redirect them
+        if (!loading && userData) {
+            if (userData.isAdmin) {
+                navigate('/admin-dashboard', { replace: true });
+            } else {
+                navigate('/dashboard', { replace: true });
+            }
         }
     }, [userData, loading, navigate]);
 
-    // Prevent rendering the homepage for admins while redirecting
-    if (loading || (userData && userData.isAdmin)) {
-        return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    // Prevent rendering the homepage for logged in users while redirecting
+    if (loading || userData) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900">
+                <Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/>
+            </div>
+        );
     }
 
     return (
@@ -206,6 +309,7 @@ const HomePage: React.FC = () => {
             <MarketTicker />
             <FeaturesSection />
             <ProductsSection />
+            <TeamSection />
             <FinalCTASection />
         </>
     );

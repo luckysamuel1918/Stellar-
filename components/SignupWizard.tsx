@@ -1,7 +1,3 @@
-
-
-
-
 import React, { useState } from 'react';
 import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
 import { auth, createUserProfileDocument } from '../services/firebase';
@@ -283,7 +279,7 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
                     <h2 className="text-3xl font-bold text-westcoast-dark dark:text-white mb-2">Account Created Successfully!</h2>
                     <p className="text-westcoast-text-light dark:text-gray-300 mb-6">Your new account is ready. Welcome to Westcoast.</p>
                     <div className="bg-westcoast-bg dark:bg-gray-700 p-4 rounded-lg"><p className="text-sm text-westcoast-text-light dark:text-gray-300">Your Account Number</p><p className="text-2xl font-mono font-bold text-westcoast-blue tracking-widest">{accountNumber}</p></div>
-                     <button onClick={() => navigate('/user-dashboard')} className="mt-8 px-6 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90">Go to Dashboard</button>
+                     <button onClick={() => navigate('/dashboard')} className="mt-8 px-6 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90">Go to Dashboard</button>
                 </div>}
 
                 {step < 4 && <div className="flex justify-between items-center pt-6">

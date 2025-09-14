@@ -5,7 +5,7 @@ import { auth, User, getUserData } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
-import UserDashboardPage from './pages/UserDashboardPage';
+import DashboardLayout from './dashboard/DashboardLayout';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import { WestcoastLogo } from './components/icons';
@@ -108,7 +108,7 @@ const Header: React.FC = () => {
 
     const handleDashboardRedirect = () => {
       if(user && userData) {
-          navigate(userData.isAdmin ? '/admin-dashboard' : '/user-dashboard');
+          navigate(userData.isAdmin ? '/admin-dashboard' : '/dashboard');
       }
     }
     
@@ -291,12 +291,12 @@ const App: React.FC = () => {
                     {/* Standalone routes without the main layout */}
                     <Route path="/admin-login" element={<AdminLoginPage />} />
                     <Route
-                        path="/admin-dashboard"
+                        path="/admin-dashboard/*"
                         element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
                     />
                     <Route
-                        path="/user-dashboard"
-                        element={<UserRoute><UserDashboardPage /></UserRoute>}
+                        path="/dashboard/*"
+                        element={<UserRoute><DashboardLayout /></UserRoute>}
                     />
                 </Routes>
             </AuthProvider>

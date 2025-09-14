@@ -1,9 +1,3 @@
-
-
-
-
-
-
 import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -20,7 +14,7 @@ const AuthPage: React.FC = () => {
 
   useEffect(() => {
     if (!loading && user && userData) {
-      navigate(userData.isAdmin ? '/admin-dashboard' : '/user-dashboard', { replace: true });
+      navigate(userData.isAdmin ? '/admin-dashboard' : '/dashboard', { replace: true });
     }
   }, [user, userData, loading, navigate]);
 
@@ -75,7 +69,7 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
         setError('Admin accounts should use the admin sign-in page.');
         await auth.signOut();
       } else {
-        navigate('/user-dashboard'); // Redirect to user dashboard on success
+        navigate('/dashboard'); // Redirect to user dashboard on success
       }
     } catch (err: any) {
       if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {

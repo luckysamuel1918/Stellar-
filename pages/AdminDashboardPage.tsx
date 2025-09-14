@@ -159,6 +159,7 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
                         <InputField label="Email" name="email" type="email" value={formData.email} onChange={handleChange} />
                     </div>
                     <p className="text-xs text-yellow-600 -mt-2 ml-1">Note: This only changes the database record, not the login email.</p>
+                     <InputField label="Photo URL" name="photoURL" type="url" value={formData.photoURL || ''} onChange={handleChange} placeholder="https://example.com/image.png" />
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <InputField label="Account Number" name="accountNumber" type="text" value={formData.accountNumber} onChange={handleChange} pattern="\d{10}" title="Account number must be 10 digits" />
                         <InputField label="Phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} />
