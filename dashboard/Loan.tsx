@@ -35,7 +35,7 @@ const LoanView: React.FC = () => {
                  <form className="space-y-4">
                      <div>
                         <label htmlFor="loan-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Loan Amount</label>
-                        <input id="loan-amount" type="number" placeholder={`Amount in ${user.currencyCode}`} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                        <input id="loan-amount" type="number" placeholder={`Loan Amount in ${user.currencyCode}`} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
                     </div>
                      <div>
                         <label htmlFor="loan-purpose" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Purpose</label>

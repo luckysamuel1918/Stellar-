@@ -105,7 +105,7 @@ const DashboardLayout: React.FC = () => {
                         Email us
                     </a>
                     <button onClick={onLogout} className="w-full px-4 py-3 font-bold text-gray-700 bg-gray-200 dark:bg-gray-600 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors flex-1">
-                        Logout
+                        Log Out
                     </button>
                 </div>
             </div>
@@ -121,12 +121,12 @@ const DashboardLayout: React.FC = () => {
     const activeView = getActiveView();
     
     const navItems = [
-        { id: 'home', label: 'Home', icon: <Home />, path: '/dashboard' },
-        { id: 'cards', label: 'Cards', icon: <CreditCard />, path: '/dashboard/cards' },
-        { id: 'payments', label: 'Payments', icon: <Receipt />, path: '/dashboard/payments' },
-        { id: 'loan', label: 'Loan', icon: <HandCoins />, path: '/dashboard/loan' },
-        { id: 'ai', label: 'AI Assistant', icon: <Sparkles />, path: '/dashboard/ai' },
-        { id: 'me', label: 'Me', icon: <UserIcon />, path: '/dashboard/me' },
+        { id: 'home', label: "Home", icon: <Home />, path: '/dashboard' },
+        { id: 'cards', label: "Cards", icon: <CreditCard />, path: '/dashboard/cards' },
+        { id: 'payments', label: "Payments", icon: <Receipt />, path: '/dashboard/payments' },
+        { id: 'loan', label: "Loan", icon: <HandCoins />, path: '/dashboard/loan' },
+        { id: 'ai', label: "AI Assistant", icon: <Sparkles />, path: '/dashboard/ai' },
+        { id: 'me', label: "Me", icon: <UserIcon />, path: '/dashboard/me' },
     ];
     
     if (loading && !userData) {
@@ -143,7 +143,7 @@ const DashboardLayout: React.FC = () => {
         openCheckDepositModal: () => setShowDepositModal(true),
     };
 
-    const pageTitle = (navItems.find(item => item.id === activeView) || { label: 'Dashboard' }).label;
+    const pageTitle = (navItems.find(item => item.id === activeView) || { label: "Dashboard" }).label;
 
     return (
         <DashboardContext.Provider value={contextValue}>
@@ -158,7 +158,7 @@ const DashboardLayout: React.FC = () => {
                             ))}
                         </nav>
                         <div className="mt-auto">
-                            <SideNavItem icon={<LogOut />} label="Log Out" active={false} onClick={signOut} />
+                            <SideNavItem icon={<LogOut />} label={"Log Out"} active={false} onClick={signOut} />
                         </div>
                     </aside>
                     <main className="flex-1 pb-20 md:pb-0">

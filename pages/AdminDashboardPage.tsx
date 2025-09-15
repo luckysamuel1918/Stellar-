@@ -8,7 +8,7 @@ import {
 } from '../services/firebase';
 import firebase from "firebase/compat/app";
 import "firebase/compat/firestore";
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck } from 'lucide-react';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
     const [imgError, setImgError] = useState(false);
@@ -234,7 +234,7 @@ const ManageTransactionsModal = ({ user, onClose }) => {
     const [editingTx, setEditingTx] = useState(null);
     const [date, setDate] = useState('');
     const [time, setTime] = useState('');
-    // FIX: Explicitly type the status state to match the Transaction type, preventing it from being inferred as a generic string.
+    const [description, setDescription] = useState('');
     const [status, setStatus] = useState<Transaction['status']>('completed');
     
     useEffect(() => {
@@ -250,12 +250,13 @@ const ManageTransactionsModal = ({ user, onClose }) => {
         setDate(txDate.toISOString().split('T')[0]);
         setTime(txDate.toTimeString().substring(0, 5));
         setStatus(tx.status);
+        setDescription(tx.description || '');
     };
     
     const handleSave = async () => {
         const newTimestamp = firebase.firestore.Timestamp.fromDate(new Date(`${date}T${time}`));
-        await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status });
-        const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status } : tx);
+        await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status, description });
+        const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status, description } : tx);
         setTransactions(updatedTxs.sort((a, b) => {
             const aSeconds = (a.timestamp && a.timestamp.seconds) || 0;
             const bSeconds = (b.timestamp && b.timestamp.seconds) || 0;
@@ -278,13 +279,19 @@ const ManageTransactionsModal = ({ user, onClose }) => {
                                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                                                 <input type="date" value={date} onChange={e => setDate(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
                                                 <input type="time" value={time} onChange={e => setTime(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
-                                                {/* FIX: Add a type assertion to the value from the select element to match the typed state. */}
                                                 <select value={status} onChange={e => setStatus(e.target.value as Transaction['status'])} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500">
                                                     <option value="completed">Completed</option>
                                                     <option value="pending">Pending</option>
                                                     <option value="failed">Failed</option>
                                                 </select>
                                             </div>
+                                            <input 
+                                                type="text" 
+                                                value={description} 
+                                                onChange={e => setDescription(e.target.value)} 
+                                                placeholder="Transaction description"
+                                                className="w-full mt-2 px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" 
+                                            />
                                             <div className="flex justify-end gap-2">
                                                 <button onClick={() => setEditingTx(null)} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-500 rounded">Cancel</button>
                                                 <button onClick={handleSave} className="text-xs px-2 py-1 bg-westcoast-blue text-white rounded">Save</button>
@@ -426,6 +433,19 @@ const AdminDashboardPage: React.FC = () => {
         setModal({ type: null, user: null });
         fetchUsers();
     };
+
+    const handleToggleSuspend = async (userToUpdate: UserProfile) => {
+        const action = userToUpdate.isSuspended ? "unsuspend" : "suspend";
+        if (window.confirm(`Are you sure you want to ${action} ${userToUpdate.fullName}?`)) {
+            try {
+                await updateUserProfile(userToUpdate.uid, { isSuspended: !userToUpdate.isSuspended });
+                fetchUsers(); // Refresh the list
+            } catch (error) {
+                console.error(`Failed to ${action} user:`, error);
+                alert(`Could not ${action} the user. Please try again.`);
+            }
+        }
+    };
     
     const openModal = (type: string, user: UserProfile) => setModal({ type, user });
     const closeModal = () => setModal({ type: null, user: null });
@@ -517,6 +537,7 @@ const AdminDashboardPage: React.FC = () => {
                                                  <button onClick={() => openModal('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
                                                  <button onClick={() => openModal('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
                                                  <button onClick={() => openModal('chat', user)} title="Chat with User" className="text-cyan-600 hover:text-cyan-800 p-2 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/50"><MessageSquare size={18} /></button>
+                                                 <button onClick={() => handleToggleSuspend(user)} title={user.isSuspended ? "Unsuspend User" : "Suspend User"} className={`p-2 rounded-full ${user.isSuspended ? 'text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900/50' : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'}`}>{user.isSuspended ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}</button>
                                                  <button onClick={() => openModal('delete', user)} title="Delete User" className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><Trash2 size={18} /></button>
                                             </div>
                                         </td>

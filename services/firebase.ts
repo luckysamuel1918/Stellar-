@@ -321,10 +321,10 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
 
     // FIX: Use placeholder EmailJS credentials for development.
     await (window as any).emailjs.send(
-        "service_demo",
-        "template_demo",
+        "service_ddqz3a6",
+        "template_zsv0alp",
         templateParams,
-        "user_demoPublicKey"
+        "VYfq3eW-NMpJkm35M"
     );
 };
 

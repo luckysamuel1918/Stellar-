@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate, useLocation } from 'react-router-dom';
+import { Home } from 'lucide-react';
 import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
 import SignupWizard from '../components/SignupWizard';
 import { useAuth } from '../App';
@@ -134,7 +135,15 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
               {loading ? 'Signing In...' : 'Sign In'}
             </button>
           </div>
-          <div className="text-sm text-center">
+          <div className="flex justify-between items-center text-sm">
+            <button
+                type="button"
+                onClick={() => navigate('/')}
+                className="flex items-center gap-1 font-medium text-gray-600 dark:text-gray-400 hover:text-westcoast-blue dark:hover:text-westcoast-accent"
+            >
+                <Home size={16} />
+                <span>Home</span>
+            </button>
             <button type="button" onClick={onSignupSwitch} className="font-medium text-westcoast-blue hover:underline">
               Don't have an account? Sign up
             </button>

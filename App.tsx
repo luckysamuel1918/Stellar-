@@ -9,7 +9,7 @@ import DashboardLayout from './dashboard/DashboardLayout';
 import AdminLoginPage from './pages/AdminLoginPage';
 import AdminDashboardPage from './pages/AdminDashboardPage';
 import { WestcoastLogo } from './components/icons';
-import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun } from 'lucide-react';
+import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun, Globe } from 'lucide-react';
 
 // --- THEME CONTEXT ---
 interface ThemeContextType {
@@ -98,6 +98,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 };
 
 export const useAuth = () => useContext(AuthContext);
+
 
 // --- LAYOUT COMPONENTS ---
 const Header: React.FC = () => {
@@ -215,7 +216,8 @@ const Header: React.FC = () => {
     );
 };
 
-const Footer: React.FC = () => (
+const Footer: React.FC = () => {
+    return (
     <footer className="bg-westcoast-dark text-white dark:bg-black">
         <div className="container mx-auto px-4 pt-16 pb-8">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-8 mb-12">
@@ -223,10 +225,10 @@ const Footer: React.FC = () => (
                     <WestcoastLogo className="text-white" />
                     <p className="text-sm text-gray-400 mt-4">Your Financial Future, Elevated.</p>
                 </div>
-                {[{title: 'Personal', items: ['Checking', 'Savings', 'Credit Cards', 'Personal Loans']},
-                  {title: 'Investing', items: ['Stocks & ETFs', 'Managed Portfolios', 'Retirement', 'Pricing']},
-                  {title: 'Resources', items: ['Market News', 'Blog', 'Support Center', 'Contact Us']},
-                  {title: 'Company', items: ['About Us', 'Careers', 'Legal', 'Privacy Policy']}].map(section => (
+                {[{title: "Personal", items: ["Checking", "Savings", "Credit Cards", "Personal Loans"]},
+                  {title: "Investing", items: ["Stocks & ETFs", "Managed Portfolios", "Retirement", "Pricing"]},
+                  {title: "Resources", items: ["Market News", "Blog", "Support Center", "Contact Us"]},
+                  {title: "Company", items: ["About Us", "Careers", "Legal", "Privacy Policy"]}].map(section => (
                     <div key={section.title}>
                         <h3 className="font-semibold mb-4">{section.title}</h3>
                         <ul className="space-y-3 text-sm text-gray-300">
@@ -236,7 +238,7 @@ const Footer: React.FC = () => (
                 ))}
             </div>
             <div className="border-t border-gray-700 pt-8 flex flex-col md:flex-row justify-between items-center text-sm">
-                 <p className="text-gray-400 mb-4 md:mb-0">&copy; {new Date().getFullYear()} Westcoast Trust Bank. All rights reserved.</p>
+                 <p className="text-gray-400 mb-4 md:mb-0">{`© ${new Date().getFullYear()} Westcoast Trust Bank. All rights reserved.`}</p>
                  <div className="flex items-center space-x-5">
                     <a href="#" className="text-gray-400 hover:text-white"><Twitter size={20}/></a>
                     <a href="#" className="text-gray-400 hover:text-white"><Facebook size={20}/></a>
@@ -245,7 +247,8 @@ const Footer: React.FC = () => (
             </div>
         </div>
     </footer>
-);
+    );
+};
 
 
 const AppLayout: React.FC = () => (

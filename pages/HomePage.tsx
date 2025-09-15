@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
@@ -9,6 +9,21 @@ const handleImageError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
     e.currentTarget.src = PLACEHOLDER_IMAGE_URI;
     e.currentTarget.onerror = null; // Prevent infinite loop
 };
+
+const heroSlides = [
+    {
+        url: 'https://images.unsplash.com/photo-1600985160351-a9c6560965ea?q=80&w=2070&auto=format&fit=crop',
+        alt: 'Abstract financial graphics',
+    },
+    {
+        url: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?q=80&w=2072&auto=format&fit=crop',
+        alt: 'Person analyzing financial data on a laptop',
+    },
+    {
+        url: 'https://images.unsplash.com/photo-1534723328310-e82dad3ee43f?q=80&w=2070&auto=format&fit=crop',
+        alt: 'Futuristic abstract data visualization',
+    },
+];
 
 const MarketTicker: React.FC = () => {
     const stocks = [
@@ -44,10 +59,81 @@ const MarketTicker: React.FC = () => {
 
 const HeroSection: React.FC = () => {
     const navigate = useNavigate();
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [imagesLoaded, setImagesLoaded] = useState<boolean[]>(Array(heroSlides.length).fill(false));
+    const slides = heroSlides;
+
+    useEffect(() => {
+        const imagePromises = slides.map((slide, index) => {
+            return new Promise<void>((resolve) => {
+                const img = new Image();
+                img.src = slide.url;
+                img.onload = () => {
+                    setImagesLoaded(prevLoaded => {
+                        const newLoaded = [...prevLoaded];
+                        newLoaded[index] = true;
+                        return newLoaded;
+                    });
+                    resolve();
+                };
+                img.onerror = () => {
+                    console.warn(`Failed to load hero image: ${slide.url}`);
+                    // Mark as "loaded" to remove skeleton, onError on img tag will show the placeholder
+                    setImagesLoaded(prevLoaded => {
+                        const newLoaded = [...prevLoaded];
+                        newLoaded[index] = true;
+                        return newLoaded;
+                    });
+                    resolve();
+                };
+            });
+        });
+        Promise.all(imagePromises);
+    }, [slides]);
+
+    const prevSlide = () => {
+        const isFirstSlide = currentIndex === 0;
+        const newIndex = isFirstSlide ? slides.length - 1 : currentIndex - 1;
+        setCurrentIndex(newIndex);
+    };
+
+    const nextSlide = useCallback(() => {
+        const isLastSlide = currentIndex === slides.length - 1;
+        const newIndex = isLastSlide ? 0 : currentIndex + 1;
+        setCurrentIndex(newIndex);
+    }, [currentIndex, slides.length]);
+    
+    useEffect(() => {
+        const slideInterval = setInterval(nextSlide, 7000); // slow motion swipe every 7 seconds
+        return () => clearInterval(slideInterval);
+    }, [nextSlide]);
+
     return (
-        <div className="relative bg-westcoast-dark dark:bg-black text-white">
-            <div className="container mx-auto px-4 flex items-center min-h-[500px]">
-                <div className="w-full md:w-1/2 text-left z-10">
+        <div className="relative bg-westcoast-dark dark:bg-black text-white h-[500px] overflow-hidden">
+            {/* Image Slider Container */}
+            <div className="absolute inset-0 z-0">
+                {slides.map((slide, index) => (
+                    <div
+                        key={index}
+                        className={`absolute inset-0 w-full h-full transition-opacity duration-1000 ease-in-out ${index === currentIndex ? 'opacity-30 dark:opacity-40' : 'opacity-0'}`}
+                    >
+                         {/* Skeleton loader shown if image isn't loaded yet */}
+                        {!imagesLoaded[index] && <div className="absolute inset-0 bg-gray-800 animate-pulse"></div>}
+
+                         <img 
+                            src={slide.url} 
+                            alt={slide.alt} 
+                            className={`w-full h-full object-cover transition-opacity duration-500 ${imagesLoaded[index] ? 'opacity-100' : 'opacity-0'}`}
+                            onError={handleImageError} 
+                         />
+                         <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark dark:from-black via-westcoast-dark/80 dark:via-black/80 to-transparent"></div>
+                    </div>
+                ))}
+            </div>
+
+            {/* Content */}
+            <div className="container mx-auto px-4 flex items-center h-full relative z-10">
+                <div className="w-full md:w-1/2 text-left">
                     <h1 className="text-4xl sm:text-5xl md:text-6xl font-black mb-4 leading-tight">Your Financial Future, Elevated.</h1>
                     <p className="text-md sm:text-lg text-gray-300 dark:text-gray-400 mb-8">Seamless banking meets powerful investing. Grow your wealth with confidence on a platform built for you.</p>
                     <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
@@ -60,10 +146,25 @@ const HeroSection: React.FC = () => {
                     </div>
                 </div>
             </div>
-            <div className="absolute inset-0 z-0 opacity-30 dark:opacity-40">
-                 <img src="https://images.unsplash.com/photo-1665686374006-b8f04b627f44?q=80&w=2071&auto=format&fit=crop" alt="Abstract financial graphics" className="w-full h-full object-cover" onError={handleImageError} />
-                 <div className="absolute inset-0 bg-gradient-to-r from-westcoast-dark dark:from-black via-westcoast-dark/80 dark:via-black/80 to-transparent"></div>
+            
+             {/* Manual Controls */}
+            <div className="absolute z-20 bottom-5 left-1/2 -translate-x-1/2 flex space-x-2">
+                {slides.map((_, index) => (
+                    <button
+                        key={index}
+                        onClick={() => setCurrentIndex(index)}
+                        aria-label={`Go to slide ${index + 1}`}
+                        className={`w-3 h-3 rounded-full transition-colors ${index === currentIndex ? 'bg-white' : 'bg-white/50 hover:bg-white/75'}`}
+                    />
+                ))}
             </div>
+
+            <button onClick={prevSlide} aria-label="Previous slide" className="absolute top-1/2 left-4 -translate-y-1/2 z-20 bg-black/30 p-2 rounded-full text-white hover:bg-black/50 transition-colors hidden md:block">
+                <ChevronLeft size={24} />
+            </button>
+            <button onClick={nextSlide} aria-label="Next slide" className="absolute top-1/2 right-4 -translate-y-1/2 z-20 bg-black/30 p-2 rounded-full text-white hover:bg-black/50 transition-colors hidden md:block">
+                <ChevronRight size={24} />
+            </button>
         </div>
     );
 };
@@ -72,20 +173,20 @@ const FeaturesSection: React.FC = () => {
     const features = [
         { 
             icon: <Landmark size={28} className="text-westcoast-blue" />, 
-            title: 'Smart Banking', 
-            description: 'Effortless payments, advanced budgeting, and global support, all in one place.',
+            title: "Smart Banking", 
+            description: "Effortless payments, advanced budgeting, and global support, all in one place.",
             imgSrc: 'https://images.unsplash.com/photo-1556740738-b6a63e27c4df?q=80&w=2070&auto=format&fit=crop'
         },
         { 
             icon: <TrendingUp size={28} className="text-westcoast-blue" />, 
-            title: 'Powerful Investing', 
-            description: 'Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.',
+            title: "Powerful Investing", 
+            description: "Trade stocks, ETFs, and explore managed portfolios with low fees and expert insights.",
             imgSrc: 'https://images.unsplash.com/photo-1590283603385-17ffb3a7f29f?q=80&w=2070&auto=format&fit=crop'
         },
         { 
             icon: <ShieldCheck size={28} className="text-westcoast-blue" />, 
-            title: 'Total Security', 
-            description: 'Your assets are protected with bank-grade security and FDIC insurance.',
+            title: "Total Security", 
+            description: "Your assets are protected with bank-grade security and FDIC insurance.",
             imgSrc: 'https://images.unsplash.com/photo-1614064548237-02f15507b341?q=80&w=2070&auto=format&fit=crop'
         },
     ];
@@ -113,10 +214,10 @@ const FeaturesSection: React.FC = () => {
 const ProductsSection: React.FC = () => {
     const navigate = useNavigate();
     const products = [
-        { title: 'Personal Checking', description: 'No monthly fees, free ATM withdrawals, and a debit card that works worldwide.', icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?q=80&w=2070&auto=format&fit=crop' },
-        { title: 'Stock & ETF Trading', description: 'Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.', icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop' },
-        { title: 'Managed Portfolios', description: 'Let our experts build and manage a diversified portfolio tailored to your financial goals.', icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=2070&auto=format&fit=crop' },
-        { title: 'High-Yield Savings', description: 'Earn a competitive interest rate on your savings and watch your money grow faster.', icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1932&auto=format&fit=crop' },
+        { title: "Personal Checking", description: "No monthly fees, free ATM withdrawals, and a debit card that works worldwide.", icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?q=80&w=2070&auto=format&fit=crop' },
+        { title: "Stock & ETF Trading", description: "Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.", icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop' },
+        { title: "Managed Portfolios", description: "Let our experts build and manage a diversified portfolio tailored to your financial goals.", icon: <BrainCircuit />, imgSrc: 'https://images.unsplash.com/photo-1553729459-efe14ef6055d?q=80&w=2070&auto=format&fit=crop' },
+        { title: "High-Yield Savings", description: "Earn a competitive interest rate on your savings and watch your money grow faster.", icon: <Smartphone />, imgSrc: 'https://images.unsplash.com/photo-1639322537228-f710d846310a?q=80&w=1932&auto=format&fit=crop' },
     ];
     return (
         <div className="bg-westcoast-bg dark:bg-gray-900 py-20">

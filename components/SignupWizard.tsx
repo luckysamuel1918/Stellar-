@@ -239,7 +239,7 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
     const ProgressTracker = () => (
         <div className="mb-8">
             <h2 className="text-3xl font-bold text-center text-westcoast-dark dark:text-white mb-2">Open a Westcoast Account</h2>
-            <p className="text-center text-westcoast-text-light dark:text-gray-300 font-semibold">Step {step} of 3</p>
+            <p className="text-center text-westcoast-text-light dark:text-gray-300 font-semibold">{`Step ${step} of 3`}</p>
             <div className="flex mt-4">
                 {[1, 2, 3].map(s => (<div key={s} className="w-1/3 px-1"><div className={`h-2 rounded-full ${step >= s ? 'bg-westcoast-blue' : 'bg-gray-200 dark:bg-gray-600'}`}></div></div>))}
             </div>

@@ -27,7 +27,7 @@ const HomeView = () => {
                 <div className="flex items-center gap-3">
                     <Avatar user={userData} />
                     <div>
-                        <h1 className="text-xl font-bold text-gray-800 dark:text-white">Hi, {userData.fullName.split(' ')[0]}</h1>
+                        <h1 className="text-xl font-bold text-gray-800 dark:text-white">{`Hi, ${userData.fullName.split(' ')[0]}`}</h1>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -52,10 +52,10 @@ const HomeView = () => {
             <section className="p-4 md:p-0 md:mt-8">
                 <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-3">Quick Actions</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
-                    <QuickActionButton onClick={() => handleActionClick('transfer')} icon={<Send className="w-6 h-6 text-westcoast-blue"/>} label="Domestic" />
-                    <QuickActionButton onClick={() => handleActionClick('international')} icon={<Globe className="w-6 h-6 text-westcoast-blue"/>} label="International" />
-                    <QuickActionButton onClick={() => handleActionClick('deposit')} icon={<ClipboardCheck className="w-6 h-6 text-westcoast-blue"/>} label="Deposit" />
-                    <QuickActionButton onClick={() => handleActionClick('history')} icon={<History className="w-6 h-6 text-westcoast-blue"/>} label="History" />
+                    <QuickActionButton onClick={() => handleActionClick('transfer')} icon={<Send className="w-6 h-6 text-westcoast-blue"/>} label={"Domestic"} />
+                    <QuickActionButton onClick={() => handleActionClick('international')} icon={<Globe className="w-6 h-6 text-westcoast-blue"/>} label={"International"} />
+                    <QuickActionButton onClick={() => handleActionClick('deposit')} icon={<ClipboardCheck className="w-6 h-6 text-westcoast-blue"/>} label={"Deposit"} />
+                    <QuickActionButton onClick={() => handleActionClick('history')} icon={<History className="w-6 h-6 text-westcoast-blue"/>} label={"History"} />
                 </div>
             </section>
 

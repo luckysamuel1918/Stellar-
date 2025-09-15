@@ -98,10 +98,10 @@ const ProfileView: React.FC = () => {
                     <form onSubmit={handleSave}>
                         <div className="space-y-2">
                              <InfoRow label="Full Name" name="fullName" value={formData.fullName} onChange={handleFormChange} edit={editMode} />
-                             <InfoRow label="Email" name="email" value={formData.email} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
-                             <InfoRow label="Phone" name="phone" value={formData.phone} onChange={handleFormChange} edit={editMode} type="tel"/>
-                             <InfoRow label="Address" name="address" value={formData.address} onChange={handleFormChange} edit={editMode} />
-                             <InfoRow label="State" name="state" value={formData.state} onChange={handleFormChange} edit={editMode} />
+                             <InfoRow label="Email Address" name="email" value={formData.email} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
+                             <InfoRow label="Phone Number" name="phone" value={formData.phone} onChange={handleFormChange} edit={editMode} type="tel"/>
+                             <InfoRow label="House Address" name="address" value={formData.address} onChange={handleFormChange} edit={editMode} />
+                             <InfoRow label="State / Province" name="state" value={formData.state} onChange={handleFormChange} edit={editMode} />
                              <InfoRow label="Country" name="country" value={formData.country} onChange={handleFormChange} edit={editMode} />
                              <InfoRow label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
                              <InfoRow label="Currency" name="currencyCode" value={formData.currencyCode} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
@@ -112,7 +112,7 @@ const ProfileView: React.FC = () => {
                         {editMode ? (
                             <div className="flex gap-4 mt-6">
                                 <button type="button" onClick={() => { setEditMode(false); setFormData(user); }} className="w-full py-2 bg-gray-200 dark:bg-gray-600 font-semibold rounded-lg">Cancel</button>
-                                <button type="submit" disabled={saving} className="w-full py-2 bg-westcoast-blue text-white font-semibold rounded-lg disabled:opacity-50 flex justify-center items-center">{saving ? <Loader2 className="animate-spin" /> : 'Save Changes'}</button>
+                                <button type="submit" disabled={saving} className="w-full py-2 bg-westcoast-blue text-white font-semibold rounded-lg disabled:opacity-50 flex justify-center items-center">{saving ? <Loader2 className="animate-spin" /> : "Save Changes"}</button>
                             </div>
                         ) : (
                              <button onClick={signOut} className="md:hidden mt-6 w-full flex items-center justify-center gap-2 py-3 bg-red-50 dark:bg-red-900/40 text-red-600 dark:text-red-300 font-bold rounded-lg hover:bg-red-100 dark:hover:bg-red-900/60 transition-colors">

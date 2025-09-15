@@ -7,7 +7,7 @@ import {
     generateAndSendOtp, verifyOtp, deleteOtp
 } from '../services/firebase';
 import { 
-    CheckCircle, X, Loader2, UploadCloud, ShieldCheck, 
+    CheckCircle, X, Loader2, UploadCloud, 
     Receipt, Printer, ArrowUpRight, ArrowDownLeft
 } from 'lucide-react';
 import { WestcoastLogo } from '../components/icons';
@@ -110,42 +110,6 @@ const localBanks = [
     'Bank of America', 'JPMorgan Chase', 'Wells Fargo', 'Citibank', 'U.S. Bank', 'PNC Bank', 'TD Bank', 'Capital One'
 ];
 
-const OtpInput = ({ otp, setOtp }) => {
-    const handleChange = (element, index) => {
-        if (isNaN(element.value)) return false;
-        const newOtp = [...otp];
-        newOtp[index] = element.value;
-        setOtp(newOtp);
-        if (element.nextSibling && element.value) {
-            element.nextSibling.focus();
-        }
-    };
-
-    const handleKeyDown = (e, index) => {
-        if (e.key === "Backspace" && !otp[index] && e.target.previousSibling) {
-            e.target.previousSibling.focus();
-        }
-    };
-
-    return (
-        <div className="flex justify-center gap-2 my-4">
-            {otp.map((data, index) => (
-                <input
-                    key={index}
-                    type="text"
-                    name="otp"
-                    maxLength={1}
-                    value={data}
-                    onChange={e => handleChange(e.target, index)}
-                    onKeyDown={e => handleKeyDown(e, index)}
-                    onFocus={e => e.target.select()}
-                    className="w-12 h-14 text-center text-2xl font-semibold border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-westcoast-blue focus:border-transparent transition dark:bg-gray-700 dark:border-gray-600 dark:text-white"
-                />
-            ))}
-        </div>
-    );
-};
-
 export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const [step, setStep] = useState(1);
     const [recipient, setRecipient] = useState(null);
@@ -157,10 +121,11 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const [purpose, setPurpose] = useState('');
     const [fee, setFee] = useState(0);
     const [total, setTotal] = useState(0);
-    const [userOtp, setUserOtp] = useState(new Array(6).fill(""));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [receiptData, setReceiptData] = useState<Transaction | null>(null);
+    const [otp, setOtp] = useState('');
+    const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
     useEffect(() => {
         const numAmount = parseFloat(amount);
@@ -216,42 +181,38 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         }
     };
     
-    const handleProceedToOtp = async () => {
+    const handleRequestOtp = async () => {
         setLoading(true);
         setError('');
         try {
             await generateAndSendOtp(user.uid, user.email, user.fullName);
             setStep(3);
-        } catch(e) {
-            setError("Failed to send OTP. Please try again later.");
+        } catch (e) {
+            console.error("OTP send error:", e);
+            setError("We couldn't send an OTP. Please try again later.");
         } finally {
             setLoading(false);
         }
     };
 
-    const handleTransfer = async () => {
-        const otpString = userOtp.join('');
-        if (otpString.length !== 6) {
-            return setError("Please enter the 6-digit OTP.");
-        }
+    const handleConfirmAndTransfer = async () => {
+        if (otp.length !== 6) return setError("Please enter a valid 6-digit OTP.");
         setLoading(true);
         setError('');
         try {
-            const otpResult = await verifyOtp(user.uid, otpString);
-            if (!otpResult.valid) {
-                setError(otpResult.message);
-                setLoading(false);
-                return;
-            }
-
-            const transaction = await performTransfer(user, recipient, parseFloat(amount), purpose);
-            if (transaction) {
-                onSuccess();
+            const verification = await verifyOtp(user.uid, otp);
+            if (verification.valid) {
+                const transaction = await performTransfer(user, recipient, parseFloat(amount), purpose);
                 await deleteOtp(user.uid);
-                setReceiptData(transaction);
-                setStep(4);
+                if (transaction) {
+                    onSuccess();
+                    setReceiptData(transaction);
+                    setStep(4);
+                } else {
+                    setError('Transaction failed to record.');
+                }
             } else {
-                setError('Transaction failed to record.');
+                setError(verification.message);
             }
         } catch (e) {
             setError(e.message || 'An unexpected error occurred.');
@@ -260,10 +221,34 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         }
     };
     
+    const handleClose = () => {
+        if (step === 3) {
+            deleteOtp(user.uid).catch(e => console.error("Could not delete OTP on close", e));
+        }
+        onClose();
+    };
+
+    const handleOtpInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const { value } = e.target;
+        if (/^[0-9]$/.test(value)) {
+            const newOtp = otp.substring(0, index) + value + otp.substring(index + 1);
+            setOtp(newOtp);
+            if (index < 5 && otpInputRefs.current[index + 1]) {
+                otpInputRefs.current[index + 1]?.focus();
+            }
+        }
+    };
+
+    const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0 && otpInputRefs.current[index - 1]) {
+            otpInputRefs.current[index - 1]?.focus();
+        }
+    };
+
     return (
       <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
         <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 sm:p-8 relative">
-            <button onClick={onClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
+            <button onClick={handleClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
             
             {step === 1 && (
                 <form onSubmit={handleProceedToConfirm} className="space-y-6">
@@ -289,7 +274,7 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                         </div>}
                     </div>
                     {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-                    <button type="submit" disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg disabled:opacity-50 flex justify-center">{loading ? <Loader2 className="animate-spin"/> : 'Continue'}</button>
+                    <button type="submit" disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg disabled:opacity-50 flex justify-center">{loading ? <Loader2 className="animate-spin"/> : "Continue"}</button>
                 </form>
             )}
 
@@ -308,27 +293,41 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                     </div>
                     <div className="flex gap-4">
                         <button onClick={() => setStep(1)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
-                        <button onClick={handleProceedToOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
-                           {loading ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                        <button onClick={handleRequestOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
+                           {loading ? <Loader2 className="animate-spin" /> : "Confirm"}
                         </button>
                     </div>
                 </div>
             )}
             
             {step === 3 && (
-                <div className="text-center">
-                    <div className="flex justify-center mb-4"><Avatar user={user} size="w-16 h-16" /></div>
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">OTP Verification</h2>
-                    <p className="text-gray-600 dark:text-gray-300 mt-2 px-2">Hello, {user.fullName}, we've sent a 6-digit verification code to your ({user.phone}) and ({user.email})</p>
-                    <OtpInput otp={userOtp} setOtp={setUserOtp} />
-                    {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
-                    <button onClick={handleTransfer} disabled={loading} className="w-full bg-green-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
-                        {loading ? <Loader2 className="animate-spin" /> : <><ShieldCheck/> Verify & Transfer</>}
-                    </button>
-                    <button onClick={handleProceedToOtp} className="text-sm text-westcoast-blue hover:underline mt-4">Resend OTP</button>
+                <div className="space-y-6 text-center">
+                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Enter OTP</h2>
+                    <p className="text-gray-600 dark:text-gray-300">{`We've sent a 6-digit code to your email ${user.email}. Please enter it below.`}</p>
+                    <div className="flex justify-center gap-2">
+                        {[...Array(6)].map((_, i) => (
+                            <input
+                                key={i}
+                                ref={el => { otpInputRefs.current[i] = el; }}
+                                type="tel"
+                                maxLength={1}
+                                value={otp[i] || ''}
+                                onChange={e => handleOtpInputChange(e, i)}
+                                onKeyDown={e => handleOtpKeyDown(e, i)}
+                                className="w-12 h-14 text-center text-2xl font-bold border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                            />
+                        ))}
+                    </div>
+                    {error && <p className="text-red-600 text-sm">{error}</p>}
+                    <div className="flex gap-4">
+                        <button onClick={() => setStep(2)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
+                        <button onClick={handleConfirmAndTransfer} disabled={loading || otp.length < 6} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg disabled:opacity-50 flex justify-center items-center">
+                            {loading ? <Loader2 className="animate-spin" /> : "Verify & Transfer"}
+                        </button>
+                    </div>
                 </div>
             )}
-            
+
             {step === 4 && receiptData && (
                  <ReceiptView 
                     receiptData={receiptData} 
@@ -353,10 +352,12 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
     const [purpose, setPurpose] = useState('');
     const [fee, setFee] = useState(0);
     const [total, setTotal] = useState(0);
-    const [userOtp, setUserOtp] = useState(new Array(6).fill(""));
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
     const [receiptData, setReceiptData] = useState<Transaction | null>(null);
+    const [otp, setOtp] = useState('');
+    const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
 
     useEffect(() => {
         const numAmount = parseFloat(amount);
@@ -379,58 +380,56 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
         setStep(2);
     };
 
-    const handleProceedToOtp = async () => {
+    const handleRequestOtp = async () => {
         setLoading(true);
         setError('');
         try {
             await generateAndSendOtp(user.uid, user.email, user.fullName);
             setStep(3);
-        } catch(e) {
-            setError("Failed to send OTP. Please try again later.");
+        } catch (e) {
+            console.error("OTP send error:", e);
+            setError("We couldn't send an OTP. Please try again later.");
         } finally {
             setLoading(false);
         }
     };
-
-    const handleTransfer = async () => {
-        const otpString = userOtp.join('');
-        if (otpString.length !== 6) {
-            return setError("Please enter the 6-digit OTP.");
-        }
+    
+    const handleConfirmAndTransfer = async () => {
+        if (otp.length !== 6) return setError("Please enter a valid 6-digit OTP.");
         setLoading(true);
         setError('');
         try {
-            const otpResult = await verifyOtp(user.uid, otpString);
-            if (!otpResult.valid) {
-                setError(otpResult.message);
-                setLoading(false);
-                return;
-            }
+            const verification = await verifyOtp(user.uid, otp);
 
-            const selectedCountryData = countryData.find(c => c.name === country);
-            const tempRecipient: UserProfile = {
-                uid: `INTL-${swiftBic}`,
-                fullName: beneficiaryName,
-                accountNumber: accountNumber,
-                balance: 0,
-                email: '',
-                phone: '',
-                address: '',
-                state: '',
-                country: country,
-                currencyCode: (selectedCountryData && selectedCountryData.currency) || '',
-                isAdmin: false,
-                createdAt: new Date(),
-                customerId: '',
-            };
-            const transaction = await performTransfer(user, tempRecipient, parseFloat(amount), purpose);
-            if (transaction) {
-                onSuccess();
+            if (verification.valid) {
+                const selectedCountryData = countryData.find(c => c.name === country);
+                const tempRecipient: UserProfile = {
+                    uid: `INTL-${swiftBic}`,
+                    fullName: beneficiaryName,
+                    accountNumber: accountNumber,
+                    balance: 0,
+                    email: '',
+                    phone: '',
+                    address: '',
+                    state: '',
+                    country: country,
+                    currencyCode: (selectedCountryData && selectedCountryData.currency) || '',
+                    isAdmin: false,
+                    createdAt: new Date(),
+                    customerId: '',
+                };
+                const transaction = await performTransfer(user, tempRecipient, parseFloat(amount), purpose);
                 await deleteOtp(user.uid);
-                setReceiptData(transaction);
-                setStep(4);
+                
+                if (transaction) {
+                    onSuccess();
+                    setReceiptData(transaction);
+                    setStep(4);
+                } else {
+                    setError('Transaction failed to record.');
+                }
             } else {
-                setError('Transaction failed to record.');
+                setError(verification.message);
             }
         } catch (e) {
             setError(e.message || 'An unexpected error occurred.');
@@ -439,10 +438,34 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
         }
     };
 
+    const handleClose = () => {
+        if (step === 3) {
+            deleteOtp(user.uid).catch(e => console.error("Could not delete OTP on close", e));
+        }
+        onClose();
+    };
+    
+    const handleOtpInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+        const { value } = e.target;
+        if (/^[0-9]$/.test(value)) {
+            const newOtp = otp.substring(0, index) + value + otp.substring(index + 1);
+            setOtp(newOtp);
+            if (index < 5 && otpInputRefs.current[index + 1]) {
+                otpInputRefs.current[index + 1]?.focus();
+            }
+        }
+    };
+
+    const handleOtpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, index: number) => {
+        if (e.key === 'Backspace' && !otp[index] && index > 0 && otpInputRefs.current[index - 1]) {
+            otpInputRefs.current[index - 1]?.focus();
+        }
+    };
+
     return (
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg p-6 sm:p-8 relative">
-                 <button onClick={onClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
+                 <button onClick={handleClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
                 {step === 1 && (
                     <form onSubmit={handleProceedToConfirm} className="space-y-6">
                         <h2 className="text-2xl font-bold text-gray-800 dark:text-white">International Transfer</h2>
@@ -471,7 +494,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                             </div>}
                         </div>
                         {error && <p className="text-red-600 text-sm text-center">{error}</p>}
-                        <button type="submit" disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg disabled:opacity-50 flex justify-center">{loading ? <Loader2 className="animate-spin"/> : 'Continue'}</button>
+                        <button type="submit" disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg disabled:opacity-50 flex justify-center">{loading ? <Loader2 className="animate-spin"/> : "Continue"}</button>
                     </form>
                 )}
                  {step === 2 && (
@@ -488,23 +511,37 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                         </div>
                          <div className="flex gap-4">
                             <button onClick={() => setStep(1)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
-                            <button onClick={handleProceedToOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
-                                {loading ? <Loader2 className="animate-spin" /> : 'Confirm'}
+                            <button onClick={handleRequestOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
+                                {loading ? <Loader2 className="animate-spin" /> : "Confirm"}
                             </button>
                         </div>
                     </div>
                 )}
-                 {step === 3 && (
-                    <div className="text-center">
-                        <div className="flex justify-center mb-4"><Avatar user={user} size="w-16 h-16" /></div>
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">OTP Verification</h2>
-                        <p className="text-gray-600 dark:text-gray-300 mt-2 px-2">Hello, {user.fullName}, we've sent a 6-digit verification code to your ({user.phone}) and ({user.email})</p>
-                        <OtpInput otp={userOtp} setOtp={setUserOtp} />
-                        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
-                         <button onClick={handleTransfer} disabled={loading} className="w-full bg-green-500 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2">
-                             {loading ? <Loader2 className="animate-spin" /> : <><ShieldCheck/> Verify & Transfer</>}
-                        </button>
-                        <button onClick={handleProceedToOtp} className="text-sm text-westcoast-blue hover:underline mt-4">Resend OTP</button>
+                {step === 3 && (
+                    <div className="space-y-6 text-center">
+                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Enter OTP</h2>
+                        <p className="text-gray-600 dark:text-gray-300">{`We've sent a 6-digit code to your email ${user.email}. Please enter it below.`}</p>
+                        <div className="flex justify-center gap-2">
+                            {[...Array(6)].map((_, i) => (
+                                <input
+                                    key={i}
+                                    ref={el => { otpInputRefs.current[i] = el; }}
+                                    type="tel"
+                                    maxLength={1}
+                                    value={otp[i] || ''}
+                                    onChange={e => handleOtpInputChange(e, i)}
+                                    onKeyDown={e => handleOtpKeyDown(e, i)}
+                                    className="w-12 h-14 text-center text-2xl font-bold border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
+                                />
+                            ))}
+                        </div>
+                        {error && <p className="text-red-600 text-sm">{error}</p>}
+                        <div className="flex gap-4">
+                            <button onClick={() => setStep(2)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
+                            <button onClick={handleConfirmAndTransfer} disabled={loading || otp.length < 6} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg disabled:opacity-50 flex justify-center items-center">
+                                {loading ? <Loader2 className="animate-spin" /> : "Verify & Transfer"}
+                            </button>
+                        </div>
                     </div>
                 )}
                 {step === 4 && receiptData && (
@@ -523,6 +560,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
 
 const FileUploadBox = ({ side, image, onFileChange }: { side: 'front' | 'back', image: string | null, onFileChange: (e: React.ChangeEvent<HTMLInputElement>, side: 'front' | 'back') => void }) => {
     const inputId = `check-${side}-upload`;
+    const label = side === 'front' ? 'Upload Front' : 'Upload Back';
     return (
         <div>
             <label htmlFor={inputId} className="cursor-pointer">
@@ -532,7 +570,7 @@ const FileUploadBox = ({ side, image, onFileChange }: { side: 'front' | 'back', 
                     ) : (
                         <>
                             <UploadCloud className="w-8 h-8 text-gray-400 mb-2" />
-                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">Upload {side.charAt(0).toUpperCase() + side.slice(1)}</span>
+                            <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{label}</span>
                             <span className="text-xs text-gray-500 dark:text-gray-400">Click to select file</span>
                         </>
                     )}
@@ -616,10 +654,10 @@ export const CheckDepositModal = ({ user, onClose, onSuccess }) => {
                         </div>
                         <div className="pt-2">
                              <label htmlFor="deposit-amount" className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Check Amount</label>
-                             <input id="deposit-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`Amount in ${user.currencyCode}`} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required/>
+                             <input id="deposit-amount" type="number" value={amount} onChange={e => setAmount(e.target.value)} placeholder={`Check Amount in ${user.currencyCode}`} className="w-full p-3 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required/>
                         </div>
                         <button type="submit" disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center">
-                            {loading ? <Loader2 className="animate-spin" /> : 'Deposit Check'}
+                            {loading ? <Loader2 className="animate-spin" /> : "Deposit Check"}
                         </button>
                     </form>
                 )}
