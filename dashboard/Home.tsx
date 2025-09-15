@@ -40,7 +40,7 @@ const HomeView = () => {
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-westcoast-blue to-westcoast-accent text-white shadow-lg">
                     <p className="text-sm opacity-80">Available Balance</p>
                     <div className="flex justify-between items-center mt-1">
-                        <p className="text-4xl font-bold">{formatCurrency(userData.balance, userData.currencyCode).replace('.00', '')}<span className="text-xl font-semibold opacity-80 ml-1">{userData.currencyCode}</span></p>
+                        <p className="text-3xl md:text-4xl font-bold">{formatCurrency(userData.balance, userData.currencyCode).replace('.00', '')}<span className="text-lg md:text-xl font-semibold opacity-80 ml-1">{userData.currencyCode}</span></p>
                         <CreditCard className="w-8 h-8 opacity-50"/>
                     </div>
                     <div className="mt-4">

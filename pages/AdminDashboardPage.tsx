@@ -501,12 +501,12 @@ const AdminDashboardPage: React.FC = () => {
                         </div>
                     </div>
                     <div className="overflow-x-auto">
-                        <table className="w-full">
+                        <table className="w-full min-w-[800px]">
                             <thead>
                                 <tr className="text-left text-xs text-gray-400 uppercase">
                                     <th className="py-3 px-4 font-semibold">Name</th>
                                     <th className="py-3 px-4 font-semibold hidden md:table-cell">Account No.</th>
-                                    <th className="py-3 px-4 font-semibold text-right hidden sm:table-cell">Balance</th>
+                                    <th className="py-3 px-4 font-semibold text-right hidden md:table-cell">Balance</th>
                                     <th className="py-3 px-4 font-semibold text-center">Actions</th>
                                 </tr>
                             </thead>
@@ -526,11 +526,15 @@ const AdminDashboardPage: React.FC = () => {
                                                         )}
                                                     </p>
                                                     <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
+                                                    <div className="mt-2 space-y-1 md:hidden">
+                                                        <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Acc:</span> <span className="font-mono text-westcoast-text-light dark:text-gray-300">{user.accountNumber}</span></p>
+                                                        <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Bal:</span> <span className="font-mono font-semibold dark:text-white">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</span></p>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
-                                        <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden sm:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
+                                        <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden md:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
                                         <td className="py-4 px-4 text-center">
                                             <div className="flex items-center justify-center flex-wrap gap-1">
                                                  <button onClick={() => openModal('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>

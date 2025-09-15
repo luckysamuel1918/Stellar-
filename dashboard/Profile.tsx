@@ -64,12 +64,12 @@ const ProfileView: React.FC = () => {
     };
 
     const InfoRow = ({ label, value, name, onChange, edit, type = "text", isReadOnly = false }) => (
-        <div className="grid grid-cols-3 gap-4 items-center py-2 border-b border-gray-100 dark:border-gray-700">
-            <label className="text-gray-500 dark:text-gray-400 font-medium col-span-1">{label}</label>
+        <div className="py-3 border-b border-gray-100 dark:border-gray-700 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center">
+            <label htmlFor={name} className="block text-sm font-medium text-gray-500 dark:text-gray-400">{label}</label>
             {edit && !isReadOnly ? (
-                <input type={type} name={name} value={value} onChange={onChange} className="col-span-2 w-full px-3 py-1.5 border rounded-md dark:bg-gray-600 dark:border-gray-500 bg-gray-50" />
+                <input type={type} name={name} id={name} value={value} onChange={onChange} className="mt-1 w-full px-3 py-1.5 border rounded-md dark:bg-gray-600 dark:border-gray-500 bg-gray-50 sm:mt-0 sm:col-span-2" />
             ) : (
-                <p className="font-semibold dark:text-white col-span-2 break-words">{value}</p>
+                <p className="mt-1 font-semibold dark:text-white break-words sm:mt-0 sm:col-span-2">{value}</p>
             )}
         </div>
     );
