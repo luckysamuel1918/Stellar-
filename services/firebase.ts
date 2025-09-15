@@ -45,14 +45,10 @@ const db = firebase.firestore();
 const { Timestamp } = firebase.firestore;
 const { serverTimestamp, increment } = firebase.firestore.FieldValue;
 
-// Re-export auth functions to be used in components
-const { onAuthStateChanged, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } = auth;
-export { 
-  onAuthStateChanged, 
-  createUserWithEmailAndPassword, 
-  signInWithEmailAndPassword, 
-  signOut,
-  auth, 
+// Re-export auth object to be used in components.
+// Methods should be called directly on the auth object, e.g., auth.onAuthStateChanged()
+export {
+  auth,
   db,
   Timestamp
 };
