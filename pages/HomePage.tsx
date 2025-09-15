@@ -1,7 +1,8 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit, Loader2 } from 'lucide-react';
+import { ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit, Loader2, Newspaper, ExternalLink } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
+import { GoogleGenAI } from "@google/genai";
 
 const PLACEHOLDER_IMAGE_URI = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgc3Ryb2tlPSIjOWNhM2FmIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCI+PHJlY3QgeD0iMyIgeT0iMyIgd2lkdGg9IjE4IiBoZWlnaHQ9IjE4IiByeD0iMiIgcnk9IjIiIGZpbGw9IiNlNWU3ZWIiPjwvcmVjdD48Y2lyY2xlIGN4PSI4LjUiIGN5PSI4LjUiIHI9IjEuNSIgZmlsbD0iIzljYTNhZiIgc3Ryb2tlPSJub25lIj48L2NpcmNsZT48cG9seWxpbmUgcG9pbnRzPSIyMSAxNSAxNiAxMCA1IDIxIiBmaWxsPSJub25lIj48L3BvbHlsaW5lPjwvc3ZnPg==';
 
@@ -252,6 +253,112 @@ const ProductsSection: React.FC = () => {
     );
 };
 
+const MarketInsightsSection: React.FC = () => {
+    const [news, setNews] = useState<{ headline: string; summary: string }[]>([]);
+    const [sources, setSources] = useState<{ uri: string; title: string }[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+
+    const parseNews = (text: string) => {
+        if (!text) return [];
+        const articles = [];
+        const entries = text.split('Headline:').slice(1);
+        for (const entry of entries) {
+            const parts = entry.split('Summary:');
+            if (parts.length === 2) {
+                articles.push({
+                    headline: parts[0].trim(),
+                    summary: parts[1].trim(),
+                });
+            }
+        }
+        return articles;
+    };
+
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.5-flash",
+                    contents: "Get the top 5 latest financial news headlines. For each headline, provide a brief 1-2 sentence summary. Format each item like this: Headline: [The headline] Summary: [The summary]",
+                    config: {
+                        tools: [{ googleSearch: {} }],
+                    },
+                });
+
+                const text = response.text;
+                const parsedNews = parseNews(text);
+                setNews(parsedNews);
+
+                const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
+                if (groundingChunks) {
+                    const webSources = groundingChunks
+                        .filter(chunk => chunk.web)
+                        .map(chunk => chunk.web)
+                        .filter((value, index, self) => self.findIndex(s => s.uri === value.uri) === index);
+                    setSources(webSources);
+                }
+            } catch (err) {
+                console.error("Error fetching market news:", err);
+                setError("Could not load market insights at this time.");
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchNews();
+    }, []);
+
+    const renderSkeletons = () => (
+        Array.from({ length: 3 }).map((_, index) => (
+            <div key={index} className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 animate-pulse">
+                <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4 mb-4"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-full mb-2"></div>
+                <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-5/6"></div>
+            </div>
+        ))
+    );
+
+    return (
+        <div className="bg-white dark:bg-gray-800 py-20">
+            <div className="container mx-auto px-4">
+                <div className="text-center mb-16">
+                    <h2 className="text-4xl font-bold text-westcoast-text-dark dark:text-white mb-4">Market Insights</h2>
+                    <p className="text-lg text-westcoast-text-light dark:text-gray-300 max-w-3xl mx-auto">Stay informed with the latest financial news and updates, powered by real-time search.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    {loading ? renderSkeletons() : error ? (
+                        <div className="col-span-full text-center text-red-500 bg-red-50 dark:bg-red-900/40 p-6 rounded-lg">{error}</div>
+                    ) : (
+                        news.map((item, index) => (
+                            <div key={index} className="bg-gray-50 dark:bg-gray-700 rounded-xl shadow-md p-6 flex flex-col">
+                                <div className="flex-grow">
+                                    <h3 className="text-lg font-bold text-westcoast-text-dark dark:text-white mb-2">{item.headline}</h3>
+                                    <p className="text-sm text-westcoast-text-light dark:text-gray-300">{item.summary}</p>
+                                </div>
+                            </div>
+                        ))
+                    )}
+                </div>
+                {sources.length > 0 && (
+                    <div className="mt-12">
+                        <h4 className="text-center text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-4">Information Sources</h4>
+                        <div className="flex flex-wrap justify-center gap-4">
+                            {sources.map((source, index) => (
+                                <a key={index} href={source.uri} target="_blank" rel="noopener noreferrer" className="text-sm text-westcoast-blue hover:underline flex items-center gap-1">
+                                    {source.title} <ExternalLink size={14} />
+                                </a>
+                            ))}
+                        </div>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+};
+
+
 const TeamSection: React.FC = () => {
     const staffData = [
         { name: 'Dr. Evelyn Reed', title: 'Chief Executive Officer', description: 'With over 20 years in finance, Evelyn guides our strategic vision, ensuring sustainable growth and innovation while fostering a customer-centric culture.', imgSrc: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
@@ -319,7 +426,7 @@ const TeamSection: React.FC = () => {
     );
 
     return (
-        <div className="bg-white dark:bg-gray-800 py-20">
+        <div className="bg-westcoast-bg dark:bg-gray-900 py-20">
             <style>{`
                 .scrollbar-hide::-webkit-scrollbar { display: none; }
                 .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
@@ -410,6 +517,7 @@ const HomePage: React.FC = () => {
             <MarketTicker />
             <FeaturesSection />
             <ProductsSection />
+            <MarketInsightsSection />
             <TeamSection />
             <FinalCTASection />
         </>

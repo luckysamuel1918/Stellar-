@@ -4,10 +4,8 @@ import { UserProfile, Transaction } from '../types';
 import { 
     getAllUsers, adminUpdateBalance, updateUserProfile, adminDeleteUser,
     getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
-    wipeChatHistory
+    wipeChatHistory, Timestamp
 } from '../services/firebase';
-import firebase from "firebase/compat/app";
-import "firebase/compat/firestore";
 import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck } from 'lucide-react';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
@@ -63,7 +61,7 @@ const ManageBalanceModal: React.FC<{ user: UserProfile; onClose: () => void; onU
         }
         try {
             const dateTime = new Date(`${date}T${time}`);
-            const customTimestamp = firebase.firestore.Timestamp.fromDate(dateTime);
+            const customTimestamp = Timestamp.fromDate(dateTime);
             await adminUpdateBalance(user, numAmount, type, description || `Administrative ${type}`, senderName, customTimestamp);
             onUpdate();
         } catch (err: any) {
@@ -254,7 +252,7 @@ const ManageTransactionsModal = ({ user, onClose }) => {
     };
     
     const handleSave = async () => {
-        const newTimestamp = firebase.firestore.Timestamp.fromDate(new Date(`${date}T${time}`));
+        const newTimestamp = Timestamp.fromDate(new Date(`${date}T${time}`));
         await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status, description });
         const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status, description } : tx);
         setTransactions(updatedTxs.sort((a, b) => {

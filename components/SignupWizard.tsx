@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react';
-import { auth, createUserProfileDocument } from '../services/firebase';
+import { auth, createUserWithEmailAndPassword, createUserProfileDocument } from '../services/firebase';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate } from 'react-router-dom';
 
@@ -217,7 +217,7 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
             setLoading(true);
             setFirebaseError('');
             try {
-                const userCredential = await auth.createUserWithEmailAndPassword(formData.email, formData.password);
+                const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
                 const { user } = userCredential;
                 const newAccountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
                 setAccountNumber(newAccountNumber);

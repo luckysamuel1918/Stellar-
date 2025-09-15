@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
-import { auth, User, getUserData } from './services/firebase';
+import { auth, onAuthStateChanged, signOut as firebaseSignOut, User, getUserData } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
 import AuthPage from './pages/AuthPage';
@@ -70,7 +70,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   }, []);
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(async (user) => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
         const profile = await getUserData(user.uid);
         setUserData(profile);
@@ -85,7 +85,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 
   const signOut = useCallback(async () => {
       try {
-          await auth.signOut();
+          await firebaseSignOut(auth);
           setUserData(null);
           navigate('/');
       } catch (error) {
