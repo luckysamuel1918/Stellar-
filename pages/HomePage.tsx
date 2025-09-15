@@ -278,7 +278,13 @@ const MarketInsightsSection: React.FC = () => {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+                const apiKey = (process && process.env && process.env.API_KEY) || '';
+                if (!apiKey) {
+                    setError("Could not load market insights: API key is not configured.");
+                    setLoading(false);
+                    return;
+                }
+                const ai = new GoogleGenAI({ apiKey });
                 const response = await ai.models.generateContent({
                     model: "gemini-2.5-flash",
                     contents: "Get the top 5 latest financial news headlines. For each headline, provide a brief 1-2 sentence summary. Format each item like this: Headline: [The headline] Summary: [The summary]",

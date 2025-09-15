@@ -23,7 +23,13 @@ const AiAssistantView: React.FC = () => {
     // Initialize the AI chat session
     useEffect(() => {
         try {
-            const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+            const apiKey = (process && process.env && process.env.API_KEY) || '';
+            if (!apiKey) {
+                console.error("Failed to initialize AI Assistant: API key is not configured.");
+                setMessages(prev => [...prev, { sender: 'ai', text: "Sorry, the AI Assistant is not configured correctly. Please contact support." }]);
+                return;
+            }
+            const ai = new GoogleGenAI({ apiKey });
             const newChat = ai.chats.create({
                 model: 'gemini-2.5-flash',
                 config: {
