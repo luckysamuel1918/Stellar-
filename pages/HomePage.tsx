@@ -299,10 +299,14 @@ const MarketInsightsSection: React.FC = () => {
 
                 const groundingChunks = response.candidates?.[0]?.groundingMetadata?.groundingChunks;
                 if (groundingChunks) {
+                    // FIX: Ensure that the 'uri' property exists and provide a fallback for 'title' to match the state's type definition.
                     const webSources = groundingChunks
-                        .filter(chunk => chunk.web)
-                        .map(chunk => chunk.web)
-                        .filter((value, index, self) => self.findIndex(s => s.uri === value.uri) === index);
+                        .filter(chunk => chunk.web?.uri) // Filter for chunks that have a web property with a uri
+                        .map(chunk => ({
+                            uri: chunk.web!.uri!, 
+                            title: chunk.web!.title || chunk.web!.uri!
+                        }))
+                        .filter((value, index, self) => self.findIndex(s => s.uri === value.uri) === index); // Remove duplicates
                     setSources(webSources);
                 }
             } catch (err) {
@@ -510,11 +514,7 @@ const HomePage: React.FC = () => {
 
     // Prevent rendering the homepage for logged in users while redirecting
     if (loading || userData) {
-        return (
-            <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900">
-                <Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/>
-            </div>
-        );
+        return null;
     }
 
     return (

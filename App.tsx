@@ -4,10 +4,10 @@ import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router
 import { auth, User, getUserData } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
-import AuthPage from './pages/AuthPage';
+import AuthPage from './auth/AuthPage';
 import DashboardLayout from './dashboard/DashboardLayout';
-import AdminLoginPage from './pages/AdminLoginPage';
-import AdminDashboardPage from './pages/AdminDashboardPage';
+import AdminLoginPage from './admin/AdminLoginPage';
+import AdminDashboardPage from './admin/AdminDashboardPage';
 import { WestcoastLogo } from './components/icons';
 import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun, Globe } from 'lucide-react';
 
@@ -264,18 +264,18 @@ const AppLayout: React.FC = () => (
 // --- ROUTING & PROTECTION ---
 const UserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
-    if (loading) return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    if (loading) return null;
     // Add a check for userData loading state to prevent race conditions on login
-    if (user && !userData) return <div className="flex justify-center items-center h-screen"><p>Loading user profile...</p></div>;
+    if (user && !userData) return null;
     if (user && userData && !userData.isAdmin) return <>{children}</>;
     return <Navigate to="/user" replace />;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
-    if (loading) return <div className="flex justify-center items-center h-screen"><p>Loading...</p></div>;
+    if (loading) return null;
     // Add a check for userData loading state to prevent race conditions on login
-    if (user && !userData) return <div className="flex justify-center items-center h-screen"><p>Loading user profile...</p></div>;
+    if (user && !userData) return null;
     if (user && userData && userData.isAdmin) return <>{children}</>;
     return <Navigate to="/admin-login" replace />;
 };

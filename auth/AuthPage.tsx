@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home } from 'lucide-react';
 import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
-import SignupWizard from '../components/SignupWizard';
+import SignupWizard from './SignupWizard';
 import { useAuth } from '../App';
 
 const AuthPage: React.FC = () => {

@@ -74,15 +74,26 @@ const DashboardLayout: React.FC = () => {
     };
 
     useEffect(() => {
-        if (userData && userData.isSuspended) {
+        // Auto-logout for inactivity for all users.
+        if (userData) {
             let inactivityTimer: number;
+
             const resetTimer = () => {
                 clearTimeout(inactivityTimer);
-                inactivityTimer = window.setTimeout(() => signOut(), 5 * 60 * 1000); // 5 minutes
+                // Set a 5-minute timer. When it expires, call signOut.
+                inactivityTimer = window.setTimeout(() => signOut(), 5 * 60 * 1000);
             };
+
+            // List of events that indicate user activity.
             const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
+            
+            // Add event listeners for each activity type. Any of these will reset the timer.
             activityEvents.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
+            
+            // Initialize the timer when the component mounts.
             resetTimer();
+
+            // Cleanup function to remove listeners and clear the timer when the component unmounts.
             return () => {
                 clearTimeout(inactivityTimer);
                 activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
