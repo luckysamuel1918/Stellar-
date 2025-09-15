@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate } from 'react-router-dom';
-import { auth, getUserData, updateUserProfile, createUserProfileDocument } from '../services/firebase';
+// FIX: Import `signInWithEmailAndPassword` and `signOut` for correct Firebase auth usage.
+import { auth, getUserData, updateUserProfile, createUserProfileDocument, signInWithEmailAndPassword, signOut } from '../services/firebase';
 import { useAuth } from '../App';
 
 const AdminLoginPage: React.FC = () => {
@@ -26,7 +27,8 @@ const AdminLoginPage: React.FC = () => {
     setError(null);
 
     try {
-      const userCredential = await auth.signInWithEmailAndPassword(email, password);
+      // FIX: Use `signInWithEmailAndPassword` as a function, passing `auth` as the first argument.
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const profile = await getUserData(userCredential.user.uid);
 
       if (profile && profile.isAdmin) {
@@ -53,7 +55,8 @@ const AdminLoginPage: React.FC = () => {
           navigate('/admin-dashboard');
       } else {
           setError('Access denied. Not an admin account.');
-          await auth.signOut(); // Sign out non-admin user
+          // FIX: Use `signOut` as a function, passing `auth` as the first argument.
+          await signOut(auth); // Sign out non-admin user
       }
     } catch (err: any) {
       setError('Invalid admin credentials.');

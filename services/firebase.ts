@@ -1,67 +1,65 @@
-// FIX: Refactored to use Firebase v8 compat libraries to fix module resolution errors.
-import firebase from 'firebase/compat/app';
-import 'firebase/compat/auth';
-import 'firebase/compat/firestore';
-
+import { initializeApp } from "firebase/app";
+import { getAuth, User, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+import { 
+    getFirestore, 
+    doc, 
+    getDoc, 
+    setDoc, 
+    serverTimestamp, 
+    Timestamp, 
+    collection, 
+    query, 
+    where, 
+    getDocs,
+    addDoc,
+    runTransaction,
+    increment,
+    updateDoc,
+    writeBatch,
+    orderBy,
+    onSnapshot,
+    deleteDoc,
+} from "firebase/firestore";
 import { UserProfile, Transaction } from "../types";
 
-// Manually define types that were previously imported from the v9 SDK.
-type FirebaseApp = firebase.app.App;
-export type User = firebase.User;
+// --- INITIALIZATION ---
 
 const firebaseConfig = {
-  apiKey: (process && process.env && process.env.API_KEY) || '',
-  authDomain: "westcoast-trust-demo.firebaseapp.com",
-  databaseURL: "https://westcoast-trust-demo.firebaseio.com",
-  projectId: "westcoast-trust-demo",
-  storageBucket: "westcoast-trust-demo.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:a1b2c3d4e5f6a7b8c9d0e1",
-  measurementId: "G-DEMO123ABC"
+  apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
+  authDomain: "westcoast-c85e4.firebaseapp.com",
+  databaseURL: "https://westcoast-c85e4-default-rtdb.firebaseio.com",
+  projectId: "westcoast-c85e4",
+  storageBucket: "westcoast-c85e4.appspot.com",
+  messagingSenderId: "15776220227",
+  appId: "1:15776220227:web:a5cf2658b895aff29180f6",
+  measurementId: "G-MNTK4NDZH4"
 };
 
-let app: FirebaseApp;
-try {
-    // Use v8-style initialization.
-    if (!firebase.apps.length) {
-        app = firebase.initializeApp(firebaseConfig);
-    } else {
-        app = firebase.app();
-    }
-} catch (error) {
-    console.error("Firebase initialization error:", error);
-    // This is a critical error. We stop the app and show a clear message.
-    // Replacing the body prevents other scripts from running and React from mounting.
-    document.body.innerHTML = `<div style="text-align: center; padding: 40px; font-family: 'Inter', sans-serif; background-color: #F6F9FC; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;">
-        <h1 style="font-size: 1.5rem; font-weight: bold; color: #0A2540;">Application Configuration Error</h1>
-        <p style="margin-top: 1rem; color: #6B7280;">There's a problem with the app's setup. The API key for backend services is missing or invalid.</p>
-        <p style="margin-top: 0.5rem; color: #6B7280;">Please ensure environment variables are correctly configured.</p>
-    </div>`;
-    throw new Error("Firebase initialization failed due to invalid configuration. Halting application.");
-}
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
 
-const auth = firebase.auth();
-const db = firebase.firestore();
-const { Timestamp } = firebase.firestore;
-const { serverTimestamp, increment } = firebase.firestore.FieldValue;
+// --- EXPORTS ---
 
-// Re-export auth object to be used in components.
-// Methods should be called directly on the auth object, e.g., auth.onAuthStateChanged()
-export {
-  auth,
-  db,
-  Timestamp
-};
+// Re-export auth instance and core auth functions for convenience
+export { auth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword };
+
+// Re-export User type from auth
+export type { User };
+
+// Re-export Timestamp
+export { Timestamp };
+
+// --- FIRESTORE FUNCTIONS ---
 
 export const createUserProfileDocument = async (userAuth: User, additionalData: any) => {
   if (!userAuth) return;
-  const userRef = db.doc(`users/${userAuth.uid}`);
-  const snapshot = await userRef.get();
+  const userRef = doc(db, `users/${userAuth.uid}`);
+  const snapshot = await getDoc(userRef);
 
-  if (!snapshot.exists) {
+  if (!snapshot.exists()) {
     const { email } = userAuth;
     const { fullName, phone, address, state, country, currencyCode, accountNumber, pin } = additionalData;
-    const createdAt = serverTimestamp();
     try {
       const newUserProfile: Omit<UserProfile, 'uid'> & { pin: string } = {
         email,
@@ -77,10 +75,10 @@ export const createUserProfileDocument = async (userAuth: User, additionalData: 
         balance: 1000, // Starting balance for new users for demo purposes
         isAdmin: email === 'admin@westcoasttrust.com', // Example admin setup
         isSuspended: false,
-        createdAt,
+        createdAt: serverTimestamp(),
         photoURL: '',
       };
-      await userRef.set(newUserProfile);
+      await setDoc(userRef, newUserProfile);
     } catch (error) {
       console.error("Error creating user document:", error);
     }
@@ -90,9 +88,9 @@ export const createUserProfileDocument = async (userAuth: User, additionalData: 
 
 export const getUserData = async (uid: string): Promise<UserProfile | null> => {
     if (!uid) return null;
-    const userRef = db.doc(`users/${uid}`);
-    const snapshot = await userRef.get();
-    if (snapshot.exists) {
+    const userRef = doc(db, `users/${uid}`);
+    const snapshot = await getDoc(userRef);
+    if (snapshot.exists()) {
         return { uid, ...snapshot.data() } as UserProfile;
     }
     return null;
@@ -100,18 +98,18 @@ export const getUserData = async (uid: string): Promise<UserProfile | null> => {
 
 export const getUserDataWithPin = async (uid: string): Promise<(UserProfile & { pin: string }) | null> => {
     if (!uid) return null;
-    const userRef = db.doc(`users/${uid}`);
-    const snapshot = await userRef.get();
-    if (snapshot.exists) {
+    const userRef = doc(db, `users/${uid}`);
+    const snapshot = await getDoc(userRef);
+    if (snapshot.exists()) {
         return { uid, ...snapshot.data() } as UserProfile & { pin: string };
     }
     return null;
 }
 
 export const getUserByAccountNumber = async (accountNumber: string): Promise<UserProfile | null> => {
-    const usersRef = db.collection("users");
-    const q = usersRef.where("accountNumber", "==", accountNumber);
-    const querySnapshot = await q.get();
+    const usersRef = collection(db, "users");
+    const q = query(usersRef, where("accountNumber", "==", accountNumber));
+    const querySnapshot = await getDocs(q);
     if (!querySnapshot.empty) {
         const userDoc = querySnapshot.docs[0];
         return { uid: userDoc.id, ...userDoc.data() } as UserProfile;
@@ -125,8 +123,8 @@ export const createTransaction = async (transactionData: Omit<Transaction, 'id'>
             ...transactionData,
             timestamp: transactionData.timestamp || serverTimestamp()
         };
-        const docRef = await db.collection("transactions").add(dataWithTimestamp);
-        const docSnap = await docRef.get();
+        const docRef = await addDoc(collection(db, "transactions"), dataWithTimestamp);
+        const docSnap = await getDoc(docRef);
         return { id: docSnap.id, ...docSnap.data() } as Transaction;
     } catch (error) {
         console.error("Error creating transaction:", error);
@@ -139,11 +137,11 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
         throw new Error("Insufficient funds.");
     }
     
-    const senderRef = db.doc(`users/${sender.uid}`);
+    const senderRef = doc(db, `users/${sender.uid}`);
 
-    await db.runTransaction(async (transaction) => {
+    await runTransaction(db, async (transaction) => {
         const senderDoc = await transaction.get(senderRef);
-        if (!senderDoc.exists || (senderDoc.data()?.balance || 0) < amount) {
+        if (!senderDoc.exists() || (senderDoc.data()?.balance || 0) < amount) {
             throw new Error("Insufficient funds.");
         }
         
@@ -151,7 +149,7 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
 
         const isInternal = receiver.uid && !receiver.uid.startsWith('EXT-') && !receiver.uid.startsWith('INTL-');
         if (isInternal) {
-            const receiverRef = db.doc(`users/${receiver.uid}`);
+            const receiverRef = doc(db, `users/${receiver.uid}`);
             transaction.update(receiverRef, { balance: increment(amount) });
         }
     });
@@ -183,16 +181,16 @@ export const adminUpdateBalance = async (
     type: 'credit' | 'debit', 
     description: string,
     senderName?: string,
-    customTimestamp?: firebase.firestore.Timestamp,
+    customTimestamp?: Timestamp,
     transactionType?: Transaction['type']
 ): Promise<Transaction | null> => {
-    const userRef = db.doc(`users/${user.uid}`);
+    const userRef = doc(db, `users/${user.uid}`);
     const currentBalance = Number(user.balance) || 0;
     const amountToIncrement = type === 'credit' ? amount : -amount;
 
     if(currentBalance + amountToIncrement < 0) throw new Error("Debit amount exceeds user balance.");
 
-    await userRef.update({ balance: increment(amountToIncrement) });
+    await updateDoc(userRef, { balance: increment(amountToIncrement) });
 
     const newTransaction = await createTransaction({
         amount,
@@ -210,17 +208,17 @@ export const adminUpdateBalance = async (
 };
 
 export const getAllUsers = async (): Promise<UserProfile[]> => {
-    const usersCollection = db.collection('users');
-    const userSnapshot = await usersCollection.get();
+    const usersCollection = collection(db, 'users');
+    const userSnapshot = await getDocs(usersCollection);
     return userSnapshot.docs.map(docData => ({ uid: docData.id, ...docData.data() } as UserProfile));
 };
 
 export const getUserTransactions = async (uid: string): Promise<Transaction[]> => {
-    const transactionsRef = db.collection("transactions");
-    const sentQuery = transactionsRef.where("senderId", "==", uid);
-    const receivedQuery = transactionsRef.where("receiverId", "==", uid);
+    const transactionsRef = collection(db, "transactions");
+    const sentQuery = query(transactionsRef, where("senderId", "==", uid));
+    const receivedQuery = query(transactionsRef, where("receiverId", "==", uid));
     
-    const [senderSnapshot, receiverSnapshot] = await Promise.all([sentQuery.get(), receivedQuery.get()]);
+    const [senderSnapshot, receiverSnapshot] = await Promise.all([getDocs(sentQuery), getDocs(receivedQuery)]);
 
     const transactionsMap = new Map<string, Transaction>();
     senderSnapshot.forEach((docData) => transactionsMap.set(docData.id, { id: docData.id, ...docData.data() } as Transaction));
@@ -236,25 +234,25 @@ export const getUserTransactions = async (uid: string): Promise<Transaction[]> =
 
 export const updateUserProfile = async (uid: string, data: Partial<UserProfile>): Promise<void> => {
     if (!uid) return;
-    const userRef = db.doc(`users/${uid}`);
-    await userRef.update(data);
+    const userRef = doc(db, `users/${uid}`);
+    await updateDoc(userRef, data);
 };
 
 export const adminDeleteUser = async (uid: string): Promise<void> => {
     if (!uid) throw new Error("User ID is required.");
-    const batch = db.batch();
-    const userRef = db.doc(`users/${uid}`);
+    const batch = writeBatch(db);
+    const userRef = doc(db, `users/${uid}`);
 
-    const transactionsRef = db.collection("transactions");
-    const sentQuery = transactionsRef.where("senderId", "==", uid);
-    const receivedQuery = transactionsRef.where("receiverId", "==", uid);
+    const transactionsRef = collection(db, "transactions");
+    const sentQuery = query(transactionsRef, where("senderId", "==", uid));
+    const receivedQuery = query(transactionsRef, where("receiverId", "==", uid));
 
-    const [sentSnapshot, receivedSnapshot] = await Promise.all([sentQuery.get(), receivedQuery.get()]);
+    const [sentSnapshot, receivedSnapshot] = await Promise.all([getDocs(sentQuery), getDocs(receivedQuery)]);
     sentSnapshot.forEach(docData => batch.delete(docData.ref));
     receivedSnapshot.forEach(docData => batch.delete(docData.ref));
 
-    const messagesRef = db.collection(`chats/${uid}/messages`);
-    const messagesSnapshot = await messagesRef.get();
+    const messagesRef = collection(db, `chats/${uid}/messages`);
+    const messagesSnapshot = await getDocs(messagesRef);
     messagesSnapshot.forEach(docData => batch.delete(docData.ref));
     
     batch.delete(userRef);
@@ -264,13 +262,13 @@ export const adminDeleteUser = async (uid: string): Promise<void> => {
 
 export const adminUpdateTransaction = async (transactionId: string, data: Partial<Transaction>): Promise<void> => {
     if (!transactionId) return;
-    const txRef = db.doc(`transactions/${transactionId}`);
-    await txRef.update(data);
+    const txRef = doc(db, `transactions/${transactionId}`);
+    await updateDoc(txRef, data);
 };
 
 export const getChatMessages = (userId: string, callback: (messages: any[]) => void) => {
-    const messagesQuery = db.collection(`chats/${userId}/messages`).orderBy('timestamp', 'asc');
-    return messagesQuery.onSnapshot(snapshot => {
+    const messagesQuery = query(collection(db, `chats/${userId}/messages`), orderBy('timestamp', 'asc'));
+    return onSnapshot(messagesQuery, snapshot => {
         const messages = snapshot.docs.map(docData => ({ id: docData.id, ...docData.data() }));
         callback(messages);
     });
@@ -278,28 +276,28 @@ export const getChatMessages = (userId: string, callback: (messages: any[]) => v
 
 export const sendChatMessage = async (userId: string, message: { text: string; senderId: string; senderName: string; }) => {
     if (!userId || !message.text) return;
-    await db.collection(`chats/${userId}/messages`).add({
+    await addDoc(collection(db, `chats/${userId}/messages`), {
         ...message,
         timestamp: serverTimestamp()
     });
 };
 
 export const wipeChatHistory = async (userId:string) => {
-    const messagesRef = db.collection(`chats/${userId}/messages`);
-    const snapshot = await messagesRef.get();
+    const messagesRef = collection(db, `chats/${userId}/messages`);
+    const snapshot = await getDocs(messagesRef);
     if (snapshot.empty) return;
 
-    const batch = db.batch();
+    const batch = writeBatch(db);
     snapshot.docs.forEach(docData => batch.delete(docData.ref));
     await batch.commit();
 };
 
 export const generateAndSendOtp = async (uid: string, email: string, name: string): Promise<void> => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const otpRef = db.doc(`otps/${uid}`);
+    const otpRef = doc(db, `otps/${uid}`);
     const expiresAt = Timestamp.fromMillis(Date.now() + 5 * 60 * 1000); // 5 minutes
 
-    await otpRef.set({
+    await setDoc(otpRef, {
         otp,
         email,
         createdAt: serverTimestamp(),
@@ -323,10 +321,10 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
 };
 
 export const verifyOtp = async (uid: string, userOtp: string): Promise<{ valid: boolean; message: string; }> => {
-    const otpRef = db.doc(`otps/${uid}`);
-    const snapshot = await otpRef.get();
+    const otpRef = doc(db, `otps/${uid}`);
+    const snapshot = await getDoc(otpRef);
 
-    if (!snapshot.exists) {
+    if (!snapshot.exists()) {
         return { valid: false, message: 'OTP not found. Please request a new one.' };
     }
     const data = snapshot.data();
@@ -340,11 +338,14 @@ export const verifyOtp = async (uid: string, userOtp: string): Promise<{ valid: 
     if (data.otp !== userOtp) {
         return { valid: false, message: 'Invalid OTP. Please try again.' };
     }
-    await otpRef.update({ verified: true });
+    await updateDoc(otpRef, { verified: true });
     return { valid: true, message: 'OTP verified successfully.' };
 };
 
 export const deleteOtp = async (uid: string): Promise<void> => {
-    const otpRef = db.doc(`otps/${uid}`);
-    await otpRef.delete();
+    const otpRef = doc(db, `otps/${uid}`);
+    await deleteDoc(otpRef);
 };
+
+
+export default app;

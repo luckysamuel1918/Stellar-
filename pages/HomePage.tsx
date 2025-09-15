@@ -278,7 +278,7 @@ const MarketInsightsSection: React.FC = () => {
     useEffect(() => {
         const fetchNews = async () => {
             try {
-                const apiKey = (process && process.env && process.env.API_KEY) || '';
+                const apiKey = process.env.API_KEY;
                 if (!apiKey) {
                     setError("Could not load market insights: API key is not configured.");
                     setLoading(false);

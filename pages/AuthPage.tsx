@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
 import { useNavigate, useLocation } from 'react-router-dom';
 import { Home } from 'lucide-react';
-import { auth, getUserByAccountNumber, getUserData } from '../services/firebase';
+// FIX: Import `signInWithEmailAndPassword` and `signOut` for correct Firebase auth usage.
+import { auth, getUserByAccountNumber, getUserData, signInWithEmailAndPassword, signOut } from '../services/firebase';
 import SignupWizard from '../components/SignupWizard';
 import { useAuth } from '../App';
 
@@ -63,12 +64,14 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
         }
       }
 
-      const userCredential = await auth.signInWithEmailAndPassword(userEmail, password);
+      // FIX: Use `signInWithEmailAndPassword` as a function, passing `auth` as the first argument.
+      const userCredential = await signInWithEmailAndPassword(auth, userEmail, password);
       const profile = await getUserData(userCredential.user!.uid);
 
       if (profile && profile.isAdmin) {
         setError('Admin accounts should use the admin sign-in page.');
-        await auth.signOut();
+        // FIX: Use `signOut` as a function, passing `auth` as the first argument.
+        await signOut(auth);
       } else {
         navigate('/dashboard'); // Redirect to user dashboard on success
       }
