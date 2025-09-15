@@ -1,3 +1,4 @@
+
 import { initializeApp, type FirebaseApp } from "firebase/app";
 import { 
   getAuth, 
@@ -30,7 +31,7 @@ import {
 import { UserProfile, Transaction } from "../types";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDEMOkeyForWestcoastTrustBank",
+  apiKey: process.env.API_KEY as string,
   authDomain: "westcoast-trust-demo.firebaseapp.com",
   databaseURL: "https://westcoast-trust-demo.firebaseio.com",
   projectId: "westcoast-trust-demo",
