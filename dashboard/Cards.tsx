@@ -10,7 +10,7 @@ const CardsView: React.FC = () => {
 
     return (
         <div className="p-4 md:p-0">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 md:hidden">My Cards</h2>
+            <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-4 md:hidden">My Cards</h2>
             <div className="space-y-6">
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm text-center">
                     <p className="text-gray-500 dark:text-gray-400">No cards have been added yet.</p>

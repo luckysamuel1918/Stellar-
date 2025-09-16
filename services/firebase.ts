@@ -1,5 +1,7 @@
-import { initializeApp } from "firebase/app";
-import { getAuth, User, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "firebase/auth";
+// FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
+import { initializeApp } from "@firebase/app";
+// FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
+import { getAuth, User, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "@firebase/auth";
 import { 
     getFirestore, 
     doc, 
@@ -19,8 +21,42 @@ import {
     orderBy,
     onSnapshot,
     deleteDoc,
-} from "firebase/firestore";
+// FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
+} from "@firebase/firestore";
 import { UserProfile, Transaction } from "../types";
+
+// --- EMAILJS HELPERS ---
+
+const SERVICE_ID = "service_27dimqt";
+const PUBLIC_KEY = "XiKkaXx4HIwQb00-G";
+const CREDIT_TEMPLATE_ID = "template_kozdmyg";
+const DEBIT_TEMPLATE_ID = "template_ms0phzn";
+
+const sendCreditEmail = async (params: any) => {
+    const templateParams = {
+        ...params,
+        email: params.to_email,
+        name: params.customer_name,
+    };
+    try {
+        await (window as any).emailjs.send(SERVICE_ID, CREDIT_TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    } catch (error) {
+        console.error("EmailJS credit alert failed:", error);
+    }
+};
+
+const sendDebitEmail = async (params: any) => {
+    const templateParams = {
+        ...params,
+        email: params.to_email,
+        name: params.customer_name,
+    };
+    try {
+        await (window as any).emailjs.send(SERVICE_ID, DEBIT_TEMPLATE_ID, templateParams, PUBLIC_KEY);
+    } catch (error) {
+        console.error("EmailJS debit alert failed:", error);
+    }
+};
 
 // --- INITIALIZATION ---
 
@@ -171,6 +207,42 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
         timestamp: serverTimestamp(),
     });
 
+    if (newTransaction) {
+        // Send debit alert to sender
+        const updatedSender = await getUserData(sender.uid);
+        if (updatedSender) {
+            sendDebitEmail({
+                customer_name: updatedSender.fullName,
+                amount: amount.toFixed(2),
+                recipient_name: receiver.fullName,
+                date_time: new Date().toLocaleString(),
+                description: description || 'N/A',
+                balance: updatedSender.balance.toFixed(2),
+                subject: 'Westcoast Trust Bank Debit Alert',
+                to_email: updatedSender.email,
+                from_email: 'support@westcoasttrusts.com'
+            });
+        }
+        // Send credit alert to receiver if internal
+        const isInternal = receiver.uid && !receiver.uid.startsWith('EXT-') && !receiver.uid.startsWith('INTL-');
+        if (isInternal) {
+            const updatedReceiver = await getUserData(receiver.uid);
+            if (updatedReceiver) {
+                sendCreditEmail({
+                    customer_name: updatedReceiver.fullName,
+                    amount: amount.toFixed(2),
+                    sender_name: sender.fullName,
+                    date_time: new Date().toLocaleString(),
+                    description: description || 'N/A',
+                    balance: updatedReceiver.balance.toFixed(2),
+                    subject: 'Westcoast Trust Bank Credit Alert',
+                    to_email: updatedReceiver.email,
+                    from_email: 'support@westcoasttrusts.com'
+                });
+            }
+        }
+    }
+
     return newTransaction;
 };
 
@@ -204,6 +276,44 @@ export const adminUpdateBalance = async (
         receiverAccountNumber: user.accountNumber,
         timestamp: customTimestamp || serverTimestamp(),
     });
+
+    if (newTransaction) {
+        const updatedUser = await getUserData(user.uid);
+        if (updatedUser) {
+            const date_time = (customTimestamp ? customTimestamp.toDate() : new Date()).toLocaleString();
+
+            if (type === 'credit') {
+                sendCreditEmail({
+                    customer_name: updatedUser.fullName,
+                    amount: amount.toFixed(2),
+                    sender_name: senderName || 'Westcoast Trust Bank Admin',
+                    date_time,
+                    description: description || 'N/A',
+                    balance: updatedUser.balance.toFixed(2),
+                    subject: 'Westcoast Trust Bank Credit Alert',
+                    to_email: updatedUser.email,
+                    from_email: 'support@westcoasttrusts.com'
+                });
+            } else { // debit
+                let recipientName = 'Westcoast Trust Bank';
+                if (transactionType === 'bill_payment' && description.startsWith('Bill Payment to ')) {
+                    recipientName = description.substring('Bill Payment to '.length);
+                }
+                sendDebitEmail({
+                    customer_name: updatedUser.fullName,
+                    amount: amount.toFixed(2),
+                    recipient_name: recipientName,
+                    date_time,
+                    description: description || 'N/A',
+                    balance: updatedUser.balance.toFixed(2),
+                    subject: 'Westcoast Trust Bank Debit Alert',
+                    to_email: updatedUser.email,
+                    from_email: 'support@westcoasttrusts.com'
+                });
+            }
+        }
+    }
+
     return newTransaction;
 };
 

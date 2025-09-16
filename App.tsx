@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed react-router-dom import to a named import to fix module resolution errors.
-import { Routes, Route, Link, Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { auth, onAuthStateChanged, signOut as firebaseSignOut, User, getUserData } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
@@ -10,6 +10,13 @@ import AdminLoginPage from './admin/AdminLoginPage';
 import AdminDashboardPage from './admin/AdminDashboardPage';
 import { WestcoastLogo } from './components/icons';
 import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun, Globe } from 'lucide-react';
+
+// Zoho SalesIQ Global Type
+declare global {
+    interface Window {
+        $zoho: any;
+    }
+}
 
 // --- THEME CONTEXT ---
 interface ThemeContextType {
@@ -281,6 +288,40 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 };
 
 const App: React.FC = () => {
+    const location = useLocation();
+
+    useEffect(() => {
+        const manageChat = () => {
+            if (window.$zoho && window.$zoho.salesiq && window.$zoho.salesiq.widget) {
+                if (location.pathname === '/') {
+                    window.$zoho.salesiq.widget.show();
+                } else {
+                    window.$zoho.salesiq.widget.hide();
+                }
+            }
+        };
+
+        // Hook into the Zoho ready function to manage the widget once it's loaded
+        window.$zoho = window.$zoho || {};
+        window.$zoho.salesiq = window.$zoho.salesiq || { ready: function () {} };
+        
+        const originalReady = window.$zoho.salesiq.ready; 
+        
+        window.$zoho.salesiq.ready = function () {
+          if (originalReady) {
+              originalReady.apply(this, arguments);
+          }
+          // Hide by default first, then show if on homepage
+          window.$zoho.salesiq.widget.hide();
+          if (location.pathname === '/') {
+              window.$zoho.salesiq.widget.show();
+          }
+        };
+      
+        // Also run on location change in case widget is already ready
+        manageChat();
+    }, [location.pathname]);
+
     return (
         <ThemeProvider>
             <AuthProvider>

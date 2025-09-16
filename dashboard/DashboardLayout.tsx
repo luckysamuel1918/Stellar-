@@ -141,7 +141,7 @@ const DashboardLayout: React.FC = () => {
     ];
     
     if (loading && !userData) {
-        return <div className="flex justify-center items-center h-screen bg-gray-100 dark:bg-gray-900"><Loader2 className="animate-spin text-westcoast-blue w-8 h-8"/></div>;
+        return <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900"><Loader2 className="animate-spin text-westcoast-blue w-8 h-8"/></div>;
     }
 
     const contextValue: DashboardContextType = {
@@ -158,7 +158,7 @@ const DashboardLayout: React.FC = () => {
 
     return (
         <DashboardContext.Provider value={contextValue}>
-            <div className="bg-gray-100 dark:bg-gray-900 min-h-screen font-sans">
+            <div className="bg-westcoast-bg dark:bg-gray-900 min-h-screen font-sans">
                 {userData && userData.isSuspended && <SuspendedAccountModal onLogout={signOut} />}
                 <div className={`flex ${userData && userData.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
                     <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 min-h-screen p-4 flex-shrink-0">
@@ -175,7 +175,7 @@ const DashboardLayout: React.FC = () => {
                     <main className="flex-1 pb-20 md:pb-0">
                          <div className="max-w-4xl mx-auto md:px-8 md:py-6">
                             <header className="hidden md:flex justify-between items-center mb-8 px-4 md:px-0">
-                                <h1 className="text-3xl font-bold text-gray-800 dark:text-white">{pageTitle}</h1>
+                                <h1 className="text-3xl font-bold text-westcoast-text-dark dark:text-white">{pageTitle}</h1>
                                 <div className="flex items-center gap-4">
                                     <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
                                     <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>

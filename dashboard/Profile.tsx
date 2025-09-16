@@ -78,7 +78,7 @@ const ProfileView: React.FC = () => {
         <div className="p-4 md:p-0">
             <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-sm">
                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-2 sm:mb-0 md:hidden">My Profile</h2>
+                    <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-2 sm:mb-0 md:hidden">My Profile</h2>
                     {!editMode && <button onClick={() => setEditMode(true)} className="flex items-center justify-center gap-2 text-sm font-semibold bg-blue-50 dark:bg-blue-900/40 px-4 py-2 rounded-lg text-westcoast-blue self-start sm:self-center"><Edit size={16}/> Edit Profile</button>}
                 </div>
 
@@ -90,7 +90,7 @@ const ProfileView: React.FC = () => {
                         </button>
                         <input type="file" accept="image/*" ref={fileInputRef} onChange={handleFileChange} className="hidden" />
                     </div>
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-white">{user.fullName}</h3>
+                    <h3 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">{user.fullName}</h3>
                     <p className="text-gray-500 dark:text-gray-400">{user.email}</p>
                 </div>
 

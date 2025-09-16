@@ -11,7 +11,7 @@ const HistoryView = () => {
 
     return (
         <div className="p-4 md:p-0">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4">Transaction History</h2>
+            <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-4">Transaction History</h2>
             <div className="space-y-3">
                 {transactions.length > 0 ? transactions.map(tx => (
                     <TransactionItem key={tx.id} tx={tx} currentUserId={user.uid} currencyCode={user.currencyCode} />

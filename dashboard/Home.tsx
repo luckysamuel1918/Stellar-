@@ -27,7 +27,7 @@ const HomeView = () => {
                 <div className="flex items-center gap-3">
                     <Avatar user={userData} />
                     <div>
-                        <h1 className="text-xl font-bold text-gray-800 dark:text-white">{`Hi, ${userData.fullName.split(' ')[0]}`}</h1>
+                        <h1 className="text-xl font-bold text-westcoast-text-dark dark:text-white">{`Hi, ${userData.fullName.split(' ')[0]}`}</h1>
                     </div>
                 </div>
                 <div className="flex items-center gap-2">
@@ -50,7 +50,7 @@ const HomeView = () => {
             </section>
 
             <section className="p-4 md:p-0 md:mt-8">
-                <h2 className="text-lg font-bold text-gray-800 dark:text-white mb-3">Quick Actions</h2>
+                <h2 className="text-lg font-bold text-westcoast-text-dark dark:text-white mb-3">Quick Actions</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     <QuickActionButton onClick={() => handleActionClick('transfer')} icon={<Send className="w-6 h-6 text-westcoast-blue"/>} label={"Domestic"} />
                     <QuickActionButton onClick={() => handleActionClick('international')} icon={<Globe className="w-6 h-6 text-westcoast-blue"/>} label={"International"} />
@@ -61,7 +61,7 @@ const HomeView = () => {
 
             <section className="p-4 md:p-0 md:mt-8">
                  <div className="flex justify-between items-center mb-3">
-                    <h2 className="text-lg font-bold text-gray-800 dark:text-white">Recent Transactions</h2>
+                    <h2 className="text-lg font-bold text-westcoast-text-dark dark:text-white">Recent Transactions</h2>
                     <button onClick={() => navigate('/dashboard/history')} className="text-sm font-semibold text-westcoast-blue hover:underline">View All</button>
                 </div>
                 <div className="space-y-3">

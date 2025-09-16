@@ -31,7 +31,7 @@ export const ReceiptView = ({ receiptData, user, onClose, isInternational = fals
     const DetailRow = ({ label, value }) => (
         <div className="flex justify-between items-start gap-4">
             <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
-            <span className="font-semibold text-gray-800 dark:text-gray-200 text-right break-words text-base">{value}</span>
+            <span className="font-semibold text-westcoast-text-dark dark:text-gray-200 text-right break-words text-base">{value}</span>
         </div>
     );
 
@@ -59,7 +59,7 @@ export const ReceiptView = ({ receiptData, user, onClose, isInternational = fals
                     </div>
                     <div className="text-center my-8">
                         <p className="text-gray-500 dark:text-gray-400">Amount Sent</p>
-                        <p className="text-4xl sm:text-5xl font-bold text-gray-900 dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
+                        <p className="text-4xl sm:text-5xl font-bold text-westcoast-text-dark dark:text-white tracking-tighter break-all">{formatCurrency(receiptData.amount, user.currencyCode)}</p>
                         <div className="inline-flex items-center gap-2 mt-2 bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-300 font-semibold px-3 py-1 rounded-full text-sm">
                             <CheckCircle size={16}/>
                             <span>Transaction Completed</span>
@@ -252,7 +252,7 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
             
             {step === 1 && (
                 <form onSubmit={handleProceedToConfirm} className="space-y-6">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Domestic Transfer</h2>
+                    <h2 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">Domestic Transfer</h2>
                     <div>
                         <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Beneficiary Details</h3>
                         <div className="space-y-4">
@@ -280,7 +280,7 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
 
             {step === 2 && recipient && (
                 <div className="space-y-6 text-center">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Confirm Transfer</h2>
+                    <h2 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">Confirm Transfer</h2>
                     <p className="text-gray-600 dark:text-gray-300">Please review the details below.</p>
                     <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-left space-y-3">
                         <div><span className="text-gray-500 dark:text-gray-400 text-sm">To:</span><p className="font-semibold dark:text-white">{recipient.fullName}</p></div>
@@ -302,7 +302,7 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
             
             {step === 3 && (
                 <div className="space-y-6 text-center">
-                    <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Enter OTP</h2>
+                    <h2 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">Enter OTP</h2>
                     <p className="text-gray-600 dark:text-gray-300">{`We've sent a 6-digit code to your email ${user.email}. Please enter it below.`}</p>
                     <div className="flex justify-center gap-2">
                         {[...Array(6)].map((_, i) => (
@@ -468,7 +468,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                  <button onClick={handleClose} className="absolute top-4 right-4 p-1 text-gray-400 hover:text-gray-600 no-print"><X className="w-6 h-6" /></button>
                 {step === 1 && (
                     <form onSubmit={handleProceedToConfirm} className="space-y-6">
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">International Transfer</h2>
+                        <h2 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">International Transfer</h2>
                          <div>
                             <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3">Beneficiary Details</h3>
                             <div className="space-y-4">
@@ -499,7 +499,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                 )}
                  {step === 2 && (
                     <div className="space-y-6 text-center">
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Confirm Transfer</h2>
+                        <h2 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">Confirm Transfer</h2>
                         <p className="text-gray-600 dark:text-gray-300">Please review the international transfer details.</p>
                         <div className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg text-left space-y-3">
                             <div><span className="text-gray-500 dark:text-gray-400 text-sm">To:</span><p className="font-semibold dark:text-white">{beneficiaryName}</p></div>
@@ -519,7 +519,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                 )}
                 {step === 3 && (
                     <div className="space-y-6 text-center">
-                        <h2 className="text-2xl font-bold text-gray-800 dark:text-white">Enter OTP</h2>
+                        <h2 className="text-2xl font-bold text-westcoast-text-dark dark:text-white">Enter OTP</h2>
                         <p className="text-gray-600 dark:text-gray-300">{`We've sent a 6-digit code to your email ${user.email}. Please enter it below.`}</p>
                         <div className="flex justify-center gap-2">
                             {[...Array(6)].map((_, i) => (
@@ -640,7 +640,7 @@ export const CheckDepositModal = ({ user, onClose, onSuccess }) => {
         <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-md p-6">
                 <div className="flex justify-between items-center mb-4">
-                    <h2 className="text-xl font-bold text-gray-800 dark:text-white">Check Deposit</h2>
+                    <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white">Check Deposit</h2>
                     <button onClick={onClose} className="p-1"><X className="w-6 h-6 text-gray-500 dark:text-gray-300" /></button>
                 </div>
                  {error && <p className="bg-red-100 text-red-700 p-3 rounded-lg text-sm mb-4">{error}</p>}
@@ -726,7 +726,7 @@ export const TransactionItem: React.FC<{ tx: Transaction, currentUserId: string,
             failed: 'bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100',
         };
         const text = status.charAt(0).toUpperCase() + status.slice(1);
-        return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block ${styles[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200'}`}>{text}</span>;
+        return <span className={`text-xs font-semibold px-2 py-0.5 rounded-full mt-1 inline-block ${styles[status] || 'bg-gray-100 dark:bg-gray-700 text-westcoast-text-dark dark:text-gray-200'}`}>{text}</span>;
     };
 
     const typeLabel = tx.type.replace('_', ' ').replace(/\b\w/g, l => l.toUpperCase());
@@ -737,7 +737,7 @@ export const TransactionItem: React.FC<{ tx: Transaction, currentUserId: string,
                 {isDebit ? <ArrowUpRight className="w-5 h-5 text-red-500" /> : <ArrowDownLeft className="w-5 h-5 text-green-500" />}
             </div>
             <div className="flex-grow">
-                <p className="font-bold text-gray-800 dark:text-white text-sm truncate">{getTransactionTitle()}</p>
+                <p className="font-bold text-westcoast-text-dark dark:text-white text-sm truncate">{getTransactionTitle()}</p>
                 <p className="text-xs text-gray-500 dark:text-gray-400">{formattedDate} • {typeLabel}</p>
             </div>
             <div className="text-right flex-shrink-0">

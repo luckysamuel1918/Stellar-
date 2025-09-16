@@ -78,13 +78,13 @@ const AiAssistantView: React.FC = () => {
     
     return (
         <div className="p-4 md:p-0 flex flex-col h-[calc(100vh-10rem)] md:h-auto">
-            <h2 className="text-xl font-bold text-gray-800 dark:text-white mb-4 md:hidden">AI Assistant</h2>
+            <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-4 md:hidden">AI Assistant</h2>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex-grow flex flex-col">
                 <div className="flex-grow p-4 space-y-4 overflow-y-auto">
                     {messages.map((msg, index) => (
                         <div key={index} className={`flex items-start gap-3 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                             {msg.sender === 'ai' && <AiAvatar />}
-                            <div className={`max-w-xs md:max-w-md px-4 py-2 rounded-2xl ${msg.sender === 'user' ? 'bg-westcoast-blue text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-bl-none'}`}>
+                            <div className={`max-w-xs md:max-w-md px-4 py-2 rounded-2xl ${msg.sender === 'user' ? 'bg-westcoast-blue text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 text-westcoast-text-dark dark:text-white rounded-bl-none'}`}>
                                 <p className="text-sm whitespace-pre-wrap">{msg.text}</p>
                             </div>
                             {msg.sender === 'user' && user && <Avatar user={user} size="w-10 h-10" />}
@@ -93,7 +93,7 @@ const AiAssistantView: React.FC = () => {
                     {loading && (
                          <div className="flex items-start gap-3 justify-start">
                             <AiAvatar />
-                            <div className="max-w-xs md:max-w-md px-4 py-2 rounded-2xl bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white rounded-bl-none flex items-center">
+                            <div className="max-w-xs md:max-w-md px-4 py-2 rounded-2xl bg-gray-200 dark:bg-gray-700 text-westcoast-text-dark dark:text-white rounded-bl-none flex items-center">
                                 <Loader2 className="w-5 h-5 animate-spin text-gray-500" />
                             </div>
                         </div>
