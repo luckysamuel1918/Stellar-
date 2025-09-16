@@ -1,5 +1,6 @@
 
 
+
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
@@ -78,14 +79,17 @@ const sendDebitEmail = async (params: any) => {
 
 // --- INITIALIZATION ---
 
+// FIX: Hardcoded Firebase configuration to resolve `auth/invalid-api-key` error.
+// NOTE: For production environments, it is strongly recommended to use environment variables
+// as described in the README.md file to avoid exposing sensitive keys in the source code.
 const firebaseConfig = {
-  apiKey: process.env.VITE_FIREBASE_API_KEY,
-  authDomain: process.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.VITE_FIREBASE_APP_ID,
-  measurementId: process.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
+  authDomain: "westcoast-c85e4.firebaseapp.com",
+  projectId: "westcoast-c85e4",
+  storageBucket: "westcoast-c85e4.appspot.com",
+  messagingSenderId: "15776220227",
+  appId: "1:15776220227:web:a5cf2658b895aff29180f6",
+  measurementId: "G-MNTK4NDZH4"
 };
 
 
