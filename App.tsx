@@ -292,7 +292,7 @@ const App: React.FC = () => {
 
     useEffect(() => {
         const manageChat = () => {
-            // This function is for subsequent navigation after the page has loaded
+            // This function handles showing/hiding the chat widget on navigation
             if (window.$zoho && window.$zoho.salesiq && window.$zoho.salesiq.widget) {
                 if (location.pathname === '/') {
                     window.$zoho.salesiq.widget.show();
@@ -301,30 +301,8 @@ const App: React.FC = () => {
                 }
             }
         };
-
-        // This part sets up the initial state when the widget becomes ready
-        // It runs only once per full page load using a global flag
-        if (!(window as any).isZohoReadyHooked) {
-            (window as any).isZohoReadyHooked = true;
-            window.$zoho = window.$zoho || {};
-            window.$zoho.salesiq = window.$zoho.salesiq || { ready: function () {} };
-            
-            window.$zoho.salesiq.ready = function () {
-                if (!window.$zoho.salesiq.widget) return;
-                
-                // Hide widget by default to prevent flicker on non-homepage routes
-                window.$zoho.salesiq.widget.hide();
-                
-                // Then show it only if we are on the homepage
-                // We use window.location.hash because this callback is outside React's context
-                const path = window.location.hash.substring(1); // e.g., "/" or "/dashboard"
-                if (path === '/' || path === '') {
-                    window.$zoho.salesiq.widget.show();
-                }
-            };
-        }
       
-        // This handles navigation changes after the initial load
+        // This handles navigation changes after the initial load and widget is ready
         manageChat();
     }, [location.pathname]);
 

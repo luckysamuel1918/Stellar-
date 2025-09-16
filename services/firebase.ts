@@ -23,7 +23,7 @@ import {
     deleteDoc,
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 } from "@firebase/firestore";
-import { UserProfile, Transaction } from "../types";
+import { UserProfile, Transaction, Loan } from "../types";
 
 // --- EMAILJS HELPERS ---
 
@@ -84,7 +84,8 @@ export { auth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUs
 export type { User };
 
 // Re-export Timestamp
-export { Timestamp };
+// FIX: Export 'serverTimestamp' to make it available for use in other modules.
+export { Timestamp, serverTimestamp };
 
 // --- FIRESTORE FUNCTIONS ---
 
@@ -299,6 +300,9 @@ export const adminUpdateBalance = async (
                 if (transactionType === 'bill_payment' && description.startsWith('Bill Payment to ')) {
                     recipientName = description.substring('Bill Payment to '.length);
                 }
+                if (transactionType === 'loan_repayment') {
+                    recipientName = 'Westcoast Trust Bank Loans';
+                }
                 sendDebitEmail({
                     customer_name: updatedUser.fullName,
                     amount: amount.toFixed(2),
@@ -364,6 +368,11 @@ export const adminDeleteUser = async (uid: string): Promise<void> => {
     const messagesRef = collection(db, `chats/${uid}/messages`);
     const messagesSnapshot = await getDocs(messagesRef);
     messagesSnapshot.forEach(docData => batch.delete(docData.ref));
+
+    const loansRef = collection(db, "loans");
+    const loansQuery = query(loansRef, where("userId", "==", uid));
+    const loansSnapshot = await getDocs(loansQuery);
+    loansSnapshot.forEach(docData => batch.delete(docData.ref));
     
     batch.delete(userRef);
 
@@ -401,6 +410,8 @@ export const wipeChatHistory = async (userId:string) => {
     snapshot.docs.forEach(docData => batch.delete(docData.ref));
     await batch.commit();
 };
+
+// --- OTP FUNCTIONS ---
 
 export const generateAndSendOtp = async (uid: string, email: string, name: string): Promise<void> => {
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -455,6 +466,35 @@ export const verifyOtp = async (uid: string, userOtp: string): Promise<{ valid: 
 export const deleteOtp = async (uid: string): Promise<void> => {
     const otpRef = doc(db, `otps/${uid}`);
     await deleteDoc(otpRef);
+};
+
+// --- LOAN FUNCTIONS ---
+
+export const createLoanApplication = async (loanData: Omit<Loan, 'id' | 'status' | 'requestDate'>): Promise<void> => {
+  await addDoc(collection(db, 'loans'), {
+    ...loanData,
+    status: 'pending',
+    requestDate: serverTimestamp(),
+  });
+};
+
+export const getUserLoans = async (userId: string): Promise<Loan[]> => {
+  if (!userId) return [];
+  const q = query(collection(db, 'loans'), where('userId', '==', userId), orderBy('requestDate', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Loan));
+};
+
+export const getAllLoans = async (): Promise<Loan[]> => {
+  const q = query(collection(db, 'loans'), orderBy('requestDate', 'desc'));
+  const snapshot = await getDocs(q);
+  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Loan));
+};
+
+export const updateLoan = async (loanId: string, data: Partial<Omit<Loan, 'id'>>): Promise<void> => {
+  if (!loanId) return;
+  const loanRef = doc(db, 'loans', loanId);
+  await updateDoc(loanRef, data);
 };
 
 

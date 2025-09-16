@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
 import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
-import { UserProfile, Transaction } from '../types';
-import { getUserData, getUserTransactions } from '../services/firebase';
+import { UserProfile, Transaction, Loan } from '../types';
+import { getUserData, getUserTransactions, getUserLoans, updateLoan, adminUpdateBalance } from '../services/firebase';
 import { Home, User as UserIcon, CreditCard, Receipt, HandCoins, LogOut, Loader2, Bell, MessageSquare, Sparkles } from 'lucide-react';
 import { WestcoastLogo } from '../components/icons';
 
@@ -18,6 +18,7 @@ import { DomesticTransferModal, InternationalTransferModal, CheckDepositModal } 
 interface DashboardContextType {
     user: UserProfile | null;
     transactions: Transaction[];
+    loans: Loan[];
     loading: boolean;
     fetchData: () => Promise<void>;
     openDomesticTransferModal: () => void;
@@ -38,6 +39,7 @@ const DashboardLayout: React.FC = () => {
     const { user: authUser, signOut } = useAuth();
     const [userData, setUserData] = useState<UserProfile | null>(null);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
     
     const [showTransferModal, setShowTransferModal] = useState(false);
@@ -47,30 +49,57 @@ const DashboardLayout: React.FC = () => {
     const location = useLocation();
     const navigate = useNavigate();
 
-    const fetchData = useCallback(async () => {
+    const processOverdueLoans = useCallback(async (user: UserProfile, userLoans: Loan[]) => {
+        const now = new Date();
+        for (const loan of userLoans) {
+            if (loan.status === 'approved' && loan.dueDate && loan.dueDate.toDate() < now) {
+                if (user.balance >= (loan.totalOwed ?? 0)) {
+                    await adminUpdateBalance(user, loan.totalOwed!, 'debit', 'Overdue loan repayment', undefined, undefined, 'loan_repayment');
+                    await updateLoan(loan.id!, { status: 'paid' });
+                } else {
+                    await updateLoan(loan.id!, { status: 'overdue' });
+                }
+            }
+        }
+    }, []);
+
+    const fetchData = useCallback(async (isInitial = false) => {
         if (authUser) {
+            if(isInitial) setLoading(true);
             try {
                 const profile = await getUserData(authUser.uid);
-                setUserData(profile);
                 if (profile) {
-                    const txs = await getUserTransactions(authUser.uid);
-                    setTransactions(txs);
+                    const [txs, userLoans] = await Promise.all([
+                        getUserTransactions(authUser.uid),
+                        getUserLoans(authUser.uid)
+                    ]);
+                    await processOverdueLoans(profile, userLoans);
+                    
+                    // Refetch data after processing loans
+                    const [finalProfile, finalTxs, finalLoans] = await Promise.all([
+                        getUserData(authUser.uid),
+                        getUserTransactions(authUser.uid),
+                        getUserLoans(authUser.uid)
+                    ]);
+
+                    setUserData(finalProfile);
+                    setTransactions(finalTxs);
+                    setLoans(finalLoans);
                 }
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
             } finally {
-                setLoading(false);
+                if(isInitial) setLoading(false);
             }
         }
-    }, [authUser]);
+    }, [authUser, processOverdueLoans]);
     
     useEffect(() => {
-        setLoading(true);
-        fetchData();
-    }, [fetchData]);
+        fetchData(true);
+    }, [authUser]); // Only run on authUser change
 
     const handleSuccess = () => {
-        fetchData();
+        fetchData(false);
     };
 
     useEffect(() => {
@@ -147,8 +176,9 @@ const DashboardLayout: React.FC = () => {
     const contextValue: DashboardContextType = {
         user: userData,
         transactions,
+        loans,
         loading,
-        fetchData,
+        fetchData: () => fetchData(false),
         openDomesticTransferModal: () => setShowTransferModal(true),
         openInternationalTransferModal: () => setShowInternationalModal(true),
         openCheckDepositModal: () => setShowDepositModal(true),

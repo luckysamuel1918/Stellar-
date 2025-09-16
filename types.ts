@@ -27,8 +27,22 @@ export interface Transaction {
   receiverName: string;
   receiverAccountNumber: string;
   amount: number;
-  type: 'transfer' | 'credit' | 'debit' | 'bill_payment';
+  type: 'transfer' | 'credit' | 'debit' | 'bill_payment' | 'loan_disbursement' | 'loan_repayment';
   description: string;
   timestamp: any; // Firestore timestamp
   status: 'completed' | 'pending' | 'failed';
+}
+
+export interface Loan {
+  id?: string;
+  userId: string;
+  fullName: string;
+  loanAmount: number;
+  loanPurpose: string;
+  status: 'pending' | 'approved' | 'rejected' | 'paid' | 'overdue';
+  requestDate: any; // Firestore timestamp
+  approvalDate?: any;
+  dueDate?: any;
+  interestRate?: number;
+  totalOwed?: number;
 }

@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '../App';
-import { UserProfile, Transaction } from '../types';
+import { UserProfile, Transaction, Loan } from '../types';
+// FIX: Import 'serverTimestamp' from Firebase services to resolve the 'Cannot find name' error.
 import { 
     getAllUsers, adminUpdateBalance, updateUserProfile, adminDeleteUser,
     getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
-    wipeChatHistory, Timestamp
+    wipeChatHistory, Timestamp, getAllLoans, updateLoan, serverTimestamp
 } from '../services/firebase';
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, Banknote, Calendar, Percent } from 'lucide-react';
+
+const formatCurrency = (amount: number, currency: string) => {
+    try {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: currency || 'USD',
+        }).format(amount);
+    } catch (e) {
+        return `$${amount.toFixed(2)}`;
+    }
+};
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
     const [imgError, setImgError] = useState(false);
@@ -392,6 +404,94 @@ const ChatModal = ({ user, admin, onClose }) => {
     );
 };
 
+const ApproveLoanModal: React.FC<{ loan: Loan; user: UserProfile; onClose: () => void; onUpdate: () => void; }> = ({ loan, user, onClose, onUpdate }) => {
+    const [interestRate, setInterestRate] = useState('8.5');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleApprove = async () => {
+        const rate = parseFloat(interestRate);
+        if (isNaN(rate) || rate <= 0) {
+            setError('Please enter a valid interest rate.');
+            return;
+        }
+        setLoading(true);
+        setError('');
+        try {
+            const totalOwed = loan.loanAmount * (1 + rate / 100);
+            const dueDate = Timestamp.fromMillis(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days from now
+
+            await adminUpdateBalance(user, loan.loanAmount, 'credit', 'Loan Disbursement', 'Westcoast Trust Bank', undefined, 'loan_disbursement');
+            
+            await updateLoan(loan.id!, {
+                status: 'approved',
+                interestRate: rate,
+                totalOwed: totalOwed,
+                approvalDate: serverTimestamp(),
+                dueDate: dueDate,
+            });
+
+            onUpdate();
+        } catch (err: any) {
+            setError(err.message || "Failed to approve loan.");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const handleReject = async () => {
+        if (window.confirm("Are you sure you want to reject this loan application?")) {
+            setLoading(true);
+            setError('');
+            try {
+                await updateLoan(loan.id!, { status: 'rejected' });
+                onUpdate();
+            } catch (err: any) {
+                setError(err.message || "Failed to reject loan.");
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md">
+                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Review Loan Request</h2>
+                <div className="space-y-3 bg-gray-50 dark:bg-gray-700 p-4 rounded-lg mb-4">
+                    <p><strong>Applicant:</strong> {loan.fullName}</p>
+                    <p><strong>Amount:</strong> {formatCurrency(loan.loanAmount, user.currencyCode)}</p>
+                    <p><strong>Purpose:</strong> {loan.loanPurpose}</p>
+                    <p><strong>Requested:</strong> {new Date(loan.requestDate.toDate()).toLocaleString()}</p>
+                </div>
+                <div>
+                    <label htmlFor="interestRate" className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">Interest Rate (APR)</label>
+                    <div className="relative mt-1">
+                        <input
+                            id="interestRate"
+                            type="number"
+                            step="0.1"
+                            value={interestRate}
+                            onChange={e => setInterestRate(e.target.value)}
+                            className="w-full px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-600 dark:border-gray-500"
+                        />
+                        <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                            <Percent className="h-5 w-5 text-gray-400" />
+                        </div>
+                    </div>
+                </div>
+                {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+                 <div className="flex justify-end space-x-4 pt-6">
+                    <button onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
+                    <button onClick={handleReject} disabled={loading} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg disabled:opacity-50">Reject</button>
+                    <button onClick={handleApprove} disabled={loading} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Processing...' : 'Approve'}</button>
+                </div>
+            </div>
+        </div>
+    );
+};
+
+
 const StatCard = ({ title, value, icon }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center space-x-4">
         <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
@@ -407,29 +507,33 @@ const StatCard = ({ title, value, icon }) => (
 const AdminDashboardPage: React.FC = () => {
     const { userData } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
+    const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
-    const [modal, setModal] = useState<{type: string | null, user: UserProfile | null}>({ type: null, user: null });
+    const [modal, setModal] = useState<{type: string | null, data: any | null}>({ type: null, data: null });
     const [searchTerm, setSearchTerm] = useState('');
+    const [view, setView] = useState('users'); // 'users' or 'loans'
+    const [loanFilter, setLoanFilter] = useState<Loan['status'] | 'all'>('pending');
 
-    const fetchUsers = useCallback(async () => {
-        // setLoading(true); // Don't show loader on refresh
+    const fetchData = useCallback(async () => {
+        setLoading(true);
         try {
-            const allUsers = await getAllUsers();
+            const [allUsers, allLoans] = await Promise.all([getAllUsers(), getAllLoans()]);
             setUsers(allUsers.filter(u => !u.isAdmin));
+            setLoans(allLoans);
         } catch (error) {
-            console.error("Failed to fetch users:", error);
+            console.error("Failed to fetch data:", error);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+        fetchData();
+    }, [fetchData]);
     
     const handleUpdateSuccess = () => {
-        setModal({ type: null, user: null });
-        fetchUsers();
+        setModal({ type: null, data: null });
+        fetchData();
     };
 
     const handleToggleSuspend = async (userToUpdate: UserProfile) => {
@@ -437,7 +541,7 @@ const AdminDashboardPage: React.FC = () => {
         if (window.confirm(`Are you sure you want to ${action} ${userToUpdate.fullName}?`)) {
             try {
                 await updateUserProfile(userToUpdate.uid, { isSuspended: !userToUpdate.isSuspended });
-                fetchUsers(); // Refresh the list
+                fetchData(); // Refresh the list
             } catch (error) {
                 console.error(`Failed to ${action} user:`, error);
                 alert(`Could not ${action} the user. Please try again.`);
@@ -445,8 +549,8 @@ const AdminDashboardPage: React.FC = () => {
         }
     };
     
-    const openModal = (type: string, user: UserProfile) => setModal({ type, user });
-    const closeModal = () => setModal({ type: null, user: null });
+    const openModal = (type: string, data: any) => setModal({ type, data });
+    const closeModal = () => setModal({ type: null, data: null });
 
     const filteredUsers = users.filter(user =>
         String(user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -454,20 +558,51 @@ const AdminDashboardPage: React.FC = () => {
         String(user.accountNumber || '').includes(searchTerm)
     );
 
-    if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
+    const filteredLoans = loans.filter(loan => {
+        if (loanFilter !== 'all' && loan.status !== loanFilter) return false;
+        if (!searchTerm) return true;
+        return String(loan.fullName || '').toLowerCase().includes(searchTerm.toLowerCase())
+    });
+
+    if (loading && users.length === 0) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
 
     const totalFunds = users.reduce((acc, user) => acc + (user.balance || 0), 0);
+    const totalLoaned = loans.filter(l => l.status === 'approved' || l.status === 'overdue').reduce((acc, l) => acc + (l.loanAmount || 0), 0);
 
     const renderModal = () => {
-        if (!modal.user) return null;
+        if (!modal.data) return null;
+        const userForModal = view === 'users' ? modal.data : users.find(u => u.uid === modal.data.userId);
+        if (!userForModal && modal.type !== 'loanReview') return null;
+
         switch(modal.type) {
-            case 'balance': return <ManageBalanceModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'edit': return <EditUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'delete': return <DeleteUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'transactions': return <ManageTransactionsModal user={modal.user} onClose={closeModal} />;
-            case 'chat': return <ChatModal user={modal.user} admin={userData} onClose={closeModal} />;
+            case 'balance': return <ManageBalanceModal user={userForModal} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
+            case 'edit': return <EditUserModal user={userForModal} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
+            case 'delete': return <DeleteUserModal user={userForModal} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
+            case 'transactions': return <ManageTransactionsModal user={userForModal} onClose={closeModal} />;
+            case 'chat': return <ChatModal user={userForModal} admin={userData} onClose={closeModal} />;
+            case 'loanReview': return <ApproveLoanModal loan={modal.data} user={userForModal} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
             default: return null;
         }
+    }
+    
+    const TabButton = ({ currentView, targetView, children }) => (
+         <button 
+            onClick={() => { setView(targetView); setSearchTerm(''); }}
+            className={`px-4 py-2 text-sm font-semibold rounded-md transition-colors ${currentView === targetView ? 'bg-westcoast-blue text-white' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700'}`}
+        >
+            {children}
+        </button>
+    );
+
+    const LoanStatusPill = ({ status }: { status: Loan['status']}) => {
+        const styles = {
+            pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+            approved: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+            overdue: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300',
+            paid: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+            rejected: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+        };
+        return <span className={`px-2 py-1 text-xs font-semibold rounded-full capitalize ${styles[status]}`}>{status}</span>
     }
 
     return (
@@ -479,25 +614,30 @@ const AdminDashboardPage: React.FC = () => {
                     <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <StatCard title="Total Users" value={users.length} icon={<Users className="w-6 h-6 text-blue-600"/>} />
-                    <StatCard title="Total Funds" value={totalFunds.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0})} icon={<TrendingUp className="w-6 h-6 text-blue-600"/>} />
+                    <StatCard title="Total Funds Managed" value={formatCurrency(totalFunds, 'USD')} icon={<TrendingUp className="w-6 h-6 text-blue-600"/>} />
+                    <StatCard title="Total Active Loans" value={formatCurrency(totalLoaned, 'USD')} icon={<Banknote className="w-6 h-6 text-blue-600"/>} />
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                        <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">User Management</h2>
+                    <div className="flex flex-col sm:flex-row justify-between items-start mb-4 gap-4">
+                        <div className="flex items-center gap-2 border border-gray-200 dark:border-gray-700 p-1 rounded-lg">
+                           <TabButton currentView={view} targetView="users">User Management</TabButton>
+                           <TabButton currentView={view} targetView="loans">Loan Management</TabButton>
+                        </div>
                         <div className="relative w-full sm:max-w-xs">
                              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
                              <input
                                 type="text"
-                                placeholder="Search by name, email, account..."
+                                placeholder={view === 'users' ? "Search users..." : "Search by name..."}
                                 value={searchTerm}
                                 onChange={e => setSearchTerm(e.target.value)}
                                 className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-westcoast-blue focus:outline-none"
                             />
                         </div>
                     </div>
+                    {view === 'users' ? (
                     <div className="overflow-x-auto">
                         <table className="w-full min-w-[800px]">
                             <thead>
@@ -549,6 +689,46 @@ const AdminDashboardPage: React.FC = () => {
                         </table>
                         {filteredUsers.length === 0 && <p className="text-center py-8 text-gray-500">No users found.</p>}
                     </div>
+                    ) : (
+                    <div>
+                         <div className="flex items-center gap-2 mb-4">
+                            {(['pending', 'approved', 'paid', 'overdue', 'rejected', 'all'] as const).map(status => (
+                                <button key={status} onClick={() => setLoanFilter(status)} className={`px-3 py-1 text-sm font-semibold rounded-full capitalize ${loanFilter === status ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/60 dark:text-blue-200' : 'text-gray-500 hover:bg-gray-100 dark:text-gray-400 dark:hover:bg-gray-700'}`}>
+                                    {status}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="overflow-x-auto">
+                           <table className="w-full min-w-[800px]">
+                                <thead>
+                                    <tr className="text-left text-xs text-gray-400 uppercase">
+                                        <th className="py-3 px-4 font-semibold">Applicant</th>
+                                        <th className="py-3 px-4 font-semibold hidden md:table-cell">Amount</th>
+                                        <th className="py-3 px-4 font-semibold hidden md:table-cell">Purpose</th>
+                                        <th className="py-3 px-4 font-semibold hidden sm:table-cell">Date</th>
+                                        <th className="py-3 px-4 font-semibold">Status</th>
+                                        <th className="py-3 px-4 font-semibold text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredLoans.map(loan => (
+                                        <tr key={loan.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                            <td className="py-4 px-4 font-semibold text-westcoast-text-dark dark:text-white">{loan.fullName}</td>
+                                            <td className="py-4 px-4 font-mono hidden md:table-cell">{formatCurrency(loan.loanAmount, 'USD')}</td>
+                                            <td className="py-4 px-4 hidden md:table-cell">{loan.loanPurpose}</td>
+                                            <td className="py-4 px-4 text-sm text-gray-500 hidden sm:table-cell">{new Date(loan.requestDate.toDate()).toLocaleDateString()}</td>
+                                            <td className="py-4 px-4"><LoanStatusPill status={loan.status} /></td>
+                                            <td className="py-4 px-4 text-center">
+                                                {loan.status === 'pending' && <button onClick={() => openModal('loanReview', loan)} className="bg-blue-600 text-white px-3 py-1 text-sm font-semibold rounded-md hover:bg-blue-700">Review</button>}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                             {filteredLoans.length === 0 && <p className="text-center py-8 text-gray-500">No loans found for this filter.</p>}
+                        </div>
+                    </div>
+                    )}
                 </div>
             </div>
         </div>
