@@ -1,6 +1,3 @@
-
-
-
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
@@ -136,6 +133,8 @@ export const createUserProfileDocument = async (userAuth: User, additionalData: 
         isSuspended: false,
         createdAt: serverTimestamp(),
         photoURL: null,
+        isDeleted: false,
+        deletedAt: null,
       };
       await setDoc(userRef, newUserProfile);
     } catch (error) {
@@ -377,29 +376,21 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
 
 export const adminDeleteUser = async (uid: string): Promise<void> => {
     if (!uid) throw new Error("User ID is required.");
-    const batch = writeBatch(db);
     const userRef = doc(db, `users/${uid}`);
+    // Perform a soft delete by updating the user document
+    await updateDoc(userRef, {
+        isDeleted: true,
+        deletedAt: serverTimestamp(),
+    });
+};
 
-    const transactionsRef = collection(db, "transactions");
-    const sentQuery = query(transactionsRef, where("senderId", "==", uid));
-    const receivedQuery = query(transactionsRef, where("receiverId", "==", uid));
-
-    const [sentSnapshot, receivedSnapshot] = await Promise.all([getDocs(sentQuery), getDocs(receivedQuery)]);
-    sentSnapshot.forEach(docData => batch.delete(docData.ref));
-    receivedSnapshot.forEach(docData => batch.delete(docData.ref));
-
-    const messagesRef = collection(db, `chats/${uid}/messages`);
-    const messagesSnapshot = await getDocs(messagesRef);
-    messagesSnapshot.forEach(docData => batch.delete(docData.ref));
-
-    const loansRef = collection(db, "loans");
-    const loansQuery = query(loansRef, where("userId", "==", uid));
-    const loansSnapshot = await getDocs(loansQuery);
-    loansSnapshot.forEach(docData => batch.delete(docData.ref));
-    
-    batch.delete(userRef);
-
-    await batch.commit();
+export const adminRestoreUser = async (uid: string): Promise<void> => {
+    if (!uid) throw new Error("User ID is required.");
+    const userRef = doc(db, `users/${uid}`);
+    await updateDoc(userRef, {
+        isDeleted: false,
+        deletedAt: null,
+    });
 };
 
 export const adminUpdateTransaction = async (transactionId: string, data: Partial<Transaction>): Promise<void> => {

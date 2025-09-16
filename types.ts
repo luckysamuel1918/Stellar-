@@ -17,6 +17,8 @@ export interface UserProfile {
   isSuspended?: boolean;
   createdAt: any; // Firestore timestamp
   photoURL?: string | null;
+  isDeleted?: boolean;
+  deletedAt?: any; // Firestore timestamp or null
 }
 
 export interface Transaction {

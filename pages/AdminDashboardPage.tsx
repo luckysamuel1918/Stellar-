@@ -1,13 +1,15 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../App';
 import { UserProfile, Transaction, Loan } from '../types';
 // FIX: Import 'serverTimestamp' from Firebase services to resolve the 'Cannot find name' error.
 import { 
     getAllUsers, adminUpdateBalance, updateUserProfile, adminDeleteUser,
     getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
-    wipeChatHistory, Timestamp, getAllLoans, updateLoan, serverTimestamp
+    wipeChatHistory, Timestamp, getAllLoans, updateLoan, serverTimestamp,
+    adminRestoreUser, signOut, auth
 } from '../services/firebase';
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, Banknote, Calendar, Percent } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, Banknote, Calendar, Percent, LogOut, RefreshCw } from 'lucide-react';
 
 const formatCurrency = (amount: number, currency: string) => {
     try {
@@ -216,7 +218,7 @@ const DeleteUserModal = ({ user, onClose, onUpdate }) => {
             await adminDeleteUser(user.uid);
             onUpdate();
         } catch(err) {
-            setError('Failed to delete user.');
+            setError('Failed to deactivate user.');
         } finally {
             setLoading(false);
         }
@@ -226,12 +228,12 @@ const DeleteUserModal = ({ user, onClose, onUpdate }) => {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md text-center">
                 <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">Confirm Deletion</h2>
-                <p className="text-westcoast-text-light dark:text-gray-300 my-4">Are you sure you want to permanently delete <span className="font-bold">{user.fullName}</span>? This will also remove all their transactions and chat history. This action cannot be undone.</p>
+                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">Confirm Deactivation</h2>
+                <p className="text-westcoast-text-light dark:text-gray-300 my-4">Are you sure you want to deactivate the account of <span className="font-bold">{user.fullName}</span>? The user will not be able to log in, but their data will be preserved and you can restore their account later.</p>
                 {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
                 <div className="flex justify-center space-x-4">
                     <button onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
-                    <button onClick={handleDelete} disabled={loading} className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Deleting...' : 'Delete User'}</button>
+                    <button onClick={handleDelete} disabled={loading} className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Deactivating...' : 'Deactivate User'}</button>
                 </div>
             </div>
         </div>
@@ -506,6 +508,7 @@ const StatCard = ({ title, value, icon }) => (
 
 const AdminDashboardPage: React.FC = () => {
     const { userData } = useAuth();
+    const navigate = useNavigate();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
@@ -513,6 +516,15 @@ const AdminDashboardPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [view, setView] = useState('users'); // 'users' or 'loans'
     const [loanFilter, setLoanFilter] = useState<Loan['status'] | 'all'>('pending');
+
+    const handleSignOut = async () => {
+        try {
+            await signOut(auth);
+            navigate('/');
+        } catch (error) {
+            console.error("Sign out error", error);
+        }
+    };
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -545,6 +557,18 @@ const AdminDashboardPage: React.FC = () => {
             } catch (error) {
                 console.error(`Failed to ${action} user:`, error);
                 alert(`Could not ${action} the user. Please try again.`);
+            }
+        }
+    };
+
+    const handleRestoreUser = async (userToUpdate: UserProfile) => {
+        if (window.confirm(`Are you sure you want to restore the account for ${userToUpdate.fullName}?`)) {
+            try {
+                await adminRestoreUser(userToUpdate.uid);
+                fetchData();
+            } catch (error) {
+                console.error("Failed to restore user:", error);
+                alert("Could not restore the user. Please try again.");
             }
         }
     };
@@ -609,9 +633,15 @@ const AdminDashboardPage: React.FC = () => {
         <div className="bg-westcoast-bg dark:bg-gray-900 min-h-screen p-4 sm:p-6 md:p-8">
             {renderModal()}
             <div className="max-w-7xl mx-auto">
-                <header className="mb-8">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-westcoast-dark dark:text-white">Admin Dashboard</h1>
-                    <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
+                <header className="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl sm:text-4xl font-bold text-westcoast-dark dark:text-white">Admin Dashboard</h1>
+                        <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
+                    </div>
+                    <button onClick={handleSignOut} className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-westcoast-text-dark dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <LogOut size={16} />
+                        <span>Log Out</span>
+                    </button>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -650,7 +680,7 @@ const AdminDashboardPage: React.FC = () => {
                             </thead>
                             <tbody>
                                 {filteredUsers.map(user => (
-                                    <tr key={user.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <tr key={user.uid} className={`border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50 ${user.isDeleted ? 'opacity-50' : ''}`}>
                                         <td className="py-4 px-4">
                                             <div className="flex items-center gap-3">
                                                 <Avatar user={user} />
@@ -660,6 +690,11 @@ const AdminDashboardPage: React.FC = () => {
                                                         {user.isSuspended && (
                                                             <span className="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
                                                                 SUSPENDED
+                                                            </span>
+                                                        )}
+                                                         {user.isDeleted && (
+                                                            <span className="text-xs font-bold text-gray-500 bg-gray-200 dark:bg-gray-600 px-2 py-0.5 rounded-full">
+                                                                DEACTIVATED
                                                             </span>
                                                         )}
                                                     </p>
@@ -674,14 +709,20 @@ const AdminDashboardPage: React.FC = () => {
                                         <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
                                         <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden md:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
                                         <td className="py-4 px-4 text-center">
-                                            <div className="flex items-center justify-center flex-wrap gap-1">
-                                                 <button onClick={() => openModal('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>
-                                                 <button onClick={() => openModal('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
-                                                 <button onClick={() => openModal('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
-                                                 <button onClick={() => openModal('chat', user)} title="Chat with User" className="text-cyan-600 hover:text-cyan-800 p-2 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/50"><MessageSquare size={18} /></button>
-                                                 <button onClick={() => handleToggleSuspend(user)} title={user.isSuspended ? "Unsuspend User" : "Suspend User"} className={`p-2 rounded-full ${user.isSuspended ? 'text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900/50' : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'}`}>{user.isSuspended ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}</button>
-                                                 <button onClick={() => openModal('delete', user)} title="Delete User" className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><Trash2 size={18} /></button>
-                                            </div>
+                                            {user.isDeleted ? (
+                                                <button onClick={() => handleRestoreUser(user)} title="Restore User" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50 flex items-center gap-1 mx-auto text-sm font-semibold">
+                                                    <RefreshCw size={16} /> Restore
+                                                </button>
+                                            ) : (
+                                                <div className="flex items-center justify-center flex-wrap gap-1">
+                                                     <button onClick={() => openModal('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>
+                                                     <button onClick={() => openModal('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
+                                                     <button onClick={() => openModal('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
+                                                     <button onClick={() => openModal('chat', user)} title="Chat with User" className="text-cyan-600 hover:text-cyan-800 p-2 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/50"><MessageSquare size={18} /></button>
+                                                     <button onClick={() => handleToggleSuspend(user)} title={user.isSuspended ? "Unsuspend User" : "Suspend User"} className={`p-2 rounded-full ${user.isSuspended ? 'text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900/50' : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'}`}>{user.isSuspended ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}</button>
+                                                     <button onClick={() => openModal('delete', user)} title="Deactivate User" className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><Trash2 size={18} /></button>
+                                                </div>
+                                            )}
                                         </td>
                                     </tr>
                                 ))}

@@ -163,6 +163,22 @@ const DashboardLayout: React.FC = () => {
         </div>
     );
 
+    const DeactivatedAccountModal: React.FC<{ onLogout: () => void }> = ({ onLogout }) => (
+        <div className="fixed inset-0 bg-red-900/90 backdrop-blur-sm z-[100] flex items-center justify-center p-4">
+            <div className="bg-white/90 dark:bg-gray-800/90 p-6 sm:p-8 rounded-2xl max-w-md w-full text-center shadow-2xl border border-gray-200 dark:border-gray-700">
+                <h1 className="text-2xl font-bold text-gray-800 dark:text-white">Account Deactivated</h1>
+                <p className="text-gray-600 dark:text-gray-300 mt-4">
+                    This account has been deactivated by an administrator. Please contact support for assistance.
+                </p>
+                <div className="mt-8">
+                    <button onClick={onLogout} className="w-full px-4 py-3 font-bold text-gray-700 bg-gray-200 dark:bg-gray-600 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors">
+                        Log Out
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+
     const getActiveView = () => {
         const path = location.pathname.replace('/dashboard', '');
         if (path === '' || path === '/') return 'home';
@@ -208,12 +224,14 @@ const DashboardLayout: React.FC = () => {
     };
 
     const pageTitle = (navItems.find(item => item.id === activeView) || { label: "Dashboard" }).label;
+    const isLocked = userData && (userData.isSuspended || userData.isDeleted);
 
     return (
         <DashboardContext.Provider value={contextValue}>
             <div className="bg-westcoast-bg dark:bg-gray-900 min-h-screen font-sans">
                 {userData && userData.isSuspended && <SuspendedAccountModal onLogout={signOut} />}
-                <div className={`flex ${userData && userData.isSuspended ? 'blur-sm pointer-events-none' : ''}`}>
+                {userData && userData.isDeleted && <DeactivatedAccountModal onLogout={signOut} />}
+                <div className={`flex ${isLocked ? 'blur-sm pointer-events-none' : ''}`}>
                     <aside className="hidden md:flex flex-col w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 min-h-screen p-4 flex-shrink-0">
                         <div className="mb-8"><WestcoastLogo /></div>
                         <nav className="flex-grow space-y-2">
@@ -248,7 +266,7 @@ const DashboardLayout: React.FC = () => {
                         </div>
                     </main>
                 </div>
-                {!(userData && userData.isSuspended) && (
+                {!isLocked && (
                      <footer className="md:hidden fixed bottom-0 left-0 right-0 bg-white/95 dark:bg-gray-800/95 backdrop-blur-sm border-t border-gray-200 dark:border-gray-700 z-50">
                         <div className="flex justify-around py-2">
                              {navItems.map(item => (
