@@ -25,6 +25,22 @@ import {
 } from "@firebase/firestore";
 import { UserProfile, Transaction, Loan } from "../types";
 
+// --- CURRENCY FORMATTER ---
+const formatCurrency = (amount: number, currency: string) => {
+    const safeCurrency = currency || 'USD';
+    try {
+        return new Intl.NumberFormat('en-US', {
+            style: 'currency',
+            currency: safeCurrency,
+        }).format(amount);
+    } catch (e) {
+        console.error(`Invalid currency code: ${safeCurrency}`, e);
+        // Fallback to just using the amount with a dollar sign if formatting fails
+        return `$${amount.toFixed(2)}`;
+    }
+};
+
+
 // --- EMAILJS HELPERS ---
 
 const SERVICE_ID = "service_27dimqt";
@@ -214,11 +230,11 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
         if (updatedSender) {
             sendDebitEmail({
                 customer_name: updatedSender.fullName,
-                amount: amount.toFixed(2),
+                amount: formatCurrency(amount, updatedSender.currencyCode),
                 recipient_name: receiver.fullName,
                 date_time: new Date().toLocaleString(),
                 description: description || 'N/A',
-                balance: updatedSender.balance.toFixed(2),
+                balance: formatCurrency(updatedSender.balance, updatedSender.currencyCode),
                 subject: 'Westcoast Trust Bank Debit Alert',
                 to_email: updatedSender.email,
                 from_email: 'support@westcoasttrusts.com'
@@ -231,11 +247,11 @@ export const performTransfer = async (sender: UserProfile, receiver: UserProfile
             if (updatedReceiver) {
                 sendCreditEmail({
                     customer_name: updatedReceiver.fullName,
-                    amount: amount.toFixed(2),
+                    amount: formatCurrency(amount, updatedReceiver.currencyCode),
                     sender_name: sender.fullName,
                     date_time: new Date().toLocaleString(),
                     description: description || 'N/A',
-                    balance: updatedReceiver.balance.toFixed(2),
+                    balance: formatCurrency(updatedReceiver.balance, updatedReceiver.currencyCode),
                     subject: 'Westcoast Trust Bank Credit Alert',
                     to_email: updatedReceiver.email,
                     from_email: 'support@westcoasttrusts.com'
@@ -286,11 +302,11 @@ export const adminUpdateBalance = async (
             if (type === 'credit') {
                 sendCreditEmail({
                     customer_name: updatedUser.fullName,
-                    amount: amount.toFixed(2),
+                    amount: formatCurrency(amount, updatedUser.currencyCode),
                     sender_name: senderName || 'Westcoast Trust Bank Admin',
                     date_time,
                     description: description || 'N/A',
-                    balance: updatedUser.balance.toFixed(2),
+                    balance: formatCurrency(updatedUser.balance, updatedUser.currencyCode),
                     subject: 'Westcoast Trust Bank Credit Alert',
                     to_email: updatedUser.email,
                     from_email: 'support@westcoasttrusts.com'
@@ -305,11 +321,11 @@ export const adminUpdateBalance = async (
                 }
                 sendDebitEmail({
                     customer_name: updatedUser.fullName,
-                    amount: amount.toFixed(2),
+                    amount: formatCurrency(amount, updatedUser.currencyCode),
                     recipient_name: recipientName,
                     date_time,
                     description: description || 'N/A',
-                    balance: updatedUser.balance.toFixed(2),
+                    balance: formatCurrency(updatedUser.balance, updatedUser.currencyCode),
                     subject: 'Westcoast Trust Bank Debit Alert',
                     to_email: updatedUser.email,
                     from_email: 'support@westcoasttrusts.com'

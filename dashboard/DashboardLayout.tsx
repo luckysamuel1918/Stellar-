@@ -85,6 +85,9 @@ const DashboardLayout: React.FC = () => {
                     setUserData(finalProfile);
                     setTransactions(finalTxs);
                     setLoans(finalLoans);
+                } else {
+                    console.error("User profile not found in database, logging out.");
+                    signOut();
                 }
             } catch (error) {
                 console.error("Failed to fetch user data:", error);
@@ -92,7 +95,7 @@ const DashboardLayout: React.FC = () => {
                 if(isInitial) setLoading(false);
             }
         }
-    }, [authUser, processOverdueLoans]);
+    }, [authUser, processOverdueLoans, signOut]);
     
     useEffect(() => {
         fetchData(true);
