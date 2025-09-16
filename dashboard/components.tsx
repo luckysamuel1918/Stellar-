@@ -704,7 +704,13 @@ export const QuickActionButton: React.FC<{ icon: React.ReactNode; label: string;
 
 export const TransactionItem: React.FC<{ tx: Transaction, currentUserId: string, currencyCode: string }> = ({ tx, currentUserId, currencyCode }) => {
     const isDebit = tx.senderId === currentUserId;
-    const formattedDate = tx.timestamp && tx.timestamp.toDate ? new Date(tx.timestamp.toDate()).toLocaleDateString() : 'N/A';
+    const getFormattedDate = (timestamp: any) => {
+        if (timestamp && typeof timestamp.toDate === 'function') {
+            return new Date(timestamp.toDate()).toLocaleDateString();
+        }
+        return 'N/A';
+    };
+    const formattedDate = getFormattedDate(tx.timestamp);
     
     const getTransactionTitle = () => {
         if (tx.description) return tx.description;

@@ -356,8 +356,9 @@ export const getUserTransactions = async (uid: string): Promise<Transaction[]> =
 
     const uniqueTransactions = Array.from(transactionsMap.values());
     return uniqueTransactions.sort((a, b) => {
-        const aSeconds = (a.timestamp && a.timestamp.seconds) || 0;
-        const bSeconds = (b.timestamp && b.timestamp.seconds) || 0;
+        const getSeconds = (timestamp: any) => (timestamp && typeof timestamp.seconds === 'number') ? timestamp.seconds : 0;
+        const aSeconds = getSeconds(a.timestamp);
+        const bSeconds = getSeconds(b.timestamp);
         return bSeconds - aSeconds;
     });
 }

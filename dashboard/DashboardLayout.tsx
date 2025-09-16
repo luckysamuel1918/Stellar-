@@ -52,7 +52,8 @@ const DashboardLayout: React.FC = () => {
     const processOverdueLoans = useCallback(async (user: UserProfile, userLoans: Loan[]) => {
         const now = new Date();
         for (const loan of userLoans) {
-            if (loan.status === 'approved' && loan.dueDate && loan.dueDate.toDate() < now) {
+            const dueDate = loan.dueDate && typeof loan.dueDate.toDate === 'function' ? loan.dueDate.toDate() : null;
+            if (loan.status === 'approved' && dueDate && dueDate < now) {
                 if (user.balance >= (loan.totalOwed ?? 0)) {
                     await adminUpdateBalance(user, loan.totalOwed!, 'debit', 'Overdue loan repayment', undefined, undefined, 'loan_repayment');
                     await updateLoan(loan.id!, { status: 'paid' });

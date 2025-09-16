@@ -110,6 +110,7 @@ const LoanView: React.FC = () => {
 
         if (activeLoan) {
             const isOverdue = activeLoan.status === 'overdue';
+            const formattedDueDate = activeLoan.dueDate && typeof activeLoan.dueDate.toDate === 'function' ? new Date(activeLoan.dueDate.toDate()).toLocaleDateString() : 'N/A';
             return (
                 <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
                     <div className="flex items-center gap-4 mb-4">
@@ -128,7 +129,7 @@ const LoanView: React.FC = () => {
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-500 dark:text-gray-400">Due Date</span>
-                            <span className="font-semibold text-westcoast-text-dark dark:text-white">{activeLoan.dueDate ? new Date(activeLoan.dueDate.toDate()).toLocaleDateString() : 'N/A'}</span>
+                            <span className="font-semibold text-westcoast-text-dark dark:text-white">{formattedDueDate}</span>
                         </div>
                         <div className="flex justify-between items-center">
                             <span className="text-gray-500 dark:text-gray-400">Interest Rate (APR)</span>
