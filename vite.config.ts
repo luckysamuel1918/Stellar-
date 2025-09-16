@@ -1,12 +1,12 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-// FIX: Import 'process' to provide type definitions and functionality for process.cwd().
+// FIX: Import 'process' to provide types for 'process.cwd()' and resolve build-time errors.
 import process from 'process';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // FIX: process.cwd() requires the 'process' module to be imported for type safety.
+  // FIX: 'process' is globally available in Node.js. The explicit import was causing type conflicts.
   const env = loadEnv(mode, process.cwd(), '');
 
   return {
@@ -17,10 +17,19 @@ export default defineConfig(({ mode }) => {
         '@': path.resolve(process.cwd(), './'),
       },
     },
+    // Define is used to replace global variables at build time.
+    // Vite's default import.meta.env was not working in the execution environment,
+    // so we manually define process.env variables from the loaded .env file.
     define: {
-      // Expose the Gemini API key to the app, which expects it on process.env
-      // Make sure to set VITE_GEMINI_API_KEY in your Vercel environment variables
       'process.env.API_KEY': JSON.stringify(env.VITE_GEMINI_API_KEY),
+      'process.env.VITE_FIREBASE_API_KEY': JSON.stringify(env.VITE_FIREBASE_API_KEY),
+      'process.env.VITE_FIREBASE_AUTH_DOMAIN': JSON.stringify(env.VITE_FIREBASE_AUTH_DOMAIN),
+      'process.env.VITE_FIREBASE_PROJECT_ID': JSON.stringify(env.VITE_FIREBASE_PROJECT_ID),
+      'process.env.VITE_FIREBASE_STORAGE_BUCKET': JSON.stringify(env.VITE_FIREBASE_STORAGE_BUCKET),
+      'process.env.VITE_FIREBASE_MESSAGING_SENDER_ID': JSON.stringify(env.VITE_FIREBASE_MESSAGING_SENDER_ID),
+      'process.env.VITE_FIREBASE_APP_ID': JSON.stringify(env.VITE_FIREBASE_APP_ID),
+      'process.env.VITE_FIREBASE_MEASUREMENT_ID': JSON.stringify(env.VITE_FIREBASE_MEASUREMENT_ID),
+      'process.env.VITE_TEST_MESSAGE': JSON.stringify(env.VITE_TEST_MESSAGE),
     },
     build: {
       outDir: 'dist',

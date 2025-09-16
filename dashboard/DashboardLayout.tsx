@@ -20,6 +20,7 @@ interface DashboardContextType {
     transactions: Transaction[];
     loans: Loan[];
     loading: boolean;
+    error: string | null;
     fetchData: () => Promise<void>;
     openDomesticTransferModal: () => void;
     openInternationalTransferModal: () => void;
@@ -41,6 +42,7 @@ const DashboardLayout: React.FC = () => {
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
     
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [showDepositModal, setShowDepositModal] = useState(false);
@@ -67,6 +69,7 @@ const DashboardLayout: React.FC = () => {
     const fetchData = useCallback(async (isInitial = false) => {
         if (authUser) {
             if(isInitial) setLoading(true);
+            setError(null);
             try {
                 const profile = await getUserData(authUser.uid);
                 if (profile) {
@@ -87,11 +90,15 @@ const DashboardLayout: React.FC = () => {
                     setTransactions(finalTxs);
                     setLoans(finalLoans);
                 } else {
+                    setError("Your user account data is missing. Please contact support. You will be logged out automatically.");
                     console.error("User profile not found in database, logging out.");
-                    signOut();
+                    setTimeout(() => {
+                        signOut();
+                    }, 5000);
                 }
-            } catch (error) {
-                console.error("Failed to fetch user data:", error);
+            } catch (err) {
+                console.error("Failed to fetch user data:", err);
+                setError("An error occurred while fetching your data. Please try again later.");
             } finally {
                 if(isInitial) setLoading(false);
             }
@@ -177,11 +184,23 @@ const DashboardLayout: React.FC = () => {
         return <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900"><Loader2 className="animate-spin text-westcoast-blue w-8 h-8"/></div>;
     }
 
+    if (error) {
+        return (
+            <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900 p-4">
+                <div className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md text-center max-w-md">
+                    <h2 className="text-xl font-bold text-red-600">An Error Occurred</h2>
+                    <p className="mt-2 text-gray-600 dark:text-gray-300">{error}</p>
+                </div>
+            </div>
+        );
+    }
+
     const contextValue: DashboardContextType = {
         user: userData,
         transactions,
         loans,
         loading,
+        error,
         fetchData: () => fetchData(false),
         openDomesticTransferModal: () => setShowTransferModal(true),
         openInternationalTransferModal: () => setShowInternationalModal(true),
