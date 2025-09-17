@@ -4,30 +4,20 @@ import path from 'path';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  // FIX: Replaced process.cwd() with path.resolve() to fix type error 'Property 'cwd' does not exist on type 'Process''.
-  const env = loadEnv(mode, path.resolve(), '');
-
-  // Create a process.env object that includes all variables from the .env file
-  // by spreading them. This is more robust than manually listing each one.
-  // We also explicitly map VITE_GEMINI_API_KEY to API_KEY for the GenAI SDK.
-  const processEnv = {
-    ...env,
-    API_KEY: env.VITE_GEMINI_API_KEY,
-  };
+  const env = loadEnv(mode, process.cwd(), '');
 
   return {
     plugins: [react()],
     resolve: {
       alias: {
-        // FIX: Replaced process.cwd() with path.resolve() to fix type error 'Property 'cwd' does not exist on type 'Process''.
         '@': path.resolve('./'),
       },
     },
-    // The 'define' option will perform a literal replacement of `process.env`
-    // with a JSON representation of the `processEnv` object. This makes
-    // the `process.env.VAR_NAME` syntax work correctly in the browser.
     define: {
-      'process.env': processEnv,
+      // Map Gemini API key if you want to expose it as process.env.API_KEY
+      'process.env': {
+        API_KEY: env.VITE_GEMINI_API_KEY, 
+      },
     },
     build: {
       outDir: 'dist',
