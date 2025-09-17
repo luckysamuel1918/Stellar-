@@ -9,7 +9,7 @@ import DashboardLayout from './dashboard/DashboardLayout';
 import AdminLoginPage from './admin/AdminLoginPage';
 import AdminDashboardPage from './admin/AdminDashboardPage';
 import { WestcoastLogo } from './components/icons';
-import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun, Globe } from 'lucide-react';
+import { Menu, Search, User as UserIcon, LogOut, X, Facebook, Twitter, Instagram, Youtube, Briefcase, Landmark, Moon, Sun, Globe, Loader2 } from 'lucide-react';
 
 // Zoho SalesIQ Global Type
 declare global {
@@ -17,6 +17,14 @@ declare global {
         $zoho: any;
     }
 }
+
+// --- FULL PAGE LOADER ---
+const FullPageLoader: React.FC = () => (
+    <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900">
+        <Loader2 className="animate-spin text-westcoast-blue w-10 h-10"/>
+    </div>
+);
+
 
 // --- THEME CONTEXT ---
 interface ThemeContextType {
@@ -271,18 +279,14 @@ const AppLayout: React.FC = () => (
 // --- ROUTING & PROTECTION ---
 const UserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
-    if (loading) return null;
-    // Add a check for userData loading state to prevent race conditions on login
-    if (user && !userData) return null;
+    if (loading || (user && !userData)) return <FullPageLoader />;
     if (user && userData && !userData.isAdmin) return <>{children}</>;
     return <ReactRouterDOM.Navigate to="/user" replace />;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
-    if (loading) return null;
-    // Add a check for userData loading state to prevent race conditions on login
-    if (user && !userData) return null;
+    if (loading || (user && !userData)) return <FullPageLoader />;
     if (user && userData && userData.isAdmin) return <>{children}</>;
     return <ReactRouterDOM.Navigate to="/admin-login" replace />;
 };

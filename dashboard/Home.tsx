@@ -4,6 +4,76 @@ import { useDashboard } from './DashboardLayout';
 import { Loader2, Bell, MessageSquare, CreditCard, Send, Globe, ClipboardCheck, History } from 'lucide-react';
 import { QuickActionButton, TransactionItem, Avatar, formatCurrency } from './components';
 
+// --- SKELETON LOADER COMPONENTS ---
+
+const BalanceCardSkeleton: React.FC = () => (
+    <div className="p-5 rounded-2xl bg-gray-200 dark:bg-gray-700 animate-pulse">
+        <div className="h-4 bg-gray-300 dark:bg-gray-600 rounded w-1/3 mb-2"></div>
+        <div className="h-10 bg-gray-300 dark:bg-gray-600 rounded w-1/2"></div>
+        <div className="h-6 bg-gray-300 dark:bg-gray-600 rounded w-1/4 mt-4"></div>
+    </div>
+);
+
+const TransactionItemSkeleton: React.FC = () => (
+    <div className="bg-white dark:bg-gray-800 p-3 rounded-xl flex items-center gap-3 shadow-sm animate-pulse">
+        <div className="w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+        <div className="flex-grow space-y-2">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-1/2"></div>
+        </div>
+        <div className="space-y-2 text-right">
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-16 ml-auto"></div>
+            <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 ml-auto"></div>
+        </div>
+    </div>
+);
+
+const HomeViewSkeleton: React.FC = () => (
+    <>
+        <header className="p-4 flex justify-between items-center md:hidden animate-pulse">
+            <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
+                <div>
+                    <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-24"></div>
+                </div>
+            </div>
+            <div className="flex items-center gap-2">
+                <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+                <div className="w-9 h-9 bg-gray-200 dark:bg-gray-700 rounded-full"></div>
+            </div>
+        </header>
+
+        <section className="px-4 md:px-0">
+            <BalanceCardSkeleton />
+        </section>
+
+        <section className="p-4 md:p-0 md:mt-8">
+            <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-3 animate-pulse"></div>
+             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+                {Array.from({ length: 4 }).map((_, i) => (
+                    <div key={i} className="flex flex-col items-center justify-center space-y-2">
+                        <div className="bg-gray-200 dark:bg-gray-700 p-4 rounded-xl w-[70px] h-[56px] animate-pulse"></div>
+                        <div className="h-3 bg-gray-200 dark:bg-gray-700 rounded w-12 animate-pulse mt-2"></div>
+                    </div>
+                ))}
+            </div>
+        </section>
+        
+        <section className="p-4 md:p-0 md:mt-8">
+            <div className="flex justify-between items-center mb-3">
+                <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
+                <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
+            </div>
+            <div className="space-y-3">
+                <TransactionItemSkeleton />
+                <TransactionItemSkeleton />
+                <TransactionItemSkeleton />
+            </div>
+        </section>
+    </>
+);
+
+
 const HomeView = () => {
     const { user: userData, transactions, loading, openDomesticTransferModal, openInternationalTransferModal, openCheckDepositModal } = useDashboard();
     const navigate = ReactRouterDOM.useNavigate();
@@ -18,7 +88,7 @@ const HomeView = () => {
         }
     }
     
-    if (loading) return <div className="flex justify-center items-center h-96"><Loader2 className="animate-spin w-8 h-8 text-westcoast-blue"/></div>;
+    if (loading) return <HomeViewSkeleton />;
     if (!userData) return <div className="p-4 text-center">Could not load user data.</div>;
 
     return (

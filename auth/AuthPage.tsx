@@ -1,10 +1,16 @@
 import React, { useState, useEffect } from 'react';
 // FIX: Changed to namespace import for react-router-dom to resolve module export errors.
 import * as ReactRouterDOM from 'react-router-dom';
-import { Home } from 'lucide-react';
+import { Home, Loader2 } from 'lucide-react';
 import { auth, signInWithEmailAndPassword, signOut, getUserByAccountNumber, getUserData } from '../services/firebase';
-import SignupWizard from './SignupWizard';
+import SignupWizard from '../components/SignupWizard';
 import { useAuth } from '../App';
+
+const FullPageLoader: React.FC = () => (
+    <div className="flex items-center justify-center min-h-[calc(100vh-200px)] bg-westcoast-bg dark:bg-gray-900">
+        <Loader2 className="animate-spin text-westcoast-blue w-10 h-10"/>
+    </div>
+);
 
 const AuthPage: React.FC = () => {
   const { user, userData, loading } = useAuth();
@@ -21,7 +27,7 @@ const AuthPage: React.FC = () => {
 
   // Show a loading screen while checking for an active session to prevent form flicker
   if (loading || (user && userData)) {
-    return null;
+    return <FullPageLoader />;
   }
 
   if (!isLogin) {

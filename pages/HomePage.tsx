@@ -497,6 +497,12 @@ const FinalCTASection: React.FC = () => {
 };
 
 
+const FullPageLoader: React.FC = () => (
+    <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900">
+        <Loader2 className="animate-spin text-westcoast-blue w-10 h-10"/>
+    </div>
+);
+
 const HomePage: React.FC = () => {
     const { userData, loading } = useAuth();
     const navigate = ReactRouterDOM.useNavigate();
@@ -514,7 +520,7 @@ const HomePage: React.FC = () => {
 
     // Prevent rendering the homepage for logged in users while redirecting
     if (loading || userData) {
-        return null;
+        return <FullPageLoader />;
     }
 
     return (
