@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+// FIX: Imported `useRef` and `useCallback` to resolve 'Cannot find name' errors.
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../App';
 import { UserProfile, Transaction } from '../types';
 import { 
@@ -6,7 +7,7 @@ import {
     getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
     wipeChatHistory, Timestamp
 } from '../services/firebase';
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, LogOut } from 'lucide-react';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
     const [imgError, setImgError] = useState(false);
@@ -502,9 +503,15 @@ const AdminDashboardPage: React.FC = () => {
         <div className="bg-westcoast-bg dark:bg-gray-900 min-h-screen p-4 sm:p-6 md:p-8">
             {renderModal()}
             <div className="max-w-7xl mx-auto">
-                <header className="mb-8">
-                    <h1 className="text-3xl sm:text-4xl font-bold text-westcoast-dark dark:text-white">Admin Dashboard</h1>
-                    <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
+                <header className="mb-8 flex justify-between items-center">
+                    <div>
+                        <h1 className="text-3xl sm:text-4xl font-bold text-westcoast-dark dark:text-white">Admin Dashboard</h1>
+                        <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
+                    </div>
+                    <button onClick={signOut} className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-westcoast-text-dark dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
+                        <LogOut size={16} />
+                        <span>Log Out</span>
+                    </button>
                 </header>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
