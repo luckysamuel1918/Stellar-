@@ -494,9 +494,16 @@ export const createLoanApplication = async (loanData: Omit<Loan, 'id' | 'status'
 
 export const getUserLoans = async (userId: string): Promise<Loan[]> => {
   if (!userId) return [];
-  const q = query(collection(db, 'loans'), where('userId', '==', userId), orderBy('requestDate', 'desc'));
+  const q = query(collection(db, 'loans'), where('userId', '==', userId));
   const snapshot = await getDocs(q);
-  return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Loan));
+  const loans = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Loan));
+
+  return loans.sort((a, b) => {
+    const getSeconds = (timestamp: any) => (timestamp && typeof timestamp.seconds === 'number') ? timestamp.seconds : 0;
+    const aSeconds = getSeconds(a.requestDate);
+    const bSeconds = getSeconds(b.requestDate);
+    return bSeconds - aSeconds;
+  });
 };
 
 export const getAllLoans = async (): Promise<Loan[]> => {
