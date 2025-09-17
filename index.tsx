@@ -7,10 +7,6 @@ import * as ReactRouterDOM from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 
-// For environment variable verification as requested.
-// Create a .env file and add VITE_TEST_MESSAGE="Hello World" to see it in the console.
-console.log("Test message from .env:", process.env.VITE_TEST_MESSAGE);
-
 const rootElement = document.getElementById('root');
 if (!rootElement) {
   throw new Error("Could not find root element to mount to");

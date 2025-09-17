@@ -37,8 +37,7 @@ export const useDashboard = () => {
 };
 
 const DashboardLayout: React.FC = () => {
-    const { user: authUser, signOut } = useAuth();
-    const [userData, setUserData] = useState<UserProfile | null>(null);
+    const { userData, signOut, refreshUserData } = useAuth();
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
@@ -66,51 +65,54 @@ const DashboardLayout: React.FC = () => {
         }
     }, []);
 
-    const fetchData = useCallback(async (isInitial = false) => {
-        if (authUser) {
-            if(isInitial) setLoading(true);
+    const fetchData = useCallback(async (isRefresh = false) => {
+        if (userData) {
+            if (!isRefresh) setLoading(true);
             setError(null);
             try {
-                const profile = await getUserData(authUser.uid);
-                if (profile) {
-                    const [txs, userLoans] = await Promise.all([
-                        getUserTransactions(authUser.uid),
-                        getUserLoans(authUser.uid)
-                    ]);
-                    await processOverdueLoans(profile, userLoans);
-                    
-                    // Refetch data after processing loans
-                    const [finalProfile, finalTxs, finalLoans] = await Promise.all([
-                        getUserData(authUser.uid),
-                        getUserTransactions(authUser.uid),
-                        getUserLoans(authUser.uid)
-                    ]);
+                 const [txs, userLoans] = await Promise.all([
+                    getUserTransactions(userData.uid),
+                    getUserLoans(userData.uid)
+                ]);
 
-                    setUserData(finalProfile);
+                const hasOverdueLoans = userLoans.some(loan => {
+                    const dueDate = loan.dueDate && typeof loan.dueDate.toDate === 'function' ? loan.dueDate.toDate() : null;
+                    return loan.status === 'approved' && dueDate && dueDate < new Date();
+                });
+
+                if (hasOverdueLoans) {
+                    await processOverdueLoans(userData, userLoans);
+                    // This will refresh the user balance in the context, and this useEffect will run again
+                    await refreshUserData(); 
+                } else {
+                    const finalProfile = await getUserData(userData.uid); // re-fetch profile to get latest balance after potential loan payment
+                    const [finalTxs, finalLoans] = await Promise.all([
+                        getUserTransactions(userData.uid),
+                        getUserLoans(userData.uid)
+                    ]);
                     setTransactions(finalTxs);
                     setLoans(finalLoans);
-                } else {
-                    setError("Your user account data is missing. Please contact support. You will be logged out automatically.");
-                    console.error("User profile not found in database, logging out.");
-                    setTimeout(() => {
-                        signOut();
-                    }, 5000);
                 }
             } catch (err) {
-                console.error("Failed to fetch user data:", err);
+                console.error("Failed to fetch dashboard data:", err);
                 setError("An error occurred while fetching your data. Please try again later.");
             } finally {
-                if(isInitial) setLoading(false);
+                if (!isRefresh) setLoading(false);
             }
+        } else {
+            // If userData is not available, the UserRoute protector will handle it.
+            // We set loading to false to avoid showing a loader here indefinitely.
+            setLoading(false);
         }
-    }, [authUser, processOverdueLoans, signOut]);
+    }, [userData, processOverdueLoans, refreshUserData]);
     
     useEffect(() => {
-        fetchData(true);
-    }, [authUser]); // Only run on authUser change
+        fetchData(false);
+    }, [userData]); // Re-run when userData from context changes.
 
     const handleSuccess = () => {
-        fetchData(false);
+        // We call refreshUserData to get the latest balance, which will trigger a re-fetch of transactions.
+        refreshUserData();
     };
 
     useEffect(() => {
@@ -196,7 +198,7 @@ const DashboardLayout: React.FC = () => {
         { id: 'me', label: "Me", icon: <UserIcon />, path: '/dashboard/me' },
     ];
     
-    if (loading && !userData) {
+    if (loading) {
         return <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900"><Loader2 className="animate-spin text-westcoast-blue w-8 h-8"/></div>;
     }
 
@@ -217,7 +219,7 @@ const DashboardLayout: React.FC = () => {
         loans,
         loading,
         error,
-        fetchData: () => fetchData(false),
+        fetchData: () => fetchData(true),
         openDomesticTransferModal: () => setShowTransferModal(true),
         openInternationalTransferModal: () => setShowInternationalModal(true),
         openCheckDepositModal: () => setShowDepositModal(true),

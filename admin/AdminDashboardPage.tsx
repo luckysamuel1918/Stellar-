@@ -1,13 +1,13 @@
 // FIX: Imported `useRef` and `useCallback` to resolve 'Cannot find name' errors.
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useAuth } from '../App';
-import { UserProfile, Transaction } from '../types';
+import { UserProfile, Transaction, Loan } from '../types';
 import { 
     getAllUsers, adminUpdateBalance, updateUserProfile, adminDeleteUser,
     getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
-    wipeChatHistory, Timestamp
+    wipeChatHistory, Timestamp, getAllLoans, updateLoan
 } from '../services/firebase';
-import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, LogOut } from 'lucide-react';
+import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, LogOut, Banknote } from 'lucide-react';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
     const [imgError, setImgError] = useState(false);
@@ -393,6 +393,90 @@ const ChatModal = ({ user, admin, onClose }) => {
     );
 };
 
+const ApproveLoanModal: React.FC<{
+    loan: Loan;
+    user: UserProfile;
+    onClose: () => void;
+    onUpdate: () => void;
+}> = ({ loan, user, onClose, onUpdate }) => {
+    const [interestRate, setInterestRate] = useState('5');
+    const [dueDate, setDueDate] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        const rate = parseFloat(interestRate);
+        if (isNaN(rate) || rate < 0) {
+            setError('Please enter a valid interest rate.');
+            return;
+        }
+        if (!dueDate) {
+            setError('Please select a due date.');
+            return;
+        }
+
+        setLoading(true);
+        setError('');
+
+        try {
+            const totalOwed = loan.loanAmount * (1 + rate / 100);
+            
+            await updateLoan(loan.id!, {
+                status: 'approved',
+                interestRate: rate,
+                totalOwed: totalOwed,
+                approvalDate: Timestamp.now(),
+                dueDate: Timestamp.fromDate(new Date(dueDate)),
+            });
+
+            await adminUpdateBalance(
+                user,
+                loan.loanAmount,
+                'credit',
+                'Loan Disbursement',
+                'Westcoast Trust Bank Loans',
+                Timestamp.now(),
+                'loan_disbursement'
+            );
+            
+            onUpdate();
+        } catch (err) {
+            console.error(err);
+            setError('Failed to approve loan. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
+                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-2">Approve Loan</h2>
+                <p className="text-westcoast-text-light dark:text-gray-300 mb-6">
+                    For <span className="font-semibold">{user.fullName}</span> - {loan.loanAmount.toLocaleString('en-US', { style: 'currency', currency: user.currencyCode })}
+                </p>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <div>
+                        <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">Interest Rate (APR %)</label>
+                        <input type="number" step="0.1" value={interestRate} onChange={e => setInterestRate(e.target.value)} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">Repayment Due Date</label>
+                        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
+                    </div>
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                    <div className="flex justify-end space-x-4 pt-4">
+                        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
+                        <button type="submit" disabled={loading} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Processing...' : 'Approve & Disburse'}</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+
 const StatCard = ({ title, value, icon }) => (
     <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center space-x-4">
         <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
@@ -405,12 +489,159 @@ const StatCard = ({ title, value, icon }) => (
     </div>
 );
 
+const TabButton = ({ title, active, onClick }) => (
+    <button
+        onClick={onClick}
+        className={`px-4 py-3 text-sm font-semibold transition-colors ${
+            active
+                ? 'border-b-2 border-westcoast-blue text-westcoast-blue'
+                : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
+        }`}
+    >
+        {title}
+    </button>
+);
+
+const UserManagementView = ({ users, onAction, onSuspend, searchTerm, setSearchTerm }) => (
+    <>
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
+            <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">All Users</h2>
+            <div className="relative w-full sm:max-w-xs">
+                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                 <input
+                    type="text"
+                    placeholder="Search by name, email, account..."
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-westcoast-blue focus:outline-none"
+                />
+            </div>
+        </div>
+        <div className="overflow-x-auto">
+            <table className="w-full min-w-[800px]">
+                <thead>
+                    <tr className="text-left text-xs text-gray-400 uppercase">
+                        <th className="py-3 px-4 font-semibold">Name</th>
+                        <th className="py-3 px-4 font-semibold hidden md:table-cell">Account No.</th>
+                        <th className="py-3 px-4 font-semibold text-right hidden md:table-cell">Balance</th>
+                        <th className="py-3 px-4 font-semibold text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {users.map(user => (
+                        <tr key={user.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                            <td className="py-4 px-4">
+                                <div className="flex items-center gap-3">
+                                    <Avatar user={user} />
+                                    <div>
+                                        <p className="font-semibold text-westcoast-text-dark dark:text-white flex items-center gap-2">
+                                            {user.fullName}
+                                            {user.isSuspended && (
+                                                <span className="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
+                                                    SUSPENDED
+                                                </span>
+                                            )}
+                                        </p>
+                                        <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
+                                        <div className="mt-2 space-y-1 md:hidden">
+                                            <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Acc:</span> <span className="font-mono text-westcoast-text-light dark:text-gray-300">{user.accountNumber}</span></p>
+                                            <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Bal:</span> <span className="font-mono font-semibold dark:text-white">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</span></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
+                            <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden md:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
+                            <td className="py-4 px-4 text-center">
+                                <div className="flex items-center justify-center flex-wrap gap-1">
+                                     <button onClick={() => onAction('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>
+                                     <button onClick={() => onAction('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
+                                     <button onClick={() => onAction('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
+                                     <button onClick={() => onAction('chat', user)} title="Chat with User" className="text-cyan-600 hover:text-cyan-800 p-2 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/50"><MessageSquare size={18} /></button>
+                                     <button onClick={() => onSuspend(user)} title={user.isSuspended ? "Unsuspend User" : "Suspend User"} className={`p-2 rounded-full ${user.isSuspended ? 'text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900/50' : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'}`}>{user.isSuspended ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}</button>
+                                     <button onClick={() => onAction('delete', user)} title="Delete User" className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><Trash2 size={18} /></button>
+                                </div>
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+            {users.length === 0 && <p className="text-center py-8 text-gray-500">No users found.</p>}
+        </div>
+    </>
+);
+
+const LoanManagementView = ({ loans, users, onApprove, onReject }) => {
+    const findUserForLoan = (userId) => users.find(u => u.uid === userId);
+
+    return (
+        <>
+            <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">All Loan Applications</h2>
+            <div className="overflow-x-auto">
+                 <table className="w-full min-w-[800px]">
+                    <thead>
+                        <tr className="text-left text-xs text-gray-400 uppercase">
+                            <th className="py-3 px-4 font-semibold">Applicant</th>
+                            <th className="py-3 px-4 font-semibold">Amount</th>
+                            <th className="py-3 px-4 font-semibold hidden md:table-cell">Purpose</th>
+                            <th className="py-3 px-4 font-semibold text-center">Status</th>
+                            <th className="py-3 px-4 font-semibold text-center">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {loans.map(loan => {
+                            const user = findUserForLoan(loan.userId);
+                            const statusPillStyles = {
+                                pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
+                                approved: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
+                                rejected: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
+                                paid: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
+                                overdue: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
+                            };
+                            return (
+                                <tr key={loan.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                                    <td className="py-4 px-4">
+                                        <p className="font-semibold text-westcoast-text-dark dark:text-white">{loan.fullName}</p>
+                                        <p className="text-sm text-westcoast-text-light dark:text-gray-400">{loan.requestDate?.toDate().toLocaleDateString()}</p>
+                                    </td>
+                                    <td className="py-4 px-4 font-mono font-semibold dark:text-white">
+                                        {user ? loan.loanAmount.toLocaleString('en-US', { style: 'currency', currency: user.currencyCode }) : `$${loan.loanAmount.toFixed(2)}`}
+                                    </td>
+                                    <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 hidden md:table-cell">{loan.loanPurpose}</td>
+                                    <td className="py-4 px-4 text-center">
+                                        <span className={`text-xs font-bold px-3 py-1 rounded-full capitalize ${statusPillStyles[loan.status]}`}>
+                                            {loan.status}
+                                        </span>
+                                    </td>
+                                    <td className="py-4 px-4 text-center">
+                                        {loan.status === 'pending' && user && (
+                                            <div className="flex items-center justify-center gap-2">
+                                                <button onClick={() => onApprove(loan, user)} className="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-md hover:bg-green-600">Approve</button>
+                                                <button onClick={() => onReject(loan)} className="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-md hover:bg-red-600">Reject</button>
+                                            </div>
+                                        )}
+                                    </td>
+                                </tr>
+                            );
+                        })}
+                    </tbody>
+                </table>
+                 {loans.length === 0 && <p className="text-center py-8 text-gray-500">No loan applications found.</p>}
+            </div>
+        </>
+    );
+};
+
+
 const AdminDashboardPage: React.FC = () => {
     const { userData, signOut } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
+    const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
-    const [modal, setModal] = useState<{type: string | null, user: UserProfile | null}>({ type: null, user: null });
+    const [modal, setModal] = useState<{type: string | null; user: UserProfile | null; loan: Loan | null;}>({ type: null, user: null, loan: null });
     const [searchTerm, setSearchTerm] = useState('');
+    const [view, setView] = useState<'users' | 'loans'>('users');
+
 
     useEffect(() => {
         // Auto-logout for inactivity for admins.
@@ -419,20 +650,13 @@ const AdminDashboardPage: React.FC = () => {
 
             const resetTimer = () => {
                 clearTimeout(inactivityTimer);
-                // Set a 5-minute timer. When it expires, call signOut.
                 inactivityTimer = window.setTimeout(() => signOut(), 5 * 60 * 1000);
             };
 
-            // List of events that indicate user activity.
             const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-            
-            // Add event listeners for each activity type. Any of these will reset the timer.
             activityEvents.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
-            
-            // Initialize the timer when the component mounts.
             resetTimer();
 
-            // Cleanup function to remove listeners and clear the timer when the component unmounts.
             return () => {
                 clearTimeout(inactivityTimer);
                 activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
@@ -440,25 +664,29 @@ const AdminDashboardPage: React.FC = () => {
         }
     }, [userData, signOut]);
 
-    const fetchUsers = useCallback(async () => {
-        // setLoading(true); // Don't show loader on refresh
+    const fetchAllData = useCallback(async () => {
         try {
-            const allUsers = await getAllUsers();
+            const [allUsers, allLoans] = await Promise.all([
+                getAllUsers(),
+                getAllLoans()
+            ]);
             setUsers(allUsers.filter(u => !u.isAdmin));
+            setLoans(allLoans);
         } catch (error) {
-            console.error("Failed to fetch users:", error);
+            console.error("Failed to fetch dashboard data:", error);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        fetchUsers();
-    }, [fetchUsers]);
+        setLoading(true);
+        fetchAllData();
+    }, [fetchAllData]);
     
     const handleUpdateSuccess = () => {
-        setModal({ type: null, user: null });
-        fetchUsers();
+        setModal({ type: null, user: null, loan: null });
+        fetchAllData();
     };
 
     const handleToggleSuspend = async (userToUpdate: UserProfile) => {
@@ -466,16 +694,28 @@ const AdminDashboardPage: React.FC = () => {
         if (window.confirm(`Are you sure you want to ${action} ${userToUpdate.fullName}?`)) {
             try {
                 await updateUserProfile(userToUpdate.uid, { isSuspended: !userToUpdate.isSuspended });
-                fetchUsers(); // Refresh the list
+                fetchAllData(); // Refresh the list
             } catch (error) {
                 console.error(`Failed to ${action} user:`, error);
                 alert(`Could not ${action} the user. Please try again.`);
             }
         }
     };
+
+    const handleRejectLoan = async (loan: Loan) => {
+        if (window.confirm(`Are you sure you want to reject this loan application for ${loan.fullName}?`)) {
+            try {
+                await updateLoan(loan.id!, { status: 'rejected' });
+                fetchAllData();
+            } catch (error) {
+                console.error("Failed to reject loan:", error);
+                alert("Could not reject the loan. Please try again.");
+            }
+        }
+    };
     
-    const openModal = (type: string, user: UserProfile) => setModal({ type, user });
-    const closeModal = () => setModal({ type: null, user: null });
+    const openModal = (type: string, user: UserProfile) => setModal({ type, user, loan: null });
+    const closeModal = () => setModal({ type: null, user: null, loan: null });
 
     const filteredUsers = users.filter(user =>
         String(user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -486,15 +726,18 @@ const AdminDashboardPage: React.FC = () => {
     if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
 
     const totalFunds = users.reduce((acc, user) => acc + (user.balance || 0), 0);
+    const pendingLoansCount = loans.filter(l => l.status === 'pending').length;
 
     const renderModal = () => {
-        if (!modal.user) return null;
+        if (!modal.type) return null;
+        
         switch(modal.type) {
-            case 'balance': return <ManageBalanceModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'edit': return <EditUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'delete': return <DeleteUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'transactions': return <ManageTransactionsModal user={modal.user} onClose={closeModal} />;
-            case 'chat': return <ChatModal user={modal.user} admin={userData} onClose={closeModal} />;
+            case 'balance': return modal.user && <ManageBalanceModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
+            case 'edit': return modal.user && <EditUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
+            case 'delete': return modal.user && <DeleteUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
+            case 'transactions': return modal.user && <ManageTransactionsModal user={modal.user} onClose={closeModal} />;
+            case 'chat': return modal.user && <ChatModal user={modal.user} admin={userData} onClose={closeModal} />;
+            case 'approve_loan': return modal.user && modal.loan && <ApproveLoanModal loan={modal.loan} user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
             default: return null;
         }
     }
@@ -514,75 +757,20 @@ const AdminDashboardPage: React.FC = () => {
                     </button>
                 </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
                     <StatCard title="Total Users" value={users.length} icon={<Users className="w-6 h-6 text-blue-600"/>} />
                     <StatCard title="Total Funds" value={totalFunds.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0})} icon={<TrendingUp className="w-6 h-6 text-blue-600"/>} />
+                    <StatCard title="Pending Loans" value={pendingLoansCount} icon={<Banknote className="w-6 h-6 text-blue-600"/>} />
                 </div>
 
                 <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
-                    <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-                        <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">User Management</h2>
-                        <div className="relative w-full sm:max-w-xs">
-                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                             <input
-                                type="text"
-                                placeholder="Search by name, email, account..."
-                                value={searchTerm}
-                                onChange={e => setSearchTerm(e.target.value)}
-                                className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-westcoast-blue focus:outline-none"
-                            />
-                        </div>
+                    <div className="flex border-b border-gray-200 dark:border-gray-700">
+                        <TabButton title="User Management" active={view === 'users'} onClick={() => setView('users')} />
+                        <TabButton title={`Loan Management (${pendingLoansCount})`} active={view === 'loans'} onClick={() => setView('loans')} />
                     </div>
-                    <div className="overflow-x-auto">
-                        <table className="w-full min-w-[800px]">
-                            <thead>
-                                <tr className="text-left text-xs text-gray-400 uppercase">
-                                    <th className="py-3 px-4 font-semibold">Name</th>
-                                    <th className="py-3 px-4 font-semibold hidden md:table-cell">Account No.</th>
-                                    <th className="py-3 px-4 font-semibold text-right hidden md:table-cell">Balance</th>
-                                    <th className="py-3 px-4 font-semibold text-center">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {filteredUsers.map(user => (
-                                    <tr key={user.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                        <td className="py-4 px-4">
-                                            <div className="flex items-center gap-3">
-                                                <Avatar user={user} />
-                                                <div>
-                                                    <p className="font-semibold text-westcoast-text-dark dark:text-white flex items-center gap-2">
-                                                        {user.fullName}
-                                                        {user.isSuspended && (
-                                                            <span className="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
-                                                                SUSPENDED
-                                                            </span>
-                                                        )}
-                                                    </p>
-                                                    <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
-                                                    <div className="mt-2 space-y-1 md:hidden">
-                                                        <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Acc:</span> <span className="font-mono text-westcoast-text-light dark:text-gray-300">{user.accountNumber}</span></p>
-                                                        <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Bal:</span> <span className="font-mono font-semibold dark:text-white">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</span></p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
-                                        <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden md:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
-                                        <td className="py-4 px-4 text-center">
-                                            <div className="flex items-center justify-center flex-wrap gap-1">
-                                                 <button onClick={() => openModal('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>
-                                                 <button onClick={() => openModal('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
-                                                 <button onClick={() => openModal('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
-                                                 <button onClick={() => openModal('chat', user)} title="Chat with User" className="text-cyan-600 hover:text-cyan-800 p-2 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/50"><MessageSquare size={18} /></button>
-                                                 <button onClick={() => handleToggleSuspend(user)} title={user.isSuspended ? "Unsuspend User" : "Suspend User"} className={`p-2 rounded-full ${user.isSuspended ? 'text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900/50' : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'}`}>{user.isSuspended ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}</button>
-                                                 <button onClick={() => openModal('delete', user)} title="Delete User" className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><Trash2 size={18} /></button>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                ))}
-                            </tbody>
-                        </table>
-                        {filteredUsers.length === 0 && <p className="text-center py-8 text-gray-500">No users found.</p>}
+                    <div className="pt-4">
+                        {view === 'users' && <UserManagementView users={filteredUsers} onAction={openModal} onSuspend={handleToggleSuspend} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
+                        {view === 'loans' && <LoanManagementView loans={loans} users={users} onApprove={(loan, user) => setModal({ type: 'approve_loan', loan, user })} onReject={handleRejectLoan} />}
                     </div>
                 </div>
             </div>
