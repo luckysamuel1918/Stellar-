@@ -1,5 +1,5 @@
-// FIX: Added a triple-slash directive to include Vite's client types, which defines `import.meta.env`.
-/// <reference types="vite/client" />
+// FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
+// It's likely these types are included globally in the project's tsconfig.json, which would make this directive redundant and problematic.
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
