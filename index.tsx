@@ -2,7 +2,8 @@
 // It's likely these types are included globally in the project's tsconfig.json.
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { HashRouter } from 'react-router-dom';
+// FIX: Changed to namespace import for react-router-dom to resolve module export errors.
+import * as ReactRouterDOM from 'react-router-dom';
 import App from './App';
 import ErrorBoundary from './components/ErrorBoundary';
 
@@ -19,9 +20,9 @@ const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
     <ErrorBoundary>
-      <HashRouter>
+      <ReactRouterDOM.HashRouter>
         <App />
-      </HashRouter>
+      </ReactRouterDOM.HashRouter>
     </ErrorBoundary>
   </React.StrictMode>
 );

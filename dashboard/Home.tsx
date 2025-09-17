@@ -1,12 +1,12 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useDashboard } from './DashboardLayout';
 import { Loader2, Bell, MessageSquare, CreditCard, Send, Globe, ClipboardCheck, History } from 'lucide-react';
 import { QuickActionButton, TransactionItem, Avatar, formatCurrency } from './components';
 
 const HomeView = () => {
     const { user: userData, transactions, loading, openDomesticTransferModal, openInternationalTransferModal, openCheckDepositModal } = useDashboard();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     const handleActionClick = (action: string) => {
         switch(action) {

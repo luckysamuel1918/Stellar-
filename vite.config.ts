@@ -1,13 +1,11 @@
 import { defineConfig, loadEnv } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
-// FIX: Imported the 'process' module to resolve TypeScript errors related to 'process.cwd()'.
-// This ensures that the Node.js 'process' object and its types are correctly recognized.
-import process from 'process';
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '');
+  // FIX: Replaced process.cwd() with path.resolve() to fix type error 'Property 'cwd' does not exist on type 'Process''.
+  const env = loadEnv(mode, path.resolve(), '');
 
   // Create a process.env object that includes all variables from the .env file
   // by spreading them. This is more robust than manually listing each one.
@@ -21,7 +19,8 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     resolve: {
       alias: {
-        '@': path.resolve(process.cwd(), './'),
+        // FIX: Replaced process.cwd() with path.resolve() to fix type error 'Property 'cwd' does not exist on type 'Process''.
+        '@': path.resolve('./'),
       },
     },
     // The 'define' option will perform a literal replacement of `process.env`

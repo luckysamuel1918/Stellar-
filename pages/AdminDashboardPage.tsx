@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../App';
 import { UserProfile, Transaction, Loan } from '../types';
 // FIX: Import 'serverTimestamp' from Firebase services to resolve the 'Cannot find name' error.
@@ -508,7 +508,7 @@ const StatCard = ({ title, value, icon }) => (
 
 const AdminDashboardPage: React.FC = () => {
     const { userData } = useAuth();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     const [users, setUsers] = useState<UserProfile[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);

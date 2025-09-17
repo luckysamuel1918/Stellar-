@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Changed react-router-dom import to a named import to fix module resolution errors.
-import { useNavigate } from 'react-router-dom';
+// FIX: Changed to namespace import for react-router-dom to resolve module export errors.
+import * as ReactRouterDOM from 'react-router-dom';
 import { auth, signInWithEmailAndPassword, signOut, getUserData, updateUserProfile, createUserProfileDocument } from '../services/firebase';
 import { useAuth } from '../App';
 
@@ -9,7 +9,7 @@ const AdminLoginPage: React.FC = () => {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
   const { userData, loading: authLoading, refreshUserData } = useAuth();
 
   useEffect(() => {

@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { ChevronRight, ChevronLeft, TrendingUp, ShieldCheck, Smartphone, Landmark, Briefcase, BrainCircuit, Loader2, Newspaper, ExternalLink } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../App';
 import { GoogleGenAI } from "@google/genai";
 
@@ -59,7 +59,7 @@ const MarketTicker: React.FC = () => {
 };
 
 const HeroSection: React.FC = () => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     const [currentIndex, setCurrentIndex] = useState(0);
     const [imagesLoaded, setImagesLoaded] = useState<boolean[]>(Array(heroSlides.length).fill(false));
     const slides = heroSlides;
@@ -213,7 +213,7 @@ const FeaturesSection: React.FC = () => {
 
 
 const ProductsSection: React.FC = () => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     const products = [
         { title: "Personal Checking", description: "No monthly fees, free ATM withdrawals, and a debit card that works worldwide.", icon: <Landmark />, imgSrc: 'https://images.unsplash.com/photo-1518458028785-8fbcd101ebb9?q=80&w=2070&auto=format&fit=crop' },
         { title: "Stock & ETF Trading", description: "Invest in thousands of stocks and ETFs, commission-free. Start with as little as $1.", icon: <Briefcase />, imgSrc: 'https://images.unsplash.com/photo-1611974789855-9c2a0a7236a3?q=80&w=2070&auto=format&fit=crop' },
@@ -466,7 +466,7 @@ const TeamSection: React.FC = () => {
 
 
 const FinalCTASection: React.FC = () => {
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     return (
         <div className="bg-westcoast-bg dark:bg-gray-900 py-20">
             <div className="container mx-auto px-4">
@@ -499,7 +499,7 @@ const FinalCTASection: React.FC = () => {
 
 const HomePage: React.FC = () => {
     const { userData, loading } = useAuth();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
 
     useEffect(() => {
         // If the user is logged in, redirect them

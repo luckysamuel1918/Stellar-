@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, createContext, useContext } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import * as ReactRouterDOM from 'react-router-dom';
 import { useAuth } from '../App';
 import { UserProfile, Transaction, Loan } from '../types';
 import { getUserData, getUserTransactions, getUserLoans, updateLoan, adminUpdateBalance } from '../services/firebase';
@@ -48,8 +48,8 @@ const DashboardLayout: React.FC = () => {
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showInternationalModal, setShowInternationalModal] = useState(false);
 
-    const location = useLocation();
-    const navigate = useNavigate();
+    const location = ReactRouterDOM.useLocation();
+    const navigate = ReactRouterDOM.useNavigate();
 
     const processOverdueLoans = useCallback(async (user: UserProfile, userLoans: Loan[]) => {
         const now = new Date();
@@ -254,15 +254,15 @@ const DashboardLayout: React.FC = () => {
                                 </div>
                             </header>
                             
-                            <Routes>
-                                <Route index element={<HomeView />} />
-                                <Route path="cards" element={<CardsView />} />
-                                <Route path="payments" element={<PaymentsView />} />
-                                <Route path="loan" element={<LoanView />} />
-                                <Route path="ai" element={<AiAssistantView />} />
-                                <Route path="me" element={<ProfileView />} />
-                                <Route path="history" element={<HistoryView />} />
-                            </Routes>
+                            <ReactRouterDOM.Routes>
+                                <ReactRouterDOM.Route index element={<HomeView />} />
+                                <ReactRouterDOM.Route path="cards" element={<CardsView />} />
+                                <ReactRouterDOM.Route path="payments" element={<PaymentsView />} />
+                                <ReactRouterDOM.Route path="loan" element={<LoanView />} />
+                                <ReactRouterDOM.Route path="ai" element={<AiAssistantView />} />
+                                <ReactRouterDOM.Route path="me" element={<ProfileView />} />
+                                <ReactRouterDOM.Route path="history" element={<HistoryView />} />
+                            </ReactRouterDOM.Routes>
                         </div>
                     </main>
                 </div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-// FIX: Changed react-router-dom import to a named import to fix module resolution errors.
-import { useNavigate, useLocation } from 'react-router-dom';
+// FIX: Changed to namespace import for react-router-dom to resolve module export errors.
+import * as ReactRouterDOM from 'react-router-dom';
 import { Home } from 'lucide-react';
 // FIX: Import `signInWithEmailAndPassword` and `signOut` for correct Firebase auth usage.
 import { auth, getUserByAccountNumber, getUserData, signInWithEmailAndPassword, signOut } from '../services/firebase';
@@ -9,8 +9,8 @@ import { useAuth } from '../App';
 
 const AuthPage: React.FC = () => {
   const { user, userData, loading } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate = ReactRouterDOM.useNavigate();
+  const location = ReactRouterDOM.useLocation();
   const initialIsLogin = new URLSearchParams(location.search).get('action') !== 'signup';
   const [isLogin, setIsLogin] = useState(initialIsLogin);
 
@@ -37,7 +37,7 @@ const LoginForm: React.FC<{ onSignupSwitch: () => void }> = ({ onSignupSwitch })
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

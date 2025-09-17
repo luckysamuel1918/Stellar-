@@ -1,6 +1,6 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
-// FIX: Changed react-router-dom import to a named import to fix module resolution errors.
-import { Routes, Route, Link, Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
+// FIX: Changed to namespace import for react-router-dom to resolve module export errors.
+import * as ReactRouterDOM from 'react-router-dom';
 import { auth, onAuthStateChanged, signOut as firebaseSignOut, User, getUserData } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
@@ -67,7 +67,7 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   const [user, setUser] = useState<User | null>(null);
   const [userData, setUserData] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
+  const navigate = ReactRouterDOM.useNavigate();
 
   const refreshUserData = useCallback(async () => {
     if (auth.currentUser) {
@@ -111,7 +111,7 @@ export const useAuth = () => useContext(AuthContext);
 const Header: React.FC = () => {
     const { user, userData, signOut } = useAuth();
     const { theme, toggleTheme } = useTheme();
-    const navigate = useNavigate();
+    const navigate = ReactRouterDOM.useNavigate();
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
     const handleDashboardRedirect = () => {
@@ -137,9 +137,9 @@ const Header: React.FC = () => {
         <header className="bg-white dark:bg-gray-800 shadow-sm sticky top-0 z-50">
             <nav className="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div className="flex items-center space-x-8">
-                    <Link to="/">
+                    <ReactRouterDOM.Link to="/">
                         <WestcoastLogo />
-                    </Link>
+                    </ReactRouterDOM.Link>
                     <div className="hidden md:flex items-center space-x-6 text-sm font-medium text-westcoast-text-light dark:text-gray-300">
                         {navLinks.map(link => (
                             <a key={link.name} href={link.href} className="hover:text-westcoast-blue dark:hover:text-westcoast-accent transition-colors flex items-center">
@@ -262,7 +262,7 @@ const AppLayout: React.FC = () => (
     <div className="flex flex-col min-h-screen">
         <Header />
         <main className="flex-grow">
-            <Outlet />
+            <ReactRouterDOM.Outlet />
         </main>
         <Footer />
     </div>
@@ -275,7 +275,7 @@ const UserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Add a check for userData loading state to prevent race conditions on login
     if (user && !userData) return null;
     if (user && userData && !userData.isAdmin) return <>{children}</>;
-    return <Navigate to="/user" replace />;
+    return <ReactRouterDOM.Navigate to="/user" replace />;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -284,11 +284,11 @@ const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     // Add a check for userData loading state to prevent race conditions on login
     if (user && !userData) return null;
     if (user && userData && userData.isAdmin) return <>{children}</>;
-    return <Navigate to="/admin-login" replace />;
+    return <ReactRouterDOM.Navigate to="/admin-login" replace />;
 };
 
 const App: React.FC = () => {
-    const location = useLocation();
+    const location = ReactRouterDOM.useLocation();
 
     useEffect(() => {
         const manageChat = () => {
@@ -309,24 +309,24 @@ const App: React.FC = () => {
     return (
         <ThemeProvider>
             <AuthProvider>
-                <Routes>
+                <ReactRouterDOM.Routes>
                     {/* Public routes with Header and Footer */}
-                    <Route element={<AppLayout />}>
-                        <Route path="/" element={<HomePage />} />
-                        <Route path="/user" element={<AuthPage />} />
-                    </Route>
+                    <ReactRouterDOM.Route element={<AppLayout />}>
+                        <ReactRouterDOM.Route path="/" element={<HomePage />} />
+                        <ReactRouterDOM.Route path="/user" element={<AuthPage />} />
+                    </ReactRouterDOM.Route>
                     
                     {/* Standalone routes without the main layout */}
-                    <Route path="/admin-login" element={<AdminLoginPage />} />
-                    <Route
+                    <ReactRouterDOM.Route path="/admin-login" element={<AdminLoginPage />} />
+                    <ReactRouterDOM.Route
                         path="/admin-dashboard/*"
                         element={<AdminRoute><AdminDashboardPage /></AdminRoute>}
                     />
-                    <Route
+                    <ReactRouterDOM.Route
                         path="/dashboard/*"
                         element={<UserRoute><DashboardLayout /></UserRoute>}
                     />
-                </Routes>
+                </ReactRouterDOM.Routes>
             </AuthProvider>
         </ThemeProvider>
     );
