@@ -173,7 +173,8 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         fullName: '', email: '', phone: '', address: '', state: '', country: '', currencyCode: '',
-        password: '', confirmPassword: '', pin: ''
+        password: '', confirmPassword: '', pin: '',
+        maritalStatus: '', occupation: '', dateOfBirth: '', zipCode: ''
     });
     const [errors, setErrors] = useState<any>({});
     const [accountNumber, setAccountNumber] = useState('');
@@ -191,6 +192,10 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
             if (!formData.address) newErrors.address = 'House address is required.';
             if (!formData.state) newErrors.state = 'State is required.';
             if (!formData.country) newErrors.country = 'Country is required.';
+            if (!formData.maritalStatus) newErrors.maritalStatus = 'Marital status is required.';
+            if (!formData.occupation) newErrors.occupation = 'Occupation is required.';
+            if (!formData.dateOfBirth) newErrors.dateOfBirth = 'Date of birth is required.';
+            if (!formData.zipCode) newErrors.zipCode = 'Zip code is required.';
         } else if (step === 3) {
             if (!formData.password) newErrors.password = 'Password is required.'; else if (formData.password.length < 8) newErrors.password = 'Password must be at least 8 characters.';
             if (formData.password !== formData.confirmPassword) newErrors.confirmPassword = 'Passwords do not match.';
@@ -262,12 +267,26 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
 
                 {step === 2 && <div className="space-y-4">
                     <InputField id="address" label="House Address" value={formData.address} onChange={handleChange} error={errors.address} required />
-                    <InputField id="state" label="State / Province" value={formData.state} onChange={handleChange} error={errors.state} required />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField id="state" label="State / Province" value={formData.state} onChange={handleChange} error={errors.state} required />
+                        <InputField id="zipCode" label="Zip Code" value={formData.zipCode} onChange={handleChange} error={errors.zipCode} required />
+                    </div>
                      <SelectField id="country" label="Country" value={formData.country} onChange={handleChange} error={errors.country} required>
                         <option value="">Select a country</option>
                         {countryData.sort((a,b) => a.name.localeCompare(b.name)).map(country => <option key={country.name} value={country.name}>{country.name}</option>)}
                     </SelectField>
                     {formData.currencyCode && <p className="text-sm text-westcoast-text-light dark:text-gray-300">Selected Currency: <span className="font-bold">{formData.currencyCode}</span></p>}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField id="occupation" label="Occupation" value={formData.occupation} onChange={handleChange} error={errors.occupation} required />
+                        <InputField id="dateOfBirth" label="Date of Birth" type="date" value={formData.dateOfBirth} onChange={handleChange} error={errors.dateOfBirth} required />
+                    </div>
+                    <SelectField id="maritalStatus" label="Marital Status" value={formData.maritalStatus} onChange={handleChange} error={errors.maritalStatus} required>
+                        <option value="">Select status...</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Divorced">Divorced</option>
+                        <option value="Widowed">Widowed</option>
+                    </SelectField>
                 </div>}
                 
                 {step === 3 && <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

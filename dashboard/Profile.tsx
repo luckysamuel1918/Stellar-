@@ -43,7 +43,7 @@ const ProfileView: React.FC = () => {
         reader.readAsDataURL(file);
     };
 
-    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
     };
 
@@ -100,8 +100,26 @@ const ProfileView: React.FC = () => {
                              <InfoRow label="Full Name" name="fullName" value={formData.fullName} onChange={handleFormChange} edit={editMode} />
                              <InfoRow label="Email Address" name="email" value={formData.email} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
                              <InfoRow label="Phone Number" name="phone" value={formData.phone} onChange={handleFormChange} edit={editMode} type="tel"/>
+                             <InfoRow label="Date of Birth" name="dateOfBirth" value={formData.dateOfBirth || ''} onChange={handleFormChange} edit={editMode} type="date"/>
+                             <InfoRow label="Occupation" name="occupation" value={formData.occupation || ''} onChange={handleFormChange} edit={editMode} />
+                             
+                             <div className="py-3 border-b border-gray-100 dark:border-gray-700 sm:grid sm:grid-cols-3 sm:gap-4 sm:items-center">
+                                 <label htmlFor="maritalStatus" className="block text-sm font-medium text-gray-500 dark:text-gray-400">Marital Status</label>
+                                 {editMode ? (
+                                     <select name="maritalStatus" id="maritalStatus" value={formData.maritalStatus || ''} onChange={handleFormChange} className="mt-1 w-full px-3 py-1.5 border rounded-md dark:bg-gray-600 dark:border-gray-500 bg-gray-50 sm:mt-0 sm:col-span-2">
+                                         <option value="Single">Single</option>
+                                         <option value="Married">Married</option>
+                                         <option value="Divorced">Divorced</option>
+                                         <option value="Widowed">Widowed</option>
+                                     </select>
+                                 ) : (
+                                     <p className="mt-1 font-semibold dark:text-white break-words sm:mt-0 sm:col-span-2">{formData.maritalStatus || ''}</p>
+                                 )}
+                             </div>
+
                              <InfoRow label="House Address" name="address" value={formData.address} onChange={handleFormChange} edit={editMode} />
                              <InfoRow label="State / Province" name="state" value={formData.state} onChange={handleFormChange} edit={editMode} />
+                             <InfoRow label="Zip Code" name="zipCode" value={formData.zipCode || ''} onChange={handleFormChange} edit={editMode} />
                              <InfoRow label="Country" name="country" value={formData.country} onChange={handleFormChange} edit={editMode} />
                              <InfoRow label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleFormChange} edit={editMode} isReadOnly={true} />
                              <InfoRow label="Currency" name="currencyCode" value={formData.currencyCode} onChange={handleFormChange} edit={editMode} isReadOnly={true} />

@@ -19,6 +19,10 @@ export interface UserProfile {
   photoURL?: string | null;
   isDeleted?: boolean;
   deletedAt?: any; // Firestore timestamp or null
+  maritalStatus?: string;
+  occupation?: string;
+  dateOfBirth?: string;
+  zipCode?: string;
 }
 
 export interface Transaction {

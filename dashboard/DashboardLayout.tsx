@@ -154,7 +154,7 @@ const DashboardLayout: React.FC = () => {
                     Please note that you will not be able to access your account information, documents or statements online or on the mobile app until we unlock your account.
                 </p>
                 <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                    <a href="mailto:support@westcoasttrusts.com" className="w-full px-4 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90 transition-opacity flex-1">
+                    <a href="mailto:apexiumintonationalbank@gmail.com" className="w-full px-4 py-3 font-bold text-white bg-westcoast-blue rounded-lg hover:opacity-90 transition-opacity flex-1">
                         Email us
                     </a>
                     <button onClick={onLogout} className="w-full px-4 py-3 font-bold text-gray-700 bg-gray-200 dark:bg-gray-600 dark:text-white rounded-lg hover:bg-gray-300 dark:hover:bg-gray-500 transition-colors flex-1">

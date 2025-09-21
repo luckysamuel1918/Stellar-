@@ -1,5 +1,5 @@
-// FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
-// It's likely these types are included globally in the project's tsconfig.json, which would make this directive redundant and problematic.
+// FIX: Added the triple-slash directive for "vite/client" to resolve errors with `import.meta.env`. This provides the necessary TypeScript type definitions for Vite's environment variables.
+/// <reference types="vite/client" />
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -116,7 +116,7 @@ export const createUserProfileDocument = async (userAuth: User, additionalData: 
 
   if (!snapshot.exists()) {
     const { email } = userAuth;
-    const { fullName, phone, address, state, country, currencyCode, accountNumber, pin } = additionalData;
+    const { fullName, phone, address, state, country, currencyCode, accountNumber, pin, maritalStatus, occupation, dateOfBirth, zipCode } = additionalData;
     try {
       const newUserProfile: Omit<UserProfile, 'uid'> & { pin: string } = {
         email,
@@ -136,6 +136,10 @@ export const createUserProfileDocument = async (userAuth: User, additionalData: 
         photoURL: null,
         isDeleted: false,
         deletedAt: null,
+        maritalStatus,
+        occupation,
+        dateOfBirth,
+        zipCode,
       };
       await setDoc(userRef, newUserProfile);
     } catch (error) {
