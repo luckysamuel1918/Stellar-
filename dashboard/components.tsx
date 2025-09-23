@@ -300,6 +300,7 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                         <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Fee:</span><span className="font-semibold dark:text-white">{formatCurrency(fee, user.currencyCode)}</span></div>
                         <div className="flex justify-between text-lg"><span className="font-bold dark:text-white">Total:</span><span className="font-bold dark:text-white">{formatCurrency(total, user.currencyCode)}</span></div>
                     </div>
+                    {error && <p className="text-red-600 text-sm">{error}</p>}
                     <div className="flex gap-4">
                         <button onClick={() => setStep(1)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
                         <button onClick={handleRequestOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">
@@ -526,6 +527,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                             <div className="flex justify-between"><span className="text-gray-500 dark:text-gray-400">Fee:</span><span className="font-semibold dark:text-white">{formatCurrency(fee, user.currencyCode)}</span></div>
                             <div className="flex justify-between text-lg"><span className="font-bold dark:text-white">Total:</span><span className="font-bold dark:text-white">{formatCurrency(total, user.currencyCode)}</span></div>
                         </div>
+                        {error && <p className="text-red-600 text-sm">{error}</p>}
                          <div className="flex gap-4">
                             <button onClick={() => setStep(1)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
                             <button onClick={handleRequestOtp} disabled={loading} className="w-full bg-westcoast-blue text-white font-bold py-3 rounded-lg flex justify-center items-center">

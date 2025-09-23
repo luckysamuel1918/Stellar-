@@ -1,3 +1,5 @@
+/// <reference types="vite/client" />
+
 // FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
 // It's likely these types are included globally in the project's tsconfig.json.
 
