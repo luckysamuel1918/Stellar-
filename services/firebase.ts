@@ -1,5 +1,5 @@
-
-// FIX: Removed the triple-slash directive for "vite/client" as it's no longer used and was causing a type resolution error.
+// FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
+// It's likely these types are included globally in the project's tsconfig.json.
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -46,32 +46,46 @@ const formatCurrency = (amount: number, currency: string) => {
 
 // --- EMAILJS HELPERS ---
 
-const SERVICE_ID = "service_27dimqt";
-const PUBLIC_KEY = "XiKkaXx4HIwQb00-G";
-const CREDIT_TEMPLATE_ID = "template_kozdmyg";
-const DEBIT_TEMPLATE_ID = "template_ms0phzn";
+// Credit/Debit Alert Credentials from environment variables
+const ALERT_SERVICE_ID = import.meta.env.VITE_EMAILJS_ALERT_SERVICE_ID;
+const ALERT_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_ALERT_PUBLIC_KEY;
+const CREDIT_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID;
+const DEBIT_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID;
+
+// OTP Credentials from environment variables
+const OTP_SERVICE_ID = import.meta.env.VITE_EMAILJS_OTP_SERVICE_ID;
+const OTP_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_OTP_PUBLIC_KEY;
+const OTP_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
 
 const sendCreditEmail = async (params: any) => {
+    if (!ALERT_SERVICE_ID || !CREDIT_TEMPLATE_ID || !ALERT_PUBLIC_KEY) {
+        console.error("EmailJS credit alert credentials are not configured in environment variables.");
+        return; // Do not block transaction for failed email
+    }
     const templateParams = {
         ...params,
         email: params.to_email,
         name: params.customer_name,
     };
     try {
-        await (window as any).emailjs.send(SERVICE_ID, CREDIT_TEMPLATE_ID, templateParams, PUBLIC_KEY);
+        await (window as any).emailjs.send(ALERT_SERVICE_ID, CREDIT_TEMPLATE_ID, templateParams, ALERT_PUBLIC_KEY);
     } catch (error) {
         console.error("EmailJS credit alert failed:", error);
     }
 };
 
 const sendDebitEmail = async (params: any) => {
+    if (!ALERT_SERVICE_ID || !DEBIT_TEMPLATE_ID || !ALERT_PUBLIC_KEY) {
+        console.error("EmailJS debit alert credentials are not configured in environment variables.");
+        return; // Do not block transaction for failed email
+    }
     const templateParams = {
         ...params,
         email: params.to_email,
         name: params.customer_name,
     };
     try {
-        await (window as any).emailjs.send(SERVICE_ID, DEBIT_TEMPLATE_ID, templateParams, PUBLIC_KEY);
+        await (window as any).emailjs.send(ALERT_SERVICE_ID, DEBIT_TEMPLATE_ID, templateParams, ALERT_PUBLIC_KEY);
     } catch (error) {
         console.error("EmailJS debit alert failed:", error);
     }
@@ -79,16 +93,16 @@ const sendDebitEmail = async (params: any) => {
 
 // --- INITIALIZATION ---
 
-// FIX: Replaced environment variable-based configuration with the provided hardcoded values to resolve deployment issues.
+// FIX: Replaced hardcoded Firebase configuration with Vite environment variables (`import.meta.env`)
+// to ensure the correct credentials are used during deployment on Vercel.
 const firebaseConfig = {
-  apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
-  authDomain: "westcoast-c85e4.firebaseapp.com",
-  databaseURL: "https://westcoast-c85e4-default-rtdb.firebaseio.com",
-  projectId: "westcoast-c85e4",
-  storageBucket: "westcoast-c85e4.appspot.com",
-  messagingSenderId: "15776220227",
-  appId: "1:15776220227:web:a5cf2658b895aff29180f6",
-  measurementId: "G-MNTK4NDZH4"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
 
@@ -434,6 +448,11 @@ export const wipeChatHistory = async (userId:string) => {
 // --- OTP FUNCTIONS ---
 
 export const generateAndSendOtp = async (uid: string, email: string, name: string): Promise<void> => {
+    if (!OTP_SERVICE_ID || !OTP_TEMPLATE_ID || !OTP_PUBLIC_KEY) {
+        console.error("EmailJS OTP credentials not configured in environment variables.");
+        throw new Error("OTP service is not configured correctly. Please contact support.");
+    }
+
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
     const otpRef = doc(db, `otps/${uid}`);
     const expiresAt = Timestamp.fromMillis(Date.now() + 5 * 60 * 1000); // 5 minutes
@@ -454,10 +473,10 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
     };
 
     await (window as any).emailjs.send(
-        "service_ddqz3a6",
-        "template_zsv0alp",
+        OTP_SERVICE_ID,
+        OTP_TEMPLATE_ID,
         templateParams,
-        "VYfq3eW-NMpJkm35M"
+        OTP_PUBLIC_KEY
     );
 };
 

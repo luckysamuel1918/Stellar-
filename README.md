@@ -28,8 +28,27 @@ To run this project locally, you need to configure your Firebase credentials.
     VITE_GEMINI_API_KEY=your_gemini_api_key_here
     ```
 
+## Setup EmailJS Environment Variables
+
+This project uses EmailJS to send transaction alerts and one-time passwords (OTPs). You need to configure credentials for two separate services.
+
+In your `.env` file, add the following variables with your own EmailJS credentials:
+
+```ini
+# For Transaction Alerts (Credit/Debit)
+VITE_EMAILJS_ALERT_SERVICE_ID=your_alert_service_id
+VITE_EMAILJS_ALERT_PUBLIC_KEY=your_alert_public_key
+VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID=your_credit_template_id
+VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID=your_debit_template_id
+
+# For One-Time Passwords (OTP)
+VITE_EMAILJS_OTP_SERVICE_ID=your_otp_service_id
+VITE_EMAILJS_OTP_PUBLIC_KEY=your_otp_public_key
+VITE_EMAILJS_OTP_TEMPLATE_ID=your_otp_template_id
+```
+
 3.  **Production Setup (Vercel):**
-    For deployment, you must add the same environment variables to your Vercel project settings.
+    For deployment, you must add all the same environment variables (both Firebase and EmailJS) to your Vercel project settings.
     - Go to your project on Vercel.
     - Navigate to *Settings* > *Environment Variables*.
     - Add each key-value pair from your `.env` file.You are helping me debug my Vite + Firebase website deployed on Vercel. 
@@ -58,4 +77,4 @@ Tasks for you:
 2. Make sure I’m querying Firestore with the correct path:  
    ```js
    const userRef = doc(db, "users", user.uid);
-   const snap = await getDoc(userRef);
+   const snap = await getDoc(userRef);Why is the OTP sending functionality not working perfectly when I try to make transfer, it says fade to send OTP why is that happen and I want you to fix it

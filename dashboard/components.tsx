@@ -28,8 +28,8 @@ export const formatCurrency = (amount: number, currency: string) => {
 export const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
     const printReceipt = () => window.print();
 
-    // FIX: Explicitly typed the props to resolve an error with React's 'key' prop.
-    const DetailRow = ({ label, value }: {label: any, value: any}) => (
+    // FIX: Changed component to use React.FC to correctly handle React's special 'key' prop during type checking.
+    const DetailRow: React.FC<{ label: any; value: any }> = ({ label, value }) => (
         <div className="flex justify-between items-start gap-4">
             <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
             <span className="font-semibold text-westcoast-text-dark dark:text-gray-200 text-right break-words text-base">{value}</span>
@@ -188,9 +188,17 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         try {
             await generateAndSendOtp(user.uid, user.email, user.fullName);
             setStep(3);
-        } catch (e) {
+        } catch (e: any) {
             console.error("OTP send error:", e);
-            setError("We couldn't send an OTP. Please try again later.");
+            let errorMessage = "We couldn't send an OTP. Please try again later.";
+            if (typeof e === 'string') {
+                errorMessage = e;
+            } else if (e?.message) {
+                errorMessage = e.message;
+            } else if (e?.text) {
+                errorMessage = e.text;
+            }
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }
@@ -387,9 +395,17 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
         try {
             await generateAndSendOtp(user.uid, user.email, user.fullName);
             setStep(3);
-        } catch (e) {
+        } catch (e: any) {
             console.error("OTP send error:", e);
-            setError("We couldn't send an OTP. Please try again later.");
+            let errorMessage = "We couldn't send an OTP. Please try again later.";
+            if (typeof e === 'string') {
+                errorMessage = e;
+            } else if (e?.message) {
+                errorMessage = e.message;
+            } else if (e?.text) {
+                errorMessage = e.text;
+            }
+            setError(errorMessage);
         } finally {
             setLoading(false);
         }

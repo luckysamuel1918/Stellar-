@@ -33,24 +33,22 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Removed 'public' keyword as it's the default and can cause issues with some build configurations.
+  // FIX: Removed explicit `public` modifiers as they are default and may conflict
+  // with this project's specific TypeScript configuration, causing type resolution errors.
   state: State = {
     hasError: false
   };
 
-  // FIX: Removed 'public' keyword.
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
     return { hasError: true };
   }
 
-  // FIX: Removed 'public' keyword.
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     // You can also log the error to an error reporting service
     console.error("Uncaught error:", error, errorInfo);
   }
 
-  // FIX: Removed 'public' keyword.
   render() {
     if (this.state.hasError) {
       // Render the fallback UI
