@@ -28,7 +28,8 @@ export const formatCurrency = (amount: number, currency: string) => {
 export const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
     const printReceipt = () => window.print();
 
-    const DetailRow = ({ label, value }) => (
+    // FIX: Explicitly typed the props to resolve an error with React's 'key' prop.
+    const DetailRow = ({ label, value }: {label: any, value: any}) => (
         <div className="flex justify-between items-start gap-4">
             <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
             <span className="font-semibold text-westcoast-text-dark dark:text-gray-200 text-right break-words text-base">{value}</span>

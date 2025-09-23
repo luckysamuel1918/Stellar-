@@ -1,5 +1,5 @@
-// FIX: Added the triple-slash directive for "vite/client" to resolve errors with `import.meta.env`. This provides the necessary TypeScript type definitions for Vite's environment variables.
-/// <reference types="vite/client" />
+
+// FIX: Removed the triple-slash directive for "vite/client" as it's no longer used and was causing a type resolution error.
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -79,15 +79,16 @@ const sendDebitEmail = async (params: any) => {
 
 // --- INITIALIZATION ---
 
+// FIX: Replaced environment variable-based configuration with the provided hardcoded values to resolve deployment issues.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
+  authDomain: "westcoast-c85e4.firebaseapp.com",
+  databaseURL: "https://westcoast-c85e4-default-rtdb.firebaseio.com",
+  projectId: "westcoast-c85e4",
+  storageBucket: "westcoast-c85e4.appspot.com",
+  messagingSenderId: "15776220227",
+  appId: "1:15776220227:web:a5cf2658b895aff29180f6",
+  measurementId: "G-MNTK4NDZH4"
 };
 
 

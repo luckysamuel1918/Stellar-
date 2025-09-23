@@ -147,7 +147,8 @@ const countryData = [
 ];
 
 
-const InputField = ({ id, label, error, ...props }) => (
+// FIX: Added 'any' type to props to resolve TypeScript inference errors.
+const InputField = ({ id, label, error, ...props }: any) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
     <input id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}`} />
@@ -157,7 +158,8 @@ const InputField = ({ id, label, error, ...props }) => (
   </div>
 );
 
-const SelectField = ({ id, label, error, children, ...props }) => (
+// FIX: Added 'any' type to props to resolve TypeScript inference errors regarding the 'children' prop.
+const SelectField = ({ id, label, error, children, ...props }: any) => (
   <div>
     <label htmlFor={id} className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
     <select id={id} {...props} className={`w-full px-4 py-2 mt-1 border rounded-lg shadow-sm focus:ring-westcoast-blue focus:border-westcoast-blue dark:bg-gray-700 dark:border-gray-600 dark:text-white ${error ? 'border-red-500' : 'border-gray-300'}`}>
