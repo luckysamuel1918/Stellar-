@@ -33,12 +33,15 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Replaced the constructor with a public class field for state initialization.
-  // This is a more modern and concise approach that avoids potential issues with `this` context
-  // and directly addresses the errors where `this.state` and `this.props` were not being recognized.
-  state: State = {
-    hasError: false,
-  };
+  // FIX: Reverted to using a constructor for state initialization. The previous
+  // implementation using a public class field, while modern, was causing a
+  // TypeScript error where `this.props` was not being recognized. Using a
+  // constructor with `super(props)` is the most reliable way to ensure the
+  // component's props are correctly typed and accessible.
+  constructor(props: Props) {
+    super(props);
+    this.state = { hasError: false };
+  }
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.

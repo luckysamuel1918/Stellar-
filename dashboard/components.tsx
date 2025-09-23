@@ -190,15 +190,8 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
             setStep(3);
         } catch (e: any) {
             console.error("OTP send error:", e);
-            let errorMessage = "We couldn't send an OTP. Please try again later.";
-            if (typeof e === 'string') {
-                errorMessage = e;
-            } else if (e?.message) {
-                errorMessage = e.message;
-            } else if (e?.text) {
-                errorMessage = e.text;
-            }
-            setError(errorMessage);
+            // The generateAndSendOtp function throws an Error object with a detailed message.
+            setError(e.message || "An unexpected error occurred while sending the OTP.");
         } finally {
             setLoading(false);
         }
@@ -398,15 +391,8 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
             setStep(3);
         } catch (e: any) {
             console.error("OTP send error:", e);
-            let errorMessage = "We couldn't send an OTP. Please try again later.";
-            if (typeof e === 'string') {
-                errorMessage = e;
-            } else if (e?.message) {
-                errorMessage = e.message;
-            } else if (e?.text) {
-                errorMessage = e.text;
-            }
-            setError(errorMessage);
+            // The generateAndSendOtp function throws an Error object with a detailed message.
+            setError(e.message || "An unexpected error occurred while sending the OTP.");
         } finally {
             setLoading(false);
         }
