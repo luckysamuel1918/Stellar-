@@ -1,5 +1,26 @@
-// FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
-// Vite's client types are expected to be included globally in the project's tsconfig.json.
+// FIX: Removed the "vite/client" triple-slash directive which was causing a type definition error.
+// A local type declaration for `import.meta.env` has been added to provide type safety for Vite
+// environment variables without causing global type conflicts.
+declare global {
+    interface ImportMeta {
+        readonly env: {
+            readonly VITE_EMAILJS_ALERT_SERVICE_ID: string;
+            readonly VITE_EMAILJS_ALERT_PUBLIC_KEY: string;
+            readonly VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID: string;
+            readonly VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID: string;
+            readonly VITE_EMAILJS_OTP_SERVICE_ID: string;
+            readonly VITE_EMAILJS_OTP_PUBLIC_KEY: string;
+            readonly VITE_EMAILJS_OTP_TEMPLATE_ID: string;
+            readonly VITE_FIREBASE_API_KEY: string;
+            readonly VITE_FIREBASE_AUTH_DOMAIN: string;
+            readonly VITE_FIREBASE_PROJECT_ID: string;
+            readonly VITE_FIREBASE_STORAGE_BUCKET: string;
+            readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
+            readonly VITE_FIREBASE_APP_ID: string;
+            readonly VITE_FIREBASE_MEASUREMENT_ID: string;
+        }
+    }
+}
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -478,6 +499,12 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
         from_email: 'support@westcoasttrusts.com'
     };
 
+    if (!(window as any).emailjs) {
+        const errorMsg = "OTP service is unavailable. Please check your internet connection and try again.";
+        console.error("EmailJS SDK not loaded or initialized.");
+        throw new Error(errorMsg);
+    }
+
     try {
         await (window as any).emailjs.send(
             OTP_SERVICE_ID,
@@ -485,9 +512,31 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
             templateParams,
             OTP_PUBLIC_KEY
         );
-    } catch (error) {
+    } catch (error: any) {
         console.error("EmailJS OTP send failed:", error);
-        throw new Error("Failed to send OTP due to an authentication error. Please verify your EmailJS credentials are correct in the environment variables. See README.md for setup.");
+        
+        let detailedError = "Failed to send OTP. An unknown error occurred. Please check the browser console for details.";
+
+        // EmailJS SDK returns an object with status and text on failure.
+        if (error && typeof error.status === 'number') {
+            const errorText = error.text || 'No additional details provided.';
+            switch(error.status) {
+                case 400:
+                    detailedError = `OTP request failed (Bad Request): ${errorText} Please ensure your EmailJS template variables match the data being sent.`;
+                    break;
+                case 401: // Unauthorized
+                case 403: // Forbidden
+                    detailedError = `OTP request failed (Authentication Error): ${errorText} Please verify your EmailJS Public Key is correct for this service.`;
+                    break;
+                case 404: // Not Found
+                    detailedError = `OTP request failed (Not Found): ${errorText} Please verify your EmailJS Service ID and Template ID are correct.`;
+                    break;
+                default:
+                    detailedError = `OTP request failed. Service responded with status ${error.status}: ${errorText}`;
+            }
+        }
+        
+        throw new Error(detailedError);
     }
 };
 
