@@ -127,6 +127,27 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const [receiptData, setReceiptData] = useState<Transaction | null>(null);
     const [otp, setOtp] = useState('');
     const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendMessage, setResendMessage] = useState('');
+    const [isResendingOtp, setIsResendingOtp] = useState(false);
+    const resendInterval = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            resendInterval.current = window.setInterval(() => {
+                setResendCooldown(prev => prev - 1);
+            }, 1000);
+        } else if (resendInterval.current) {
+            clearInterval(resendInterval.current);
+            resendInterval.current = null;
+        }
+
+        return () => {
+            if (resendInterval.current) {
+                clearInterval(resendInterval.current);
+            }
+        };
+    }, [resendCooldown]);
 
     useEffect(() => {
         const numAmount = parseFloat(amount);
@@ -185,9 +206,11 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const handleRequestOtp = async () => {
         setLoading(true);
         setError('');
+        setResendMessage('');
         try {
             await generateAndSendOtp(user.uid, user.email);
             setStep(3);
+            setResendCooldown(60);
         } catch (e: any) {
             console.error("OTP send error:", e);
             // The generateAndSendOtp function throws an Error object with a detailed message.
@@ -227,7 +250,28 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         if (step === 3) {
             deleteOtp(user.uid).catch(e => console.error("Could not delete OTP on close", e));
         }
+        if (resendInterval.current) {
+            clearInterval(resendInterval.current);
+        }
         onClose();
+    };
+
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0 || isResendingOtp) return;
+
+        setIsResendingOtp(true);
+        setError('');
+        setResendMessage('');
+        setOtp('');
+        try {
+            await generateAndSendOtp(user.uid, user.email);
+            setResendMessage('A new OTP has been sent to your email.');
+            setResendCooldown(60);
+        } catch (e: any) {
+            setError(e.message || 'Failed to resend OTP. Please try again.');
+        } finally {
+            setIsResendingOtp(false);
+        }
     };
 
     const handleOtpInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -321,6 +365,17 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                             />
                         ))}
                     </div>
+                    <div className="text-sm min-h-[40px] flex flex-col justify-center">
+                        {resendMessage && <p className="text-green-600 mb-2">{resendMessage}</p>}
+                        <button
+                            type="button"
+                            onClick={handleResendOtp}
+                            disabled={resendCooldown > 0 || isResendingOtp}
+                            className="text-westcoast-blue hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                        >
+                            {isResendingOtp ? 'Sending...' : resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : "Didn't receive the code? Resend OTP"}
+                        </button>
+                    </div>
                     {error && <p className="text-red-600 text-sm">{error}</p>}
                     <div className="flex gap-4">
                         <button onClick={() => setStep(2)} className="w-full bg-gray-200 dark:bg-gray-600 text-gray-800 dark:text-white font-bold py-3 rounded-lg">Back</button>
@@ -360,6 +415,27 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
     const [receiptData, setReceiptData] = useState<Transaction | null>(null);
     const [otp, setOtp] = useState('');
     const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
+    const [resendCooldown, setResendCooldown] = useState(0);
+    const [resendMessage, setResendMessage] = useState('');
+    const [isResendingOtp, setIsResendingOtp] = useState(false);
+    const resendInterval = useRef<number | null>(null);
+
+    useEffect(() => {
+        if (resendCooldown > 0) {
+            resendInterval.current = window.setInterval(() => {
+                setResendCooldown(prev => prev - 1);
+            }, 1000);
+        } else if (resendInterval.current) {
+            clearInterval(resendInterval.current);
+            resendInterval.current = null;
+        }
+
+        return () => {
+            if (resendInterval.current) {
+                clearInterval(resendInterval.current);
+            }
+        };
+    }, [resendCooldown]);
 
 
     useEffect(() => {
@@ -386,9 +462,11 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
     const handleRequestOtp = async () => {
         setLoading(true);
         setError('');
+        setResendMessage('');
         try {
             await generateAndSendOtp(user.uid, user.email);
             setStep(3);
+            setResendCooldown(60);
         } catch (e: any) {
             console.error("OTP send error:", e);
             // The generateAndSendOtp function throws an Error object with a detailed message.
@@ -446,7 +524,28 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
         if (step === 3) {
             deleteOtp(user.uid).catch(e => console.error("Could not delete OTP on close", e));
         }
+        if (resendInterval.current) {
+            clearInterval(resendInterval.current);
+        }
         onClose();
+    };
+
+    const handleResendOtp = async () => {
+        if (resendCooldown > 0 || isResendingOtp) return;
+    
+        setIsResendingOtp(true);
+        setError('');
+        setResendMessage('');
+        setOtp('');
+        try {
+            await generateAndSendOtp(user.uid, user.email);
+            setResendMessage('A new OTP has been sent to your email.');
+            setResendCooldown(60);
+        } catch (e: any) {
+            setError(e.message || 'Failed to resend OTP. Please try again.');
+        } finally {
+            setIsResendingOtp(false);
+        }
     };
     
     const handleOtpInputChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -539,6 +638,17 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                                     className="w-12 h-14 text-center text-2xl font-bold border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white"
                                 />
                             ))}
+                        </div>
+                        <div className="text-sm min-h-[40px] flex flex-col justify-center">
+                            {resendMessage && <p className="text-green-600 mb-2">{resendMessage}</p>}
+                            <button
+                                type="button"
+                                onClick={handleResendOtp}
+                                disabled={resendCooldown > 0 || isResendingOtp}
+                                className="text-westcoast-blue hover:underline disabled:text-gray-400 disabled:no-underline disabled:cursor-not-allowed"
+                            >
+                                {isResendingOtp ? 'Sending...' : resendCooldown > 0 ? `Resend OTP in ${resendCooldown}s` : "Didn't receive the code? Resend OTP"}
+                            </button>
                         </div>
                         {error && <p className="text-red-600 text-sm">{error}</p>}
                         <div className="flex gap-4">
