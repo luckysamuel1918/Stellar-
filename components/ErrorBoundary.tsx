@@ -33,11 +33,9 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Reverted to using a constructor for state initialization. The previous
-  // implementation using a public class field, while modern, was causing a
-  // TypeScript error where `this.props` was not being recognized. Using a
-  // constructor with `super(props)` is the most reliable way to ensure the
-  // component's props are correctly typed and accessible.
+  // FIX: Reverted to using a constructor for state initialization.
+  // The class field approach was causing TypeScript errors where `this.props` was not being recognized.
+  // An explicit constructor ensures both props and state are correctly initialized.
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };

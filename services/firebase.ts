@@ -83,13 +83,8 @@ const sendCreditEmail = async (params: any) => {
         console.error("EmailJS credit alert credentials are not configured in environment variables.");
         return; // Do not block transaction for failed email
     }
-    const templateParams = {
-        ...params,
-        email: params.to_email,
-        name: params.customer_name,
-    };
     try {
-        await (window as any).emailjs.send(ALERT_SERVICE_ID, CREDIT_TEMPLATE_ID, templateParams, ALERT_PUBLIC_KEY);
+        await (window as any).emailjs.send(ALERT_SERVICE_ID, CREDIT_TEMPLATE_ID, params, { publicKey: ALERT_PUBLIC_KEY });
     } catch (error) {
         console.error("EmailJS credit alert failed:", error);
     }
@@ -100,13 +95,8 @@ const sendDebitEmail = async (params: any) => {
         console.error("EmailJS debit alert credentials are not configured in environment variables.");
         return; // Do not block transaction for failed email
     }
-    const templateParams = {
-        ...params,
-        email: params.to_email,
-        name: params.customer_name,
-    };
     try {
-        await (window as any).emailjs.send(ALERT_SERVICE_ID, DEBIT_TEMPLATE_ID, templateParams, ALERT_PUBLIC_KEY);
+        await (window as any).emailjs.send(ALERT_SERVICE_ID, DEBIT_TEMPLATE_ID, params, { publicKey: ALERT_PUBLIC_KEY });
     } catch (error) {
         console.error("EmailJS debit alert failed:", error);
     }
@@ -468,7 +458,7 @@ export const wipeChatHistory = async (userId:string) => {
 
 // --- OTP FUNCTIONS ---
 
-export const generateAndSendOtp = async (uid: string, email: string, name: string): Promise<void> => {
+export const generateAndSendOtp = async (uid: string, email: string): Promise<void> => {
     const missingVars: string[] = [];
     if (!OTP_SERVICE_ID) missingVars.push('VITE_EMAILJS_OTP_SERVICE_ID');
     if (!OTP_TEMPLATE_ID) missingVars.push('VITE_EMAILJS_OTP_TEMPLATE_ID');
@@ -493,10 +483,8 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
     });
     
     const templateParams = {
-        otp_code: otp,
+        otp: otp,
         to_email: email,
-        to_name: name,
-        from_email: 'support@westcoasttrusts.com'
     };
 
     if (!(window as any).emailjs) {
@@ -510,7 +498,7 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
             OTP_SERVICE_ID,
             OTP_TEMPLATE_ID,
             templateParams,
-            OTP_PUBLIC_KEY
+            { publicKey: OTP_PUBLIC_KEY }
         );
     } catch (error: any) {
         console.error("EmailJS OTP send failed:", error);

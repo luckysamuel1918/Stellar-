@@ -186,7 +186,7 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
         setLoading(true);
         setError('');
         try {
-            await generateAndSendOtp(user.uid, user.email, user.fullName);
+            await generateAndSendOtp(user.uid, user.email);
             setStep(3);
         } catch (e: any) {
             console.error("OTP send error:", e);
@@ -387,7 +387,7 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
         setLoading(true);
         setError('');
         try {
-            await generateAndSendOtp(user.uid, user.email, user.fullName);
+            await generateAndSendOtp(user.uid, user.email);
             setStep(3);
         } catch (e: any) {
             console.error("OTP send error:", e);
