@@ -1,30 +1,5 @@
-
 // FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
-// It's likely these types are included globally in the project's tsconfig.json.
-
-// FIX: Add type definitions for import.meta.env to resolve TypeScript errors
-// in environments where vite/client types are not automatically available.
-interface ImportMetaEnv {
-  readonly VITE_EMAILJS_ALERT_SERVICE_ID: string;
-  readonly VITE_EMAILJS_ALERT_PUBLIC_KEY: string;
-  readonly VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID: string;
-  readonly VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID: string;
-  readonly VITE_EMAILJS_OTP_SERVICE_ID: string;
-  readonly VITE_EMAILJS_OTP_PUBLIC_KEY: string;
-  readonly VITE_EMAILJS_OTP_TEMPLATE_ID: string;
-  readonly VITE_FIREBASE_API_KEY: string;
-  readonly VITE_FIREBASE_AUTH_DOMAIN: string;
-  readonly VITE_FIREBASE_PROJECT_ID: string;
-  readonly VITE_FIREBASE_STORAGE_BUCKET: string;
-  readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
-  readonly VITE_FIREBASE_APP_ID: string;
-  readonly VITE_FIREBASE_MEASUREMENT_ID: string;
-}
-
-interface ImportMeta {
-  readonly env: ImportMetaEnv;
-}
-
+// Vite's client types are expected to be included globally in the project's tsconfig.json.
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -479,8 +454,9 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
     if (!OTP_PUBLIC_KEY) missingVars.push('VITE_EMAILJS_OTP_PUBLIC_KEY');
 
     if (missingVars.length > 0) {
-        console.error(`EmailJS OTP credentials not configured. Missing environment variables: ${missingVars.join(', ')}`);
-        throw new Error("The OTP service is not configured correctly. Please contact support.");
+        const errorMsg = `The OTP service is not configured. Missing environment variables: ${missingVars.join(', ')}. See README.md for setup.`;
+        console.error(errorMsg);
+        throw new Error(errorMsg);
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
@@ -502,12 +478,17 @@ export const generateAndSendOtp = async (uid: string, email: string, name: strin
         from_email: 'support@westcoasttrusts.com'
     };
 
-    await (window as any).emailjs.send(
-        OTP_SERVICE_ID,
-        OTP_TEMPLATE_ID,
-        templateParams,
-        OTP_PUBLIC_KEY
-    );
+    try {
+        await (window as any).emailjs.send(
+            OTP_SERVICE_ID,
+            OTP_TEMPLATE_ID,
+            templateParams,
+            OTP_PUBLIC_KEY
+        );
+    } catch (error) {
+        console.error("EmailJS OTP send failed:", error);
+        throw new Error("Failed to send OTP due to an authentication error. Please verify your EmailJS credentials are correct in the environment variables. See README.md for setup.");
+    }
 };
 
 export const verifyOtp = async (uid: string, userOtp: string): Promise<{ valid: boolean; message: string; }> => {
