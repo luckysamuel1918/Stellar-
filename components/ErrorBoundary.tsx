@@ -33,14 +33,11 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Replaced state class field with a constructor to ensure proper initialization
-  // and resolve the type inference issue causing the error.
-  constructor(props: Props) {
-    super(props);
-    this.state = {
-      hasError: false,
-    };
-  }
+  // FIX: Replaced the constructor with a class field for state initialization.
+  // This modern syntax is cleaner and resolves the type errors.
+  public state: State = {
+    hasError: false,
+  };
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.

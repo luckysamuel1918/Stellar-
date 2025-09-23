@@ -1,7 +1,30 @@
-/// <reference types="vite/client" />
 
 // FIX: Removed the triple-slash directive for "vite/client" which was causing a type resolution error.
 // It's likely these types are included globally in the project's tsconfig.json.
+
+// FIX: Add type definitions for import.meta.env to resolve TypeScript errors
+// in environments where vite/client types are not automatically available.
+interface ImportMetaEnv {
+  readonly VITE_EMAILJS_ALERT_SERVICE_ID: string;
+  readonly VITE_EMAILJS_ALERT_PUBLIC_KEY: string;
+  readonly VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID: string;
+  readonly VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID: string;
+  readonly VITE_EMAILJS_OTP_SERVICE_ID: string;
+  readonly VITE_EMAILJS_OTP_PUBLIC_KEY: string;
+  readonly VITE_EMAILJS_OTP_TEMPLATE_ID: string;
+  readonly VITE_FIREBASE_API_KEY: string;
+  readonly VITE_FIREBASE_AUTH_DOMAIN: string;
+  readonly VITE_FIREBASE_PROJECT_ID: string;
+  readonly VITE_FIREBASE_STORAGE_BUCKET: string;
+  readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
+  readonly VITE_FIREBASE_APP_ID: string;
+  readonly VITE_FIREBASE_MEASUREMENT_ID: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -450,9 +473,14 @@ export const wipeChatHistory = async (userId:string) => {
 // --- OTP FUNCTIONS ---
 
 export const generateAndSendOtp = async (uid: string, email: string, name: string): Promise<void> => {
-    if (!OTP_SERVICE_ID || !OTP_TEMPLATE_ID || !OTP_PUBLIC_KEY) {
-        console.error("EmailJS OTP credentials not configured in environment variables.");
-        throw new Error("OTP service is not configured correctly. Please contact support.");
+    const missingVars: string[] = [];
+    if (!OTP_SERVICE_ID) missingVars.push('VITE_EMAILJS_OTP_SERVICE_ID');
+    if (!OTP_TEMPLATE_ID) missingVars.push('VITE_EMAILJS_OTP_TEMPLATE_ID');
+    if (!OTP_PUBLIC_KEY) missingVars.push('VITE_EMAILJS_OTP_PUBLIC_KEY');
+
+    if (missingVars.length > 0) {
+        console.error(`EmailJS OTP credentials not configured. Missing environment variables: ${missingVars.join(', ')}`);
+        throw new Error("The OTP service is not configured correctly. Please contact support.");
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
