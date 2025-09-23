@@ -47,7 +47,7 @@ const PaymentsView: React.FC = () => {
     if (!user) return <div className="p-4 text-center">Could not load user data.</div>;
 
     return (
-        <div className="p-4 md:p-0">
+        <div>
             <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-4 md:hidden">Bill Payments</h2>
             <div className="bg-white dark:bg-gray-800 p-5 rounded-2xl shadow-sm">
                 <form onSubmit={handlePayment} className="space-y-4">

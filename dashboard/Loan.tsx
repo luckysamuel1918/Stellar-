@@ -171,7 +171,7 @@ const LoanView: React.FC = () => {
     };
 
     return (
-        <div className="p-4 md:p-0 space-y-6">
+        <div className="space-y-6">
             <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white md:hidden">Loan Center</h2>
             {renderContent()}
         </div>

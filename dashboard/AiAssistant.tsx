@@ -125,7 +125,7 @@ Always be polite and professional. Never perform actions like making transfers o
     );
     
     return (
-        <div className="p-4 md:p-0 flex flex-col h-[calc(100vh-10rem)] md:h-[calc(100vh-8rem)]">
+        <div className="flex flex-col flex-grow">
             <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-4 md:hidden">AI Assistant</h2>
             <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm flex-grow flex flex-col">
                 <div className="flex-grow p-4 space-y-4 overflow-y-auto">

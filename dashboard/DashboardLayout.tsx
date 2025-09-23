@@ -13,7 +13,7 @@ import LoanView from './Loan';
 import ProfileView from './Profile';
 import HistoryView from './History';
 import AiAssistantView from './AiAssistant';
-import { DomesticTransferModal, InternationalTransferModal, CheckDepositModal } from './components';
+import { DomesticTransferModal, InternationalTransferModal, CheckDepositModal, ReceiptView } from './components';
 
 interface DashboardContextType {
     user: UserProfile | null;
@@ -46,6 +46,9 @@ const DashboardLayout: React.FC = () => {
     const [showTransferModal, setShowTransferModal] = useState(false);
     const [showDepositModal, setShowDepositModal] = useState(false);
     const [showInternationalModal, setShowInternationalModal] = useState(false);
+
+    const [receiptData, setReceiptData] = useState(null);
+    const [receiptContext, setReceiptContext] = useState(null);
 
     const location = ReactRouterDOM.useLocation();
     const navigate = ReactRouterDOM.useNavigate();
@@ -110,8 +113,19 @@ const DashboardLayout: React.FC = () => {
         fetchData(false);
     }, [userData]); // Re-run when userData from context changes.
 
-    const handleSuccess = () => {
-        // We call refreshUserData to get the latest balance, which will trigger a re-fetch of transactions.
+    const handleSuccess = (transaction = null, context = {}) => {
+        // If a transaction object is passed, it means we should show a receipt.
+        if (transaction) {
+            setShowTransferModal(false);
+            setShowInternationalModal(false);
+            setReceiptData(transaction);
+            setReceiptContext(context);
+        } else {
+            // For simple cases like deposit, just close the modal.
+            setShowDepositModal(false);
+        }
+        
+        // Always refresh data on success.
         refreshUserData();
     };
 
@@ -245,9 +259,9 @@ const DashboardLayout: React.FC = () => {
                             <SideNavItem icon={<LogOut />} label={"Log Out"} active={false} onClick={signOut} />
                         </div>
                     </aside>
-                    <main className="flex-1 pb-20 md:pb-0">
-                         <div className="max-w-4xl mx-auto md:px-8 md:py-6">
-                            <header className="hidden md:flex justify-between items-center mb-8 px-4 md:px-0">
+                    <main className="flex-1 pb-20 md:pb-0 flex flex-col">
+                         <div className="max-w-4xl mx-auto px-4 md:px-8 md:py-6 w-full flex-grow flex flex-col">
+                            <header className="hidden md:flex justify-between items-center mb-8">
                                 <h1 className="text-3xl font-bold text-westcoast-text-dark dark:text-white">{pageTitle}</h1>
                                 <div className="flex items-center gap-4">
                                     <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
@@ -282,6 +296,20 @@ const DashboardLayout: React.FC = () => {
             {showTransferModal && userData && <DomesticTransferModal user={userData} onClose={() => setShowTransferModal(false)} onSuccess={handleSuccess} />}
             {showDepositModal && userData && <CheckDepositModal user={userData} onClose={() => setShowDepositModal(false)} onSuccess={handleSuccess} />}
             {showInternationalModal && userData && <InternationalTransferModal user={userData} onClose={() => setShowInternationalModal(false)} onSuccess={handleSuccess} />}
+            
+            {receiptData && userData && (
+                <div className="fixed inset-0 bg-black/60 flex justify-center items-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                        <ReceiptView 
+                            receiptData={receiptData} 
+                            user={userData} 
+                            onClose={() => setReceiptData(null)}
+                            isInternational={receiptContext?.isInternational || false}
+                            bankDetails={receiptContext?.bankDetails || {}}
+                        />
+                    </div>
+                </div>
+            )}
         </DashboardContext.Provider>
     );
 };

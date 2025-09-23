@@ -25,10 +25,9 @@ export const formatCurrency = (amount: number, currency: string) => {
     }
 };
 
-export const ReceiptView = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
+export const ReceiptView: React.FC<{ receiptData: Transaction, user: UserProfile, onClose: () => void, isInternational?: boolean, bankDetails?: any }> = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
     const printReceipt = () => window.print();
 
-    // FIX: Changed component to use React.FC to correctly handle React's special 'key' prop during type checking.
     const DetailRow: React.FC<{ label: any; value: any }> = ({ label, value }) => (
         <div className="flex justify-between items-start gap-4">
             <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
@@ -124,7 +123,6 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [receiptData, setReceiptData] = useState<Transaction | null>(null);
     const [otp, setOtp] = useState('');
     const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [resendCooldown, setResendCooldown] = useState(0);
@@ -230,9 +228,10 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                 const transaction = await performTransfer(user, recipient, parseFloat(amount), purpose);
                 await deleteOtp(user.uid);
                 if (transaction) {
-                    onSuccess();
-                    setReceiptData(transaction);
-                    setStep(4);
+                    onSuccess(transaction, { 
+                        isInternational: false, 
+                        bankDetails: { bankName, routingNumber } 
+                    });
                 } else {
                     setError('Transaction failed to record.');
                 }
@@ -385,15 +384,6 @@ export const DomesticTransferModal = ({ user, onClose, onSuccess }) => {
                     </div>
                 </div>
             )}
-
-            {step === 4 && receiptData && (
-                 <ReceiptView 
-                    receiptData={receiptData} 
-                    user={user} 
-                    onClose={onClose}
-                    bankDetails={{ bankName, routingNumber }}
-                />
-            )}
         </div>
       </div>
     );
@@ -412,7 +402,6 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
     const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState('');
-    const [receiptData, setReceiptData] = useState<Transaction | null>(null);
     const [otp, setOtp] = useState('');
     const otpInputRefs = useRef<(HTMLInputElement | null)[]>([]);
     const [resendCooldown, setResendCooldown] = useState(0);
@@ -504,9 +493,10 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                 await deleteOtp(user.uid);
                 
                 if (transaction) {
-                    onSuccess();
-                    setReceiptData(transaction);
-                    setStep(4);
+                    onSuccess(transaction, { 
+                        isInternational: true, 
+                        bankDetails: { bankName, country, swiftBic } 
+                    });
                 } else {
                     setError('Transaction failed to record.');
                 }
@@ -659,15 +649,6 @@ export const InternationalTransferModal = ({ user, onClose, onSuccess }) => {
                         </div>
                     </div>
                 )}
-                {step === 4 && receiptData && (
-                    <ReceiptView 
-                        receiptData={receiptData} 
-                        user={user} 
-                        onClose={onClose}
-                        isInternational={true}
-                        bankDetails={{ bankName: bankName, country: country, swiftBic: swiftBic }}
-                    />
-                )}
             </div>
         </div>
     );
@@ -739,10 +720,9 @@ export const CheckDepositModal = ({ user, onClose, onSuccess }) => {
         setError('');
         try {
             await adminUpdateBalance(user, numAmount, 'credit', 'Mobile Check Deposit');
-            onSuccess();
             setStep(2);
             setTimeout(() => {
-                onClose();
+                onSuccess();
             }, 3000);
         } catch(e) {
             setError(e.message || 'Failed to process deposit.');

@@ -30,7 +30,7 @@ const TransactionItemSkeleton: React.FC = () => (
 
 const HomeViewSkeleton: React.FC = () => (
     <>
-        <header className="p-4 flex justify-between items-center md:hidden animate-pulse">
+        <header className="py-4 flex justify-between items-center md:hidden animate-pulse">
             <div className="flex items-center gap-3">
                 <div className="w-12 h-12 rounded-full bg-gray-200 dark:bg-gray-700"></div>
                 <div>
@@ -43,11 +43,11 @@ const HomeViewSkeleton: React.FC = () => (
             </div>
         </header>
 
-        <section className="px-4 md:px-0">
+        <section>
             <BalanceCardSkeleton />
         </section>
 
-        <section className="p-4 md:p-0 md:mt-8">
+        <section className="mt-8">
             <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/3 mb-3 animate-pulse"></div>
              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                 {Array.from({ length: 4 }).map((_, i) => (
@@ -59,7 +59,7 @@ const HomeViewSkeleton: React.FC = () => (
             </div>
         </section>
         
-        <section className="p-4 md:p-0 md:mt-8">
+        <section className="mt-8">
             <div className="flex justify-between items-center mb-3">
                 <div className="h-6 bg-gray-200 dark:bg-gray-700 rounded w-1/2 animate-pulse"></div>
                 <div className="h-5 bg-gray-200 dark:bg-gray-700 rounded w-16 animate-pulse"></div>
@@ -93,7 +93,7 @@ const HomeView = () => {
 
     return (
         <>
-            <header className="p-4 flex justify-between items-center md:hidden">
+            <header className="py-4 flex justify-between items-center md:hidden">
                 <div className="flex items-center gap-3">
                     <Avatar user={userData} />
                     <div>
@@ -106,7 +106,7 @@ const HomeView = () => {
                 </div>
             </header>
 
-            <section className="px-4 md:px-0">
+            <section>
                 <div className="p-5 rounded-2xl bg-gradient-to-br from-westcoast-blue to-westcoast-accent text-white shadow-lg">
                     <p className="text-sm opacity-80">Available Balance</p>
                     <div className="flex justify-between items-center mt-1">
@@ -119,7 +119,7 @@ const HomeView = () => {
                 </div>
             </section>
 
-            <section className="p-4 md:p-0 md:mt-8">
+            <section className="mt-8">
                 <h2 className="text-lg font-bold text-westcoast-text-dark dark:text-white mb-3">Quick Actions</h2>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
                     <QuickActionButton onClick={() => handleActionClick('transfer')} icon={<Send className="w-6 h-6 text-westcoast-blue"/>} label={"Domestic"} />
@@ -129,7 +129,7 @@ const HomeView = () => {
                 </div>
             </section>
 
-            <section className="p-4 md:p-0 md:mt-8">
+            <section className="mt-8">
                  <div className="flex justify-between items-center mb-3">
                     <h2 className="text-lg font-bold text-westcoast-text-dark dark:text-white">Recent Transactions</h2>
                     <button onClick={() => navigate('/dashboard/history')} className="text-sm font-semibold text-westcoast-blue hover:underline">View All</button>

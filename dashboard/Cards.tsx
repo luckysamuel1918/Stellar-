@@ -14,7 +14,7 @@ const CardsView: React.FC = () => {
     const currentBalance = 542.18;
 
     return (
-        <div className="p-4 md:p-0">
+        <div>
             <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-4 md:hidden">My Cards</h2>
             <div className="space-y-6">
 
@@ -32,7 +32,7 @@ const CardsView: React.FC = () => {
                     </div>
 
                     <div className="text-center">
-                        <p className="font-mono text-2xl md:text-3xl tracking-widest">
+                        <p className="font-mono text-2xl md:text-3xl tracking-widest break-all">
                             5282 2578 8543 1234
                         </p>
                     </div>

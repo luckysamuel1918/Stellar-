@@ -75,7 +75,7 @@ const ProfileView: React.FC = () => {
     );
 
     return (
-        <div className="p-4 md:p-0">
+        <div>
             <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-2xl shadow-sm">
                  <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6">
                     <h2 className="text-xl font-bold text-westcoast-text-dark dark:text-white mb-2 sm:mb-0 md:hidden">My Profile</h2>
