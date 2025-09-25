@@ -1,4 +1,4 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import React, { ErrorInfo, ReactNode } from 'react';
 
 interface Props {
   children?: ReactNode;
@@ -32,7 +32,7 @@ const ErrorFallbackUI = () => {
 };
 
 
-class ErrorBoundary extends Component<Props, State> {
+class ErrorBoundary extends React.Component<Props, State> {
   // FIX: Replaced constructor-based state initialization with a class property initializer.
   // This is a more modern approach and correctly declares the `state` property on the
   // class, fixing the "Property 'state' does not exist" error.
