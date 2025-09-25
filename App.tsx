@@ -277,18 +277,40 @@ const AppLayout: React.FC = () => (
 );
 
 // --- ROUTING & PROTECTION ---
+const AuthErrorPage: React.FC<{ message: string }> = ({ message }) => {
+    const { signOut } = useAuth();
+    return (
+        <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900 p-4">
+            <div className="p-8 bg-white dark:bg-gray-800 rounded-lg shadow-md text-center max-w-md">
+                <h2 className="text-xl font-bold text-red-600">Authentication Error</h2>
+                <p className="mt-2 text-gray-600 dark:text-gray-300">{message}</p>
+                <button 
+                    onClick={signOut}
+                    className="mt-6 px-4 py-2 bg-westcoast-blue text-white font-semibold rounded-lg hover:opacity-90"
+                >
+                    Return to Homepage
+                </button>
+            </div>
+        </div>
+    );
+};
+
 const UserRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
-    if (loading || (user && !userData)) return <FullPageLoader />;
-    if (user && userData && !userData.isAdmin) return <>{children}</>;
-    return <ReactRouterDOM.Navigate to="/user" replace />;
+    if (loading) return <FullPageLoader />;
+    if (!user) return <ReactRouterDOM.Navigate to="/user" replace />;
+    if (!userData) return <AuthErrorPage message="Your account data is missing. Please contact support." />;
+    if (userData.isAdmin) return <ReactRouterDOM.Navigate to="/admin-dashboard" replace />;
+    return <>{children}</>;
 };
 
 const AdminRoute: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const { user, userData, loading } = useAuth();
-    if (loading || (user && !userData)) return <FullPageLoader />;
-    if (user && userData && userData.isAdmin) return <>{children}</>;
-    return <ReactRouterDOM.Navigate to="/admin-login" replace />;
+    if (loading) return <FullPageLoader />;
+    if (!user) return <ReactRouterDOM.Navigate to="/admin-login" replace />;
+    if (!userData) return <AuthErrorPage message="Your account data is missing. Please contact support." />;
+    if (!userData.isAdmin) return <ReactRouterDOM.Navigate to="/admin-login" replace />;
+    return <>{children}</>;
 };
 
 const App: React.FC = () => {

@@ -33,12 +33,9 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Replaced class property state initialization with initialization in the constructor.
-  // This classic pattern for React class components can resolve obscure type-checking
-  // errors in some environments where class field syntax might conflict with how
-  // inherited properties like `this.props` are resolved.
-  state: State;
-
+  // FIX: Removed the redundant 'state' class field declaration. The 'state' property is
+  // inherited from React.Component and typed by the generic parameters. Redeclaring it
+  // was causing issues with TypeScript's type inference for inherited properties like 'props'.
   constructor(props: Props) {
     super(props);
     this.state = { hasError: false };

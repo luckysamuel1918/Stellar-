@@ -489,9 +489,9 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
         from_email: "support@westcoasttrusts.com"
     };
 
-    if (!(window as any).emailjs) {
-        const errorMsg = "OTP service is unavailable. Please check your internet connection and try again.";
-        console.error("EmailJS SDK not loaded or initialized.");
+    if (!(window as any).emailjs || typeof (window as any).emailjs.send !== 'function') {
+        const errorMsg = "OTP service is unavailable. The EmailJS SDK may not have loaded correctly. Please check your internet connection and ad-blockers, then try again.";
+        console.error("EmailJS SDK not loaded or initialized, or emailjs.send is not a function.");
         throw new Error(errorMsg);
     }
 
