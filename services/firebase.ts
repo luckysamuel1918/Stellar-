@@ -451,16 +451,11 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
 
 export const adminDeleteUser = async (uid: string): Promise<void> => {
     if (!uid) throw new Error("User ID is required.");
-    
-    try {
-        const deleteUserCallable = httpsCallable(functions, 'deleteUser');
-        await deleteUserCallable({ uid });
-    } catch (error) {
-        console.error("Error calling deleteUser function:", error);
-        // Re-throw a more user-friendly error message.
-        const httpsError = error as { code?: string; message: string; details?: any };
-        throw new Error(httpsError.message || "Failed to delete user. Please check console for details.");
-    }
+    const userRef = doc(db, `users/${uid}`);
+    await updateDoc(userRef, {
+        isDeleted: true,
+        deletedAt: serverTimestamp(),
+    });
 };
 
 export const adminRestoreUser = async (uid: string): Promise<void> => {

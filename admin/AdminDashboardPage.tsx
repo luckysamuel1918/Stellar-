@@ -4,7 +4,7 @@ import { useAuth } from '../App';
 import { UserProfile, Transaction, Loan } from '../types';
 import { 
     getAllUsers, adminUpdateBalance, updateUserProfile, adminDeleteUser,
-    getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
+    adminRestoreUser, getUserTransactions, adminUpdateTransaction, getChatMessages, sendChatMessage,
     wipeChatHistory, Timestamp, getAllLoans, updateLoan
 } from '../services/firebase';
 import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, LogOut, Banknote } from 'lucide-react';
@@ -159,25 +159,21 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
                     </div>
                     <p className="text-xs text-yellow-600 -mt-2 ml-1">Note: This only changes the database record, not the login email.</p>
                      <InputField label="Photo URL" name="photoURL" type="url" value={formData.photoURL || ''} onChange={handleChange} placeholder="https://example.com/image.png" />
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InputField label="Account Number" name="accountNumber" type="text" value={formData.accountNumber} onChange={handleChange} pattern="\d{10}" title="Account number must be 10 digits" />
-                        <InputField label="Phone" name="phone" type="tel" value={formData.phone} onChange={handleChange} />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <InputField label="Account Number" name="accountNumber" value={formData.accountNumber} onChange={handleChange} />
+                        <InputField label="Balance" name="balance" type="number" value={formData.balance} onChange={handleChange} />
                     </div>
-                    <InputField label="Address" name="address" value={formData.address} onChange={handleChange} />
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <InputField label="State / Province" name="state" value={formData.state} onChange={handleChange} />
-                        <InputField label="Country" name="country" value={formData.country} onChange={handleChange} />
+                    <div className="flex items-center space-x-4 pt-2">
+                        <div className="flex items-center">
+                            <input id="isSuspended" name="isSuspended" type="checkbox" checked={formData.isSuspended || false} onChange={handleChange} className="h-4 w-4 text-westcoast-blue focus:ring-westcoast-blue border-gray-300 rounded" />
+                            <label htmlFor="isSuspended" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">Account Suspended</label>
+                        </div>
+                         <div className="flex items-center">
+                            <input id="isAdmin" name="isAdmin" type="checkbox" checked={formData.isAdmin || false} onChange={handleChange} className="h-4 w-4 text-westcoast-blue focus:ring-westcoast-blue border-gray-300 rounded" />
+                            <label htmlFor="isAdmin" className="ml-2 block text-sm text-gray-900 dark:text-gray-200">Admin Privileges</label>
+                        </div>
                     </div>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                         <InputField label="Currency Code" name="currencyCode" value={formData.currencyCode} onChange={handleChange} />
-                     </div>
-
-                    <div className="flex items-center justify-between mt-4 p-3 bg-red-50 dark:bg-red-900/40 rounded-lg">
-                        <label htmlFor="isSuspended" className="font-medium text-red-700 dark:text-red-300 flex items-center gap-2"><AlertTriangle size={18}/> Suspend Account</label>
-                        <input id="isSuspended" name="isSuspended" type="checkbox" checked={!!formData.isSuspended} onChange={handleChange} className="h-5 w-5 rounded text-red-600 focus:ring-red-500 border-gray-300" />
-                    </div>
-
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                     {error && <p className="text-red-500 text-sm">{error}</p>}
                     <div className="flex justify-end space-x-4 pt-4">
                         <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
                         <button type="submit" disabled={loading} className="px-4 py-2 bg-westcoast-blue text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Saving...' : 'Save Changes'}</button>
@@ -187,6 +183,7 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
         </div>
     );
 };
+
 const InputField = ({ label, ...props }) => (
     <div>
         <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
@@ -194,586 +191,475 @@ const InputField = ({ label, ...props }) => (
     </div>
 );
 
-const DeleteUserModal = ({ user, onClose, onUpdate }) => {
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-    
-    const handleDelete = async () => {
-        setLoading(true);
-        setError('');
-        try {
-            await adminDeleteUser(user.uid);
-            onUpdate();
-        } catch(err) {
-            setError('Failed to delete user.');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md text-center">
-                <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">Confirm Deletion</h2>
-                <p className="text-westcoast-text-light dark:text-gray-300 my-4">Are you sure you want to permanently delete <span className="font-bold">{user.fullName}</span>? This will delete their authentication record and all associated data like loans and chat history from the database. Transaction records will be kept for auditing purposes. This action cannot be undone.</p>
-                {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
-                <div className="flex justify-center space-x-4">
-                    <button onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
-                    <button onClick={handleDelete} disabled={loading} className="px-6 py-2 bg-red-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Deleting...' : 'Delete User'}</button>
-                </div>
-            </div>
-        </div>
-    );
-};
-
-const ManageTransactionsModal = ({ user, onClose }) => {
-    const [transactions, setTransactions] = useState([]);
+const ChatModal: React.FC<{ user: UserProfile, onClose: () => void }> = ({ user, onClose }) => {
+    const { userData: admin } = useAuth();
+    const [messages, setMessages] = useState<any[]>([]);
+    const [newMessage, setNewMessage] = useState('');
+    const messagesEndRef = useRef<HTMLDivElement>(null);
     const [loading, setLoading] = useState(true);
-    const [editingTx, setEditingTx] = useState(null);
-    const [date, setDate] = useState('');
-    const [time, setTime] = useState('');
-    const [description, setDescription] = useState('');
-    const [status, setStatus] = useState<Transaction['status']>('completed');
-    
+
     useEffect(() => {
-        getUserTransactions(user.uid).then(txs => {
-            setTransactions(txs);
+        setLoading(true);
+        const unsubscribe = getChatMessages(user.uid, (msgs) => {
+            setMessages(msgs);
             setLoading(false);
         });
-    }, [user.uid]);
-    
-    const handleEditClick = (tx) => {
-        const txDate = tx.timestamp.toDate();
-        setEditingTx(tx);
-        setDate(txDate.toISOString().split('T')[0]);
-        setTime(txDate.toTimeString().substring(0, 5));
-        setStatus(tx.status);
-        setDescription(tx.description || '');
-    };
-    
-    const handleSave = async () => {
-        const newTimestamp = Timestamp.fromDate(new Date(`${date}T${time}`));
-        await adminUpdateTransaction(editingTx.id, { timestamp: newTimestamp, status, description });
-        const updatedTxs = transactions.map(tx => tx.id === editingTx.id ? { ...tx, timestamp: newTimestamp, status, description } : tx);
-        setTransactions(updatedTxs.sort((a, b) => {
-            const aSeconds = (a.timestamp && a.timestamp.seconds) || 0;
-            const bSeconds = (b.timestamp && b.timestamp.seconds) || 0;
-            return bSeconds - aSeconds;
-        }));
-        setEditingTx(null);
-    };
-
-    return (
-       <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-3xl max-h-[90vh] flex flex-col">
-                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Transactions for {user.fullName}</h2>
-                <div className="overflow-y-auto flex-grow pr-2">
-                    {loading ? <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin w-8 h-8 text-westcoast-blue"/></div> : (
-                        <ul className="space-y-3">
-                            {transactions.map(tx => (
-                                <li key={tx.id} className="p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                                    {editingTx && editingTx.id === tx.id ? (
-                                        <div className="space-y-2">
-                                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                                <input type="date" value={date} onChange={e => setDate(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
-                                                <input type="time" value={time} onChange={e => setTime(e.target.value)} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" />
-                                                <select value={status} onChange={e => setStatus(e.target.value as Transaction['status'])} className="px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500">
-                                                    <option value="completed">Completed</option>
-                                                    <option value="pending">Pending</option>
-                                                    <option value="failed">Failed</option>
-                                                </select>
-                                            </div>
-                                            <input 
-                                                type="text" 
-                                                value={description} 
-                                                onChange={e => setDescription(e.target.value)} 
-                                                placeholder="Transaction description"
-                                                className="w-full mt-2 px-2 py-1 border rounded dark:bg-gray-600 dark:border-gray-500" 
-                                            />
-                                            <div className="flex justify-end gap-2">
-                                                <button onClick={() => setEditingTx(null)} className="text-xs px-2 py-1 bg-gray-200 dark:bg-gray-500 rounded">Cancel</button>
-                                                <button onClick={handleSave} className="text-xs px-2 py-1 bg-westcoast-blue text-white rounded">Save</button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        <div className="flex justify-between items-center flex-wrap gap-2">
-                                            <div>
-                                                <p className="font-semibold text-sm">{tx.description || 'Transaction'}</p>
-                                                <p className="text-xs text-gray-500 dark:text-gray-400">{tx.timestamp.toDate().toLocaleString()}</p>
-                                            </div>
-                                            <div className="flex items-center gap-4">
-                                                <span className={`text-xs font-semibold px-2 py-0.5 rounded-full ${tx.status === 'completed' ? 'bg-green-100 text-green-800' : tx.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{tx.status}</span>
-                                                <p className={`font-mono text-sm font-semibold ${tx.senderId === user.uid ? 'text-red-600' : 'text-green-600'}`}>{tx.senderId === user.uid ? '-' : '+'}{tx.amount.toFixed(2)}</p>
-                                                <button onClick={() => handleEditClick(tx)}><Edit size={16} className="text-gray-500 hover:text-westcoast-blue" /></button>
-                                            </div>
-                                        </div>
-                                    )}
-                                </li>
-                            ))}
-                        </ul>
-                    )}
-                </div>
-                <button onClick={onClose} className="mt-4 w-full py-2 bg-gray-200 dark:bg-gray-600 rounded-lg font-semibold">Close</button>
-            </div>
-        </div>
-    );
-};
-
-const ChatModal = ({ user, admin, onClose }) => {
-    const [messages, setMessages] = useState([]);
-    const [newMessage, setNewMessage] = useState('');
-    const [loading, setLoading] = useState(false);
-    const messagesEndRef = useRef(null);
-    
-    useEffect(() => {
-        const unsubscribe = getChatMessages(user.uid, setMessages);
         return () => unsubscribe();
     }, [user.uid]);
 
     useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
-        }
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
     }, [messages]);
-    
-    const handleSend = async (e) => {
+
+    const handleSendMessage = async (e: React.FormEvent) => {
         e.preventDefault();
-        if (!newMessage.trim()) return;
-        setLoading(true);
+        if (!newMessage.trim() || !admin) return;
+        
         await sendChatMessage(user.uid, {
             text: newMessage,
-            senderId: 'admin',
-            senderName: admin.fullName
+            senderId: admin.uid,
+            senderName: 'Admin Support'
         });
         setNewMessage('');
-        setLoading(false);
     };
-
-    const handleWipe = async () => {
-        if (window.confirm(`Are you sure you want to delete all chat history for ${user.fullName}?`)) {
+    
+    const handleWipeHistory = async () => {
+        if(window.confirm("Are you sure you want to permanently delete this chat history?")) {
             await wipeChatHistory(user.uid);
         }
-    };
+    }
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg h-[80vh] flex flex-col">
-                <header className="p-4 border-b dark:border-gray-700 flex justify-between items-center">
+                <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
                     <div>
                         <h2 className="text-lg font-bold text-westcoast-dark dark:text-white">Chat with {user.fullName}</h2>
-                        <p className="text-xs text-gray-500 dark:text-gray-400">User ID: {user.uid}</p>
+                        <p className="text-xs text-gray-500">User ID: {user.uid}</p>
                     </div>
                     <div>
-                        <button onClick={handleWipe} className="mr-4 p-2 text-red-600 hover:bg-red-100 dark:hover:bg-red-900/50 rounded-full"><Trash2 size={18} /></button>
-                        <button onClick={onClose} className="p-2 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-full"><X size={20} /></button>
+                        <button onClick={handleWipeHistory} className="text-xs text-red-500 hover:underline mr-4">Wipe History</button>
+                        <button onClick={onClose} className="p-1"><X className="w-6 h-6 text-gray-500" /></button>
                     </div>
-                </header>
-                <main className="flex-grow p-4 overflow-y-auto bg-gray-50 dark:bg-gray-900">
-                    <div className="space-y-4">
-                        {messages.map(msg => (
-                             <div key={msg.id} className={`flex ${msg.senderId === 'admin' ? 'justify-end' : 'justify-start'}`}>
-                                 <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${msg.senderId === 'admin' ? 'bg-westcoast-blue text-white' : 'bg-gray-200 text-black dark:bg-gray-700 dark:text-white'}`}>
+                </div>
+                <div className="flex-grow p-4 overflow-y-auto">
+                    {loading ? <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin w-8 h-8 text-westcoast-blue"/></div> :
+                        messages.length === 0 ? <div className="text-center text-gray-500 mt-8">No messages yet.</div> :
+                        messages.map(msg => (
+                            <div key={msg.id} className={`flex my-2 ${msg.senderId === admin?.uid ? 'justify-end' : 'justify-start'}`}>
+                                <div className={`px-4 py-2 rounded-2xl max-w-[80%] ${msg.senderId === admin?.uid ? 'bg-westcoast-blue text-white rounded-br-none' : 'bg-gray-200 dark:bg-gray-700 rounded-bl-none'}`}>
                                     <p className="text-sm">{msg.text}</p>
-                                    <p className={`text-xs mt-1 ${msg.senderId === 'admin' ? 'text-blue-200' : 'text-gray-500 dark:text-gray-400'}`}>{msg.timestamp && msg.timestamp.toDate().toLocaleTimeString()}</p>
+                                    <p className="text-xs opacity-70 mt-1 text-right">{new Date(msg.timestamp?.toDate()).toLocaleTimeString()}</p>
                                 </div>
                             </div>
-                        ))}
-                    </div>
+                        ))
+                    }
                     <div ref={messagesEndRef} />
-                </main>
-                <footer className="p-4 border-t dark:border-gray-700">
-                    <form onSubmit={handleSend} className="flex gap-2">
-                        <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="flex-grow px-4 py-2 border rounded-full focus:outline-none focus:ring-2 focus:ring-westcoast-blue dark:bg-gray-700 dark:border-gray-600" />
-                        <button type="submit" disabled={loading} className="bg-westcoast-blue text-white rounded-full p-3 disabled:opacity-50"><SendIcon size={18} /></button>
-                    </form>
-                </footer>
-            </div>
-        </div>
-    );
-};
-
-const ApproveLoanModal: React.FC<{
-    loan: Loan;
-    user: UserProfile;
-    onClose: () => void;
-    onUpdate: () => void;
-}> = ({ loan, user, onClose, onUpdate }) => {
-    const [interestRate, setInterestRate] = useState('5');
-    const [dueDate, setDueDate] = useState('');
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState('');
-
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault();
-        const rate = parseFloat(interestRate);
-        if (isNaN(rate) || rate < 0) {
-            setError('Please enter a valid interest rate.');
-            return;
-        }
-        if (!dueDate) {
-            setError('Please select a due date.');
-            return;
-        }
-
-        setLoading(true);
-        setError('');
-
-        try {
-            const totalOwed = loan.loanAmount * (1 + rate / 100);
-            
-            await updateLoan(loan.id!, {
-                status: 'approved',
-                interestRate: rate,
-                totalOwed: totalOwed,
-                approvalDate: Timestamp.now(),
-                dueDate: Timestamp.fromDate(new Date(dueDate)),
-            });
-
-            await adminUpdateBalance(
-                user,
-                loan.loanAmount,
-                'credit',
-                'Loan Disbursement',
-                'Westcoast Trust Bank Loans',
-                Timestamp.now(),
-                'loan_disbursement'
-            );
-            
-            onUpdate();
-        } catch (err) {
-            console.error(err);
-            setError('Failed to approve loan. Please try again.');
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
-                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-2">Approve Loan</h2>
-                <p className="text-westcoast-text-light dark:text-gray-300 mb-6">
-                    For <span className="font-semibold">{user.fullName}</span> - {loan.loanAmount.toLocaleString('en-US', { style: 'currency', currency: user.currencyCode })}
-                </p>
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div>
-                        <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">Interest Rate (APR %)</label>
-                        <input type="number" step="0.1" value={interestRate} onChange={e => setInterestRate(e.target.value)} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                    </div>
-                    <div>
-                        <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">Repayment Due Date</label>
-                        <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} min={new Date().toISOString().split('T')[0]} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" required />
-                    </div>
-                    {error && <p className="text-red-500 text-sm">{error}</p>}
-                    <div className="flex justify-end space-x-4 pt-4">
-                        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
-                        <button type="submit" disabled={loading} className="px-4 py-2 bg-green-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Processing...' : 'Approve & Disburse'}</button>
-                    </div>
+                </div>
+                <form onSubmit={handleSendMessage} className="p-4 border-t dark:border-gray-700 flex gap-2">
+                    <input type="text" value={newMessage} onChange={e => setNewMessage(e.target.value)} placeholder="Type a message..." className="flex-grow px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+                    <button type="submit" className="bg-westcoast-blue text-white p-3 rounded-lg"><SendIcon size={18}/></button>
                 </form>
             </div>
         </div>
     );
 };
 
-
-const StatCard = ({ title, value, icon }) => (
-    <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-md flex items-center space-x-4">
-        <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full">
-            {icon}
-        </div>
-        <div>
-            <p className="text-sm text-gray-500 dark:text-gray-400">{title}</p>
-            <p className="text-2xl font-bold text-gray-900 dark:text-white">{value}</p>
-        </div>
-    </div>
-);
-
-const TabButton = ({ title, active, onClick }) => (
-    <button
-        onClick={onClick}
-        className={`px-4 py-3 text-sm font-semibold transition-colors ${
-            active
-                ? 'border-b-2 border-westcoast-blue text-westcoast-blue'
-                : 'border-b-2 border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'
-        }`}
-    >
-        {title}
-    </button>
-);
-
-const UserManagementView = ({ users, onAction, onSuspend, searchTerm, setSearchTerm }) => (
-    <>
-        <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4">
-            <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">All Users</h2>
-            <div className="relative w-full sm:max-w-xs">
-                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
-                 <input
-                    type="text"
-                    placeholder="Search by name, email, account..."
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 border border-gray-200 dark:border-gray-600 rounded-full bg-gray-50 dark:bg-gray-700 focus:ring-2 focus:ring-westcoast-blue focus:outline-none"
-                />
-            </div>
-        </div>
-        <div className="overflow-x-auto">
-            <table className="w-full min-w-[800px]">
-                <thead>
-                    <tr className="text-left text-xs text-gray-400 uppercase">
-                        <th className="py-3 px-4 font-semibold">Name</th>
-                        <th className="py-3 px-4 font-semibold hidden md:table-cell">Account No.</th>
-                        <th className="py-3 px-4 font-semibold text-right hidden md:table-cell">Balance</th>
-                        <th className="py-3 px-4 font-semibold text-center">Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {users.map(user => (
-                        <tr key={user.uid} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                            <td className="py-4 px-4">
-                                <div className="flex items-center gap-3">
-                                    <Avatar user={user} />
-                                    <div>
-                                        <p className="font-semibold text-westcoast-text-dark dark:text-white flex items-center gap-2">
-                                            {user.fullName}
-                                            {user.isSuspended && (
-                                                <span className="text-xs font-bold text-red-500 bg-red-100 dark:bg-red-900/50 px-2 py-0.5 rounded-full">
-                                                    SUSPENDED
-                                                </span>
-                                            )}
-                                        </p>
-                                        <p className="text-sm text-westcoast-text-light dark:text-gray-400">{user.email}</p>
-                                        <div className="mt-2 space-y-1 md:hidden">
-                                            <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Acc:</span> <span className="font-mono text-westcoast-text-light dark:text-gray-300">{user.accountNumber}</span></p>
-                                            <p className="text-xs"><span className="font-medium text-gray-500 dark:text-gray-400">Bal:</span> <span className="font-mono font-semibold dark:text-white">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</span></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 font-mono hidden md:table-cell">{user.accountNumber}</td>
-                            <td className="py-4 px-4 font-mono text-right font-semibold dark:text-white hidden md:table-cell">{(user.balance || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} {user.currencyCode}</td>
-                            <td className="py-4 px-4 text-center">
-                                <div className="flex items-center justify-center flex-wrap gap-1">
-                                     <button onClick={() => onAction('balance', user)} title="Manage Balance" className="text-green-600 hover:text-green-800 p-2 rounded-full hover:bg-green-100 dark:hover:bg-green-900/50"><DollarSign size={18} /></button>
-                                     <button onClick={() => onAction('edit', user)} title="Edit Profile" className="text-blue-600 hover:text-blue-800 p-2 rounded-full hover:bg-blue-100 dark:hover:bg-blue-900/50"><Edit size={18} /></button>
-                                     <button onClick={() => onAction('transactions', user)} title="Manage Transactions" className="text-purple-600 hover:text-purple-800 p-2 rounded-full hover:bg-purple-100 dark:hover:bg-purple-900/50"><Clock size={18} /></button>
-                                     <button onClick={() => onAction('chat', user)} title="Chat with User" className="text-cyan-600 hover:text-cyan-800 p-2 rounded-full hover:bg-cyan-100 dark:hover:bg-cyan-900/50"><MessageSquare size={18} /></button>
-                                     <button onClick={() => onSuspend(user)} title={user.isSuspended ? "Unsuspend User" : "Suspend User"} className={`p-2 rounded-full ${user.isSuspended ? 'text-green-600 hover:text-green-800 hover:bg-green-100 dark:hover:bg-green-900/50' : 'text-yellow-600 hover:text-yellow-800 hover:bg-yellow-100 dark:hover:bg-yellow-900/50'}`}>{user.isSuspended ? <ShieldCheck size={18} /> : <ShieldOff size={18} />}</button>
-                                     <button onClick={() => onAction('delete', user)} title="Delete User" className="text-red-600 hover:text-red-800 p-2 rounded-full hover:bg-red-100 dark:hover:bg-red-900/50"><Trash2 size={18} /></button>
-                                </div>
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            {users.length === 0 && <p className="text-center py-8 text-gray-500">No users found.</p>}
-        </div>
-    </>
-);
-
-const LoanManagementView = ({ loans, users, onApprove, onReject }) => {
-    const findUserForLoan = (userId) => users.find(u => u.uid === userId);
-
-    return (
-        <>
-            <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">All Loan Applications</h2>
-            <div className="overflow-x-auto">
-                 <table className="w-full min-w-[800px]">
-                    <thead>
-                        <tr className="text-left text-xs text-gray-400 uppercase">
-                            <th className="py-3 px-4 font-semibold">Applicant</th>
-                            <th className="py-3 px-4 font-semibold">Amount</th>
-                            <th className="py-3 px-4 font-semibold hidden md:table-cell">Purpose</th>
-                            <th className="py-3 px-4 font-semibold text-center">Status</th>
-                            <th className="py-3 px-4 font-semibold text-center">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {loans.map(loan => {
-                            const user = findUserForLoan(loan.userId);
-                            const statusPillStyles = {
-                                pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300',
-                                approved: 'bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300',
-                                rejected: 'bg-red-100 text-red-800 dark:bg-red-900/50 dark:text-red-300',
-                                paid: 'bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300',
-                                overdue: 'bg-orange-100 text-orange-800 dark:bg-orange-900/50 dark:text-orange-300'
-                            };
-                            return (
-                                <tr key={loan.id} className="border-b border-gray-100 dark:border-gray-700 last:border-0 hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                                    <td className="py-4 px-4">
-                                        <p className="font-semibold text-westcoast-text-dark dark:text-white">{loan.fullName}</p>
-                                        <p className="text-sm text-westcoast-text-light dark:text-gray-400">{loan.requestDate?.toDate().toLocaleDateString()}</p>
-                                    </td>
-                                    <td className="py-4 px-4 font-mono font-semibold dark:text-white">
-                                        {user ? loan.loanAmount.toLocaleString('en-US', { style: 'currency', currency: user.currencyCode }) : `$${loan.loanAmount.toFixed(2)}`}
-                                    </td>
-                                    <td className="py-4 px-4 text-sm text-westcoast-text-light dark:text-gray-400 hidden md:table-cell">{loan.loanPurpose}</td>
-                                    <td className="py-4 px-4 text-center">
-                                        <span className={`text-xs font-bold px-3 py-1 rounded-full capitalize ${statusPillStyles[loan.status]}`}>
-                                            {loan.status}
-                                        </span>
-                                    </td>
-                                    <td className="py-4 px-4 text-center">
-                                        {loan.status === 'pending' && user && (
-                                            <div className="flex items-center justify-center gap-2">
-                                                <button onClick={() => onApprove(loan, user)} className="px-3 py-1 bg-green-500 text-white text-sm font-semibold rounded-md hover:bg-green-600">Approve</button>
-                                                <button onClick={() => onReject(loan)} className="px-3 py-1 bg-red-500 text-white text-sm font-semibold rounded-md hover:bg-red-600">Reject</button>
-                                            </div>
-                                        )}
-                                    </td>
-                                </tr>
-                            );
-                        })}
-                    </tbody>
-                </table>
-                 {loans.length === 0 && <p className="text-center py-8 text-gray-500">No loan applications found.</p>}
-            </div>
-        </>
-    );
-};
-
-
 const AdminDashboardPage: React.FC = () => {
     const { userData, signOut } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
-    const [modal, setModal] = useState<{type: string | null; user: UserProfile | null; loan: Loan | null;}>({ type: null, user: null, loan: null });
+    const [selectedView, setSelectedView] = useState<'dashboard' | 'users' | 'transactions' | 'loans'>('dashboard');
+    const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
+    const [showManageBalanceModal, setShowManageBalanceModal] = useState(false);
+    const [showEditModal, setShowEditModal] = useState(false);
+    const [showDeleteModal, setShowDeleteModal] = useState(false);
+    const [showChatModal, setShowChatModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
-    const [view, setView] = useState<'users' | 'loans'>('users');
+    
+    const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
 
-
-    useEffect(() => {
-        // Auto-logout for inactivity for admins.
-        if (userData) {
-            let inactivityTimer: number;
-
-            const resetTimer = () => {
-                clearTimeout(inactivityTimer);
-                inactivityTimer = window.setTimeout(() => signOut(), 5 * 60 * 1000);
-            };
-
-            const activityEvents: (keyof WindowEventMap)[] = ['mousemove', 'keydown', 'click', 'scroll', 'touchstart'];
-            activityEvents.forEach(event => window.addEventListener(event, resetTimer, { passive: true }));
-            resetTimer();
-
-            return () => {
-                clearTimeout(inactivityTimer);
-                activityEvents.forEach(event => window.removeEventListener(event, resetTimer));
-            };
-        }
-    }, [userData, signOut]);
-
-    const fetchAllData = useCallback(async () => {
+    const fetchData = useCallback(async () => {
+        setLoading(true);
         try {
-            const [allUsers, allLoans] = await Promise.all([
+            const [userList, loanList] = await Promise.all([
                 getAllUsers(),
                 getAllLoans()
             ]);
-            setUsers(allUsers.filter(u => !u.isAdmin));
-            setLoans(allLoans);
+            setUsers(userList);
+            setLoans(loanList);
         } catch (error) {
-            console.error("Failed to fetch dashboard data:", error);
+            console.error("Failed to fetch data:", error);
         } finally {
             setLoading(false);
         }
     }, []);
 
     useEffect(() => {
-        setLoading(true);
-        fetchAllData();
-    }, [fetchAllData]);
-    
-    const handleUpdateSuccess = () => {
-        setModal({ type: null, user: null, loan: null });
-        fetchAllData();
-    };
+        fetchData();
+    }, [fetchData]);
 
-    const handleToggleSuspend = async (userToUpdate: UserProfile) => {
-        const action = userToUpdate.isSuspended ? "unsuspend" : "suspend";
-        if (window.confirm(`Are you sure you want to ${action} ${userToUpdate.fullName}?`)) {
-            try {
-                await updateUserProfile(userToUpdate.uid, { isSuspended: !userToUpdate.isSuspended });
-                fetchAllData(); // Refresh the list
-            } catch (error) {
-                console.error(`Failed to ${action} user:`, error);
-                alert(`Could not ${action} the user. Please try again.`);
-            }
+    const handleUpdate = () => {
+        if (selectedUser) {
+            setShowManageBalanceModal(false);
+            setShowEditModal(false);
         }
+        if (selectedLoan) {
+            setSelectedLoan(null);
+        }
+        fetchData();
     };
-
-    const handleRejectLoan = async (loan: Loan) => {
-        if (window.confirm(`Are you sure you want to reject this loan application for ${loan.fullName}?`)) {
+    
+    const handleDeleteUser = async () => {
+        if (selectedUser) {
+            setLoading(true);
             try {
-                await updateLoan(loan.id!, { status: 'rejected' });
-                fetchAllData();
+                await adminDeleteUser(selectedUser.uid);
+                fetchData();
+                setShowDeleteModal(false);
             } catch (error) {
-                console.error("Failed to reject loan:", error);
-                alert("Could not reject the loan. Please try again.");
+                console.error("Error deleting user:", error);
+                alert('Failed to delete user.');
+            } finally {
+                setLoading(false);
             }
         }
     };
     
-    const openModal = (type: string, user: UserProfile) => setModal({ type, user, loan: null });
-    const closeModal = () => setModal({ type: null, user: null, loan: null });
+    const handleRestoreUser = async (userToRestore: UserProfile) => {
+        if (window.confirm(`Are you sure you want to restore account for ${userToRestore.fullName}? The user will be able to log in again.`)) {
+            setLoading(true);
+            try {
+                await adminRestoreUser(userToRestore.uid);
+                await fetchData();
+            } catch (error) {
+                console.error("Error restoring user:", error);
+                alert('Failed to restore user.');
+            } finally {
+                setLoading(false);
+            }
+        }
+    };
+
+    const openChat = (user: UserProfile) => {
+        setSelectedUser(user);
+        setShowChatModal(true);
+    };
+
+    const formatDate = (timestamp: any) => {
+        if (timestamp && typeof timestamp.toDate === 'function') {
+            return new Date(timestamp.toDate()).toLocaleDateString();
+        }
+        return 'N/A';
+    };
+    
+    const formatCurrency = (amount: number, currency: string) => {
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+    };
 
     const filteredUsers = users.filter(user =>
-        String(user.fullName || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(user.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-        String(user.accountNumber || '').includes(searchTerm)
+        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.accountNumber.includes(searchTerm)
     );
+    
+    const totalUsers = users.length;
+    const totalBalance = users.reduce((acc, user) => acc + user.balance, 0);
 
-    if (loading) return <div className="flex justify-center items-center min-h-screen text-center p-10"><Loader2 className="w-10 h-10 animate-spin text-westcoast-blue"/></div>;
+    const LoanApprovalModal: React.FC<{ loan: Loan, onClose: () => void, onUpdate: () => void }> = ({ loan, onClose, onUpdate }) => {
+        const [interestRate, setInterestRate] = useState('5.5');
+        const [dueDate, setDueDate] = useState('');
+        const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
+        const [loading, setLoading] = useState(false);
+        const [error, setError] = useState('');
 
-    const totalFunds = users.reduce((acc, user) => acc + (user.balance || 0), 0);
-    const pendingLoansCount = loans.filter(l => l.status === 'pending').length;
+        const handleSubmit = async (e: React.FormEvent) => {
+            e.preventDefault();
+            setLoading(true);
+            setError('');
+            try {
+                const updatedLoanData: Partial<Omit<Loan, 'id'>> = { status };
+                if (status === 'approved') {
+                    const rate = parseFloat(interestRate);
+                    if (isNaN(rate) || rate <= 0) {
+                        setError('Invalid interest rate.');
+                        setLoading(false);
+                        return;
+                    }
+                    if (!dueDate) {
+                        setError('Due date is required for approval.');
+                        setLoading(false);
+                        return;
+                    }
+                    const totalOwed = loan.loanAmount * (1 + rate / 100);
+                    updatedLoanData.interestRate = rate;
+                    updatedLoanData.totalOwed = totalOwed;
+                    updatedLoanData.dueDate = Timestamp.fromDate(new Date(dueDate));
+                    updatedLoanData.approvalDate = Timestamp.now();
+                    
+                    const user = users.find(u => u.uid === loan.userId);
+                    if(user) {
+                        await adminUpdateBalance(user, loan.loanAmount, 'credit', 'Loan Disbursement', 'Westcoast Trust Loans', undefined, 'loan_disbursement');
+                    }
+                }
+                await updateLoan(loan.id!, updatedLoanData);
+                onUpdate();
+            } catch (err: any) {
+                setError(err.message || 'Failed to update loan status.');
+            } finally {
+                setLoading(false);
+            }
+        };
 
-    const renderModal = () => {
-        if (!modal.type) return null;
-        
-        switch(modal.type) {
-            case 'balance': return modal.user && <ManageBalanceModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'edit': return modal.user && <EditUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'delete': return modal.user && <DeleteUserModal user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            case 'transactions': return modal.user && <ManageTransactionsModal user={modal.user} onClose={closeModal} />;
-            case 'chat': return modal.user && <ChatModal user={modal.user} admin={userData} onClose={closeModal} />;
-            case 'approve_loan': return modal.user && modal.loan && <ApproveLoanModal loan={modal.loan} user={modal.user} onClose={closeModal} onUpdate={handleUpdateSuccess} />;
-            default: return null;
-        }
-    }
+        return (
+             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
+                    <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Manage Loan Application</h2>
+                    <form onSubmit={handleSubmit} className="space-y-4">
+                        <p><span className="font-semibold">Applicant:</span> {loan.fullName}</p>
+                        <p><span className="font-semibold">Amount:</span> {formatCurrency(loan.loanAmount, 'USD')}</p>
+                        <p><span className="font-semibold">Purpose:</span> {loan.loanPurpose}</p>
 
-    return (
-        <div className="bg-westcoast-bg dark:bg-gray-900 min-h-screen p-4 sm:p-6 md:p-8">
-            {renderModal()}
-            <div className="max-w-7xl mx-auto">
-                <header className="mb-8 flex justify-between items-center">
-                    <div>
-                        <h1 className="text-3xl sm:text-4xl font-bold text-westcoast-dark dark:text-white">Admin Dashboard</h1>
-                        <p className="text-westcoast-text-light dark:text-gray-300">Welcome, {userData && userData.fullName}!</p>
-                    </div>
-                    <button onClick={signOut} className="flex items-center gap-2 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-westcoast-text-dark dark:text-white font-semibold rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                        <LogOut size={16} />
-                        <span>Log Out</span>
-                    </button>
-                </header>
+                        <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            <option value="approved">Approve</option>
+                            <option value="rejected">Reject</option>
+                        </select>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                    <StatCard title="Total Users" value={users.length} icon={<Users className="w-6 h-6 text-blue-600"/>} />
-                    <StatCard title="Total Funds" value={totalFunds.toLocaleString('en-US', {style: 'currency', currency: 'USD', minimumFractionDigits: 0})} icon={<TrendingUp className="w-6 h-6 text-blue-600"/>} />
-                    <StatCard title="Pending Loans" value={pendingLoansCount} icon={<Banknote className="w-6 h-6 text-blue-600"/>} />
-                </div>
-
-                <div className="bg-white dark:bg-gray-800 p-4 sm:p-6 rounded-xl shadow-md">
-                    <div className="flex border-b border-gray-200 dark:border-gray-700">
-                        <TabButton title="User Management" active={view === 'users'} onClick={() => setView('users')} />
-                        <TabButton title={`Loan Management (${pendingLoansCount})`} active={view === 'loans'} onClick={() => setView('loans')} />
-                    </div>
-                    <div className="pt-4">
-                        {view === 'users' && <UserManagementView users={filteredUsers} onAction={openModal} onSuspend={handleToggleSuspend} searchTerm={searchTerm} setSearchTerm={setSearchTerm} />}
-                        {view === 'loans' && <LoanManagementView loans={loans} users={users} onApprove={(loan, user) => setModal({ type: 'approve_loan', loan, user })} onReject={handleRejectLoan} />}
-                    </div>
+                        {status === 'approved' && (
+                            <>
+                                <div>
+                                    <label className="block text-sm font-medium">Interest Rate (%)</label>
+                                    <input type="number" step="0.1" value={interestRate} onChange={e => setInterestRate(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required/>
+                                </div>
+                                 <div>
+                                    <label className="block text-sm font-medium">Due Date</label>
+                                    <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required/>
+                                </div>
+                            </>
+                        )}
+                        {error && <p className="text-red-500 text-sm">{error}</p>}
+                        <div className="flex justify-end gap-4">
+                            <button type="button" onClick={onClose}>Cancel</button>
+                            <button type="submit" disabled={loading} className="px-4 py-2 bg-westcoast-blue text-white font-semibold rounded-lg">
+                                {loading ? 'Submitting...' : 'Submit Decision'}
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
+        );
+    };
+
+
+    const renderView = () => {
+        switch(selectedView) {
+            case 'users':
+                return (
+                    <div>
+                        <div className="mb-4">
+                            <div className="relative">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                                <input 
+                                    type="text"
+                                    placeholder="Search users by name, email, or account number..."
+                                    value={searchTerm}
+                                    onChange={e => setSearchTerm(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-2 border rounded-lg bg-white dark:bg-gray-700 dark:border-gray-600 focus:outline-none focus:ring-2 focus:ring-westcoast-blue"
+                                />
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th scope="col" className="p-3">User</th>
+                                        <th scope="col" className="p-3">Account No.</th>
+                                        <th scope="col" className="p-3">Balance</th>
+                                        <th scope="col" className="p-3">Status</th>
+                                        <th scope="col" className="p-3">Joined</th>
+                                        <th scope="col" className="p-3"><span className="sr-only">Actions</span></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {filteredUsers.map(user => (
+                                        <tr key={user.uid} className={`border-b dark:border-gray-700 ${user.isDeleted ? 'bg-gray-100 dark:bg-gray-700/50 text-gray-500 dark:text-gray-400 opacity-70' : 'hover:bg-gray-50 dark:hover:bg-gray-700/50'}`}>
+                                            <td className="p-3 font-medium text-gray-900 dark:text-white whitespace-nowrap">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar user={user} />
+                                                    <div>
+                                                        <div>{user.fullName}</div>
+                                                        <div className="text-xs text-gray-500">{user.email}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="p-3 font-mono">{user.accountNumber}</td>
+                                            <td className="p-3 font-semibold">{formatCurrency(user.balance, user.currencyCode)}</td>
+                                            <td className="p-3">
+                                                {user.isDeleted ? (
+                                                    <span className="bg-red-100 text-red-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-red-900 dark:text-red-300">Deactivated</span>
+                                                ) : user.isSuspended ? (
+                                                    <span className="bg-yellow-100 text-yellow-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-yellow-900 dark:text-yellow-300">Suspended</span>
+                                                ) : (
+                                                    <span className="bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full dark:bg-green-900 dark:text-green-300">Active</span>
+                                                )}
+                                            </td>
+                                            <td className="p-3">{formatDate(user.createdAt)}</td>
+                                            <td className="p-3 text-right">
+                                                <div className="flex justify-end items-center space-x-1">
+                                                    <button onClick={() => { setSelectedUser(user); setShowManageBalanceModal(true); }} className="p-2 text-blue-500 hover:bg-blue-100 rounded-full" title="Manage Balance"><DollarSign size={16}/></button>
+                                                    <button onClick={() => { setSelectedUser(user); setShowEditModal(true); }} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full" title="Edit User"><Edit size={16}/></button>
+                                                    <button onClick={() => openChat(user)} className="p-2 text-purple-500 hover:bg-purple-100 rounded-full" title="Chat with User"><MessageSquare size={16}/></button>
+                                                    {user.isDeleted ? (
+                                                        <button onClick={() => handleRestoreUser(user)} className="p-2 text-green-500 hover:bg-green-100 rounded-full" title="Restore User"><ShieldCheck size={16}/></button>
+                                                    ) : (
+                                                        <button onClick={() => { setSelectedUser(user); setShowDeleteModal(true); }} className="p-2 text-red-500 hover:bg-red-100 rounded-full" title="Deactivate User"><Trash2 size={16}/></button>
+                                                    )}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                );
+            case 'loans':
+                const getLoanStatusPill = (status) => {
+                    const styles = {
+                        pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+                        approved: 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+                        paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+                        rejected: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+                        overdue: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300',
+                    };
+                    return <span className={`text-xs font-medium px-2.5 py-0.5 rounded-full ${styles[status]}`}>{status}</span>;
+                };
+                return (
+                     <div>
+                        <h3 className="text-2xl font-bold text-gray-800 dark:text-white mb-4">Loan Management</h3>
+                        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-sm overflow-x-auto">
+                            <table className="w-full text-sm text-left text-gray-500 dark:text-gray-400">
+                                <thead className="text-xs text-gray-700 uppercase bg-gray-50 dark:bg-gray-700 dark:text-gray-400">
+                                    <tr>
+                                        <th className="p-3">Applicant</th>
+                                        <th className="p-3">Amount</th>
+                                        <th className="p-3">Status</th>
+                                        <th className="p-3">Requested</th>
+                                        <th className="p-3">Due Date</th>
+                                        <th className="p-3">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {loans.map(loan => (
+                                        <tr key={loan.id} className="border-b dark:border-gray-700">
+                                            <td className="p-3 font-medium text-gray-900 dark:text-white">{loan.fullName}</td>
+                                            <td className="p-3">{formatCurrency(loan.loanAmount, 'USD')}</td>
+                                            <td className="p-3">{getLoanStatusPill(loan.status)}</td>
+                                            <td className="p-3">{formatDate(loan.requestDate)}</td>
+                                            <td className="p-3">{loan.dueDate ? formatDate(loan.dueDate) : 'N/A'}</td>
+                                            <td className="p-3">
+                                                {loan.status === 'pending' && (
+                                                    <button onClick={() => setSelectedLoan(loan)} className="font-semibold text-blue-600 hover:underline">Review</button>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
+                     </div>
+                );
+            case 'dashboard':
+            default:
+                return (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex items-center gap-4">
+                            <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><Users className="text-blue-500"/></div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
+                                <p className="text-2xl font-bold text-gray-800 dark:text-white">{totalUsers}</p>
+                            </div>
+                        </div>
+                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex items-center gap-4">
+                            <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><TrendingUp className="text-green-500"/></div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Total Platform Balance</p>
+                                <p className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(totalBalance, 'USD')}</p>
+                            </div>
+                        </div>
+                        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex items-center gap-4">
+                            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-3 rounded-full"><Banknote className="text-yellow-500"/></div>
+                            <div>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Pending Loans</p>
+                                <p className="text-2xl font-bold text-gray-800 dark:text-white">{loans.filter(l => l.status === 'pending').length}</p>
+                            </div>
+                        </div>
+                    </div>
+                );
+        }
+    };
+    
+    if (loading) {
+        return <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900"><Loader2 className="animate-spin text-westcoast-blue w-8 h-8"/></div>;
+    }
+
+    const NavButton = ({ view, icon, label }) => (
+        <button 
+            onClick={() => setSelectedView(view)} 
+            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${selectedView === view ? 'bg-blue-50 dark:bg-blue-900/50 text-westcoast-blue' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+        >
+            {icon}
+            <span>{label}</span>
+        </button>
+    );
+
+    return (
+        <div className="flex min-h-screen bg-westcoast-bg dark:bg-gray-900 font-sans">
+            <aside className="w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 p-4 flex flex-col">
+                <div className="flex items-center gap-2 mb-8">
+                    <div className="w-10 h-10 bg-westcoast-dark rounded-full flex items-center justify-center font-bold text-white text-lg">A</div>
+                    <div>
+                        <p className="font-bold text-gray-800 dark:text-white">Admin</p>
+                        <p className="text-xs text-gray-500">{userData?.email}</p>
+                    </div>
+                </div>
+                 <nav className="flex-grow space-y-2">
+                     <NavButton view="dashboard" icon={<TrendingUp size={20}/>} label="Dashboard" />
+                     <NavButton view="users" icon={<Users size={20}/>} label="Users" />
+                     <NavButton view="loans" icon={<Banknote size={20}/>} label="Loans" />
+                </nav>
+                 <div>
+                    <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
+                        <LogOut size={20}/>
+                        <span>Log Out</span>
+                    </button>
+                </div>
+            </aside>
+
+            <main className="flex-1 p-8">
+                <h1 className="text-3xl font-bold text-gray-800 dark:text-white mb-8 capitalize">{selectedView}</h1>
+                {renderView()}
+            </main>
+
+            {showManageBalanceModal && selectedUser && <ManageBalanceModal user={selectedUser} onClose={() => setShowManageBalanceModal(false)} onUpdate={handleUpdate} />}
+            {showEditModal && selectedUser && <EditUserModal user={selectedUser} onClose={() => setShowEditModal(false)} onUpdate={handleUpdate} />}
+            {showDeleteModal && selectedUser && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                    <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md">
+                        <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">Deactivate User Account</h2>
+                        <p className="mt-2 text-gray-600 dark:text-gray-300">Are you sure you want to deactivate <span className="font-semibold">{selectedUser.fullName}</span>? They will not be able to log in but their data will be preserved and can be restored later.</p>
+                        <div className="flex justify-end space-x-4 mt-6">
+                            <button onClick={() => setShowDeleteModal(false)} className="px-4 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
+                            <button onClick={handleDeleteUser} disabled={loading} className="px-4 py-2 bg-red-600 text-white font-semibold rounded-lg disabled:opacity-50">{loading ? 'Deactivating...' : 'Deactivate'}</button>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {showChatModal && selectedUser && <ChatModal user={selectedUser} onClose={() => setShowChatModal(false)} />}
+            {selectedLoan && <LoanApprovalModal loan={selectedLoan} onClose={() => setSelectedLoan(null)} onUpdate={handleUpdate} />}
         </div>
     );
 };
