@@ -543,7 +543,7 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
             OTP_SERVICE_ID,
             OTP_TEMPLATE_ID,
             templateParams,
-            OTP_PUBLIC_KEY
+            { publicKey: OTP_PUBLIC_KEY }
         );
     } catch (error: any) {
         console.error("EmailJS OTP send failed:", error);
