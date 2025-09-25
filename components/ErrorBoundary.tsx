@@ -38,6 +38,13 @@ class ErrorBoundary extends React.Component<Props, State> {
   // class, fixing the "Property 'state' does not exist" error.
   state: State = { hasError: false };
 
+  // FIX: Added constructor to explicitly call super(props), which initializes `this.props`.
+  // This resolves a TypeScript error where the `props` property was not found on the
+  // component instance, likely due to a strict compiler configuration.
+  constructor(props: Props) {
+    super(props);
+  }
+
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
     return { hasError: true };

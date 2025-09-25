@@ -43,6 +43,55 @@ async function deleteQueryBatch(query, resolve) {
 }
 
 /**
+ * Callable Cloud Function for an admin to delete a user.
+ * Deletes the user from Firebase Authentication, which in turn triggers
+ * the cleanupUser function to delete associated Firestore data.
+ */
+exports.deleteUser = functions.https.onCall(async (data, context) => {
+  // Check if the request is made by an authenticated user.
+  if (!context.auth) {
+    throw new functions.https.HttpsError(
+      'unauthenticated',
+      'The function must be called while authenticated.'
+    );
+  }
+
+  // Check if the calling user is an admin.
+  const callerUid = context.auth.uid;
+  const callerDoc = await db.collection('users').doc(callerUid).get();
+  if (!callerDoc.exists || !callerDoc.data().isAdmin) {
+    throw new functions.https.HttpsError(
+      'permission-denied',
+      'Must be an administrative user to perform this action.'
+    );
+  }
+
+  // Validate the UID passed from the client.
+  const uidToDelete = data.uid;
+  if (!uidToDelete || typeof uidToDelete !== 'string') {
+    throw new functions.https.HttpsError(
+      'invalid-argument',
+      'The function must be called with a "uid" argument specifying the user to delete.'
+    );
+  }
+
+  try {
+    logger.info(`Admin ${callerUid} is deleting user ${uidToDelete}`);
+    await admin.auth().deleteUser(uidToDelete);
+    logger.info(`Successfully deleted user ${uidToDelete} from Firebase Auth.`);
+    // The onDelete trigger (cleanupUser) will handle Firestore data deletion.
+    return { result: `Successfully deleted user ${uidToDelete}.` };
+  } catch (error) {
+    logger.error(`Error deleting user ${uidToDelete}:`, error);
+    if (error.code === 'auth/user-not-found') {
+      throw new functions.https.HttpsError('not-found', 'User to delete not found.');
+    }
+    throw new functions.https.HttpsError('internal', 'Unable to delete user.');
+  }
+});
+
+
+/**
  * Cloud Function that triggers on Firebase Authentication user deletion.
  * Cleans up all associated user data from Firestore.
  */

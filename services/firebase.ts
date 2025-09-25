@@ -47,6 +47,7 @@ import {
     deleteDoc,
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 } from "@firebase/firestore";
+import { getFunctions, httpsCallable } from "@firebase/functions";
 import { UserProfile, Transaction, Loan } from "../types";
 
 // --- CURRENCY FORMATTER ---
@@ -120,6 +121,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
+const functions = getFunctions(app);
 
 // --- EXPORTS ---
 
@@ -449,12 +451,16 @@ export const updateUserProfile = async (uid: string, data: Partial<UserProfile>)
 
 export const adminDeleteUser = async (uid: string): Promise<void> => {
     if (!uid) throw new Error("User ID is required.");
-    const userRef = doc(db, `users/${uid}`);
-    // Perform a soft delete by updating the user document
-    await updateDoc(userRef, {
-        isDeleted: true,
-        deletedAt: serverTimestamp(),
-    });
+    
+    try {
+        const deleteUserCallable = httpsCallable(functions, 'deleteUser');
+        await deleteUserCallable({ uid });
+    } catch (error) {
+        console.error("Error calling deleteUser function:", error);
+        // Re-throw a more user-friendly error message.
+        const httpsError = error as { code?: string; message: string; details?: any };
+        throw new Error(httpsError.message || "Failed to delete user. Please check console for details.");
+    }
 };
 
 export const adminRestoreUser = async (uid: string): Promise<void> => {
@@ -542,7 +548,7 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
             OTP_SERVICE_ID,
             OTP_TEMPLATE_ID,
             templateParams,
-            { publicKey: OTP_PUBLIC_KEY }
+            OTP_PUBLIC_KEY
         );
     } catch (error: any) {
         console.error("EmailJS OTP send failed:", error);

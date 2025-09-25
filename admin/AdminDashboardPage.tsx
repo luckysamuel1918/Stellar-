@@ -216,7 +216,7 @@ const DeleteUserModal = ({ user, onClose, onUpdate }) => {
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md text-center">
                 <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
                 <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">Confirm Deletion</h2>
-                <p className="text-westcoast-text-light dark:text-gray-300 my-4">Are you sure you want to permanently delete <span className="font-bold">{user.fullName}</span>? This will also remove all their transactions and chat history. This action cannot be undone.</p>
+                <p className="text-westcoast-text-light dark:text-gray-300 my-4">Are you sure you want to permanently delete <span className="font-bold">{user.fullName}</span>? This will delete their authentication record and all associated data like loans and chat history from the database. Transaction records will be kept for auditing purposes. This action cannot be undone.</p>
                 {error && <p className="text-red-500 text-sm mb-4">{error}</p>}
                 <div className="flex justify-center space-x-4">
                     <button onClick={onClose} className="px-6 py-2 bg-gray-200 text-gray-800 font-semibold rounded-lg dark:bg-gray-600 dark:text-white">Cancel</button>
