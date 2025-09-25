@@ -1,7 +1,7 @@
 import React, { useState, useEffect, createContext, useContext, useCallback } from 'react';
 // FIX: Changed to namespace import for react-router-dom to resolve module export errors.
 import * as ReactRouterDOM from 'react-router-dom';
-import { auth, onAuthStateChanged, signOut as firebaseSignOut, User, getUserData } from './services/firebase';
+import { auth, onAuthStateChanged, signOut as firebaseSignOut, User, getUserData, createDefaultUserProfile } from './services/firebase';
 import { UserProfile } from './types';
 import HomePage from './pages/HomePage';
 import AuthPage from './auth/AuthPage';
@@ -87,7 +87,29 @@ const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
-        const profile = await getUserData(user.uid);
+        let profile = await getUserData(user.uid);
+        
+        if (!profile) {
+            console.warn("User profile not found in Firestore. Creating a default profile.");
+            try {
+                await createDefaultUserProfile(user);
+                // After creation, fetch it again.
+                profile = await getUserData(user.uid);
+                if (!profile) {
+                    // This case should ideally not be reached if creation is successful
+                    // and rules allow read. But as a safeguard:
+                    throw new Error("Failed to retrieve user profile after creation.");
+                }
+            } catch (error) {
+                console.error("Critical error: Failed to create or retrieve user profile.", error);
+                // Setting user but not userData will trigger the AuthErrorPage in protected routes
+                setUserData(null);
+                setUser(user);
+                setLoading(false);
+                return;
+            }
+        }
+        
         setUserData(profile);
       } else {
         setUserData(null);

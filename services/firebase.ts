@@ -175,6 +175,48 @@ export const createUserProfileDocument = async (userAuth: User, additionalData: 
   return userRef;
 };
 
+export const createDefaultUserProfile = async (userAuth: User) => {
+  if (!userAuth) return;
+  const userRef = doc(db, `users/${userAuth.uid}`);
+  const snapshot = await getDoc(userRef);
+
+  if (!snapshot.exists()) {
+    console.log(`Creating default profile for user: ${userAuth.uid}`);
+    const { email } = userAuth;
+    const isAdmin = email === 'admin@westcoasttrust.com';
+    try {
+      const newUserProfile: Omit<UserProfile, 'uid'> = {
+        email,
+        fullName: isAdmin ? 'Admin' : 'New User',
+        phone: '',
+        address: '',
+        state: '',
+        country: 'United States',
+        currencyCode: 'USD',
+        accountNumber: Math.floor(1000000000 + Math.random() * 9000000000).toString(),
+        customerId: `WCB-${userAuth.uid.slice(-8).toUpperCase()}`,
+        balance: 0,
+        isAdmin,
+        isSuspended: false,
+        createdAt: serverTimestamp(),
+        photoURL: userAuth.photoURL || null,
+        isDeleted: false,
+        deletedAt: null,
+        maritalStatus: '',
+        occupation: '',
+        dateOfBirth: '',
+        zipCode: '',
+      };
+      await setDoc(userRef, newUserProfile);
+    } catch (error) {
+      console.error("Error creating default user document:", error);
+      throw error;
+    }
+  }
+  return userRef;
+};
+
+
 export const getUserData = async (uid: string): Promise<UserProfile | null> => {
     if (!uid) return null;
     const userRef = doc(db, 'users', uid);

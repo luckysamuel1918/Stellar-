@@ -33,13 +33,10 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends Component<Props, State> {
-  // FIX: Removed the redundant 'state' class field declaration. The 'state' property is
-  // inherited from React.Component and typed by the generic parameters. Redeclaring it
-  // was causing issues with TypeScript's type inference for inherited properties like 'props'.
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // FIX: Replaced constructor-based state initialization with a class property initializer.
+  // This is a more modern approach and correctly declares the `state` property on the
+  // class, fixing the "Property 'state' does not exist" error.
+  state: State = { hasError: false };
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.
