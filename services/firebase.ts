@@ -524,6 +524,10 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
                 default:
                     detailedError = `OTP request failed. Service responded with status ${error.status}: ${errorText}`;
             }
+        } else if (error instanceof Error) {
+            detailedError = error.message;
+        } else if (typeof error === 'string') {
+            detailedError = error;
         }
         
         throw new Error(detailedError);

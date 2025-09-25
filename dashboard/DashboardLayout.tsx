@@ -69,43 +69,45 @@ const DashboardLayout: React.FC = () => {
     }, []);
 
     const fetchData = useCallback(async (isRefresh = false) => {
-        if (userData) {
-            if (!isRefresh) setLoading(true);
-            setError(null);
-            try {
-                 const [txs, userLoans] = await Promise.all([
-                    getUserTransactions(userData.uid),
-                    getUserLoans(userData.uid)
-                ]);
+        if (!userData) {
+            // This case is important for when the user signs out.
+            if (!isRefresh) setLoading(false);
+            return;
+        }
 
-                const hasOverdueLoans = userLoans.some(loan => {
-                    const dueDate = loan.dueDate && typeof loan.dueDate.toDate === 'function' ? loan.dueDate.toDate() : null;
-                    return loan.status === 'approved' && dueDate && dueDate < new Date();
-                });
+        if (!isRefresh) setLoading(true);
+        setError(null);
+        try {
+            // Fetch loans first to check for overdue status
+            const initialUserLoans = await getUserLoans(userData.uid);
 
-                if (hasOverdueLoans) {
-                    await processOverdueLoans(userData, userLoans);
-                    // This will refresh the user balance in the context, and this useEffect will run again
-                    await refreshUserData(); 
-                } else {
-                    const finalProfile = await getUserData(userData.uid); // re-fetch profile to get latest balance after potential loan payment
-                    const [finalTxs, finalLoans] = await Promise.all([
-                        getUserTransactions(userData.uid),
-                        getUserLoans(userData.uid)
-                    ]);
-                    setTransactions(finalTxs);
-                    setLoans(finalLoans);
-                }
-            } catch (err) {
-                console.error("Failed to fetch dashboard data:", err);
-                setError("An error occurred while fetching your data. Please try again later.");
-            } finally {
-                if (!isRefresh) setLoading(false);
+            const hasOverdueLoans = initialUserLoans.some(loan => {
+                const dueDate = loan.dueDate && typeof loan.dueDate.toDate === 'function' ? loan.dueDate.toDate() : null;
+                return loan.status === 'approved' && dueDate && dueDate < new Date();
+            });
+
+            if (hasOverdueLoans) {
+                // This updates the DB. The user's balance might change.
+                await processOverdueLoans(userData, initialUserLoans);
+                // Refresh user data in the context to get the new balance.
+                // This will trigger a re-render and another run of this useEffect,
+                // but on the next run, `hasOverdueLoans` should be false, preventing a loop.
+                await refreshUserData();
             }
-        } else {
-            // If userData is not available, the UserRoute protector will handle it.
-            // We set loading to false to avoid showing a loader here indefinitely.
-            setLoading(false);
+
+            // Always fetch the latest transactions and loans to display the most current state.
+            const [finalTxs, finalLoans] = await Promise.all([
+                getUserTransactions(userData.uid),
+                getUserLoans(userData.uid)
+            ]);
+            setTransactions(finalTxs);
+            setLoans(finalLoans);
+
+        } catch (err) {
+            console.error("Failed to fetch dashboard data:", err);
+            setError("An error occurred while fetching your data. Please try again later.");
+        } finally {
+            if (!isRefresh) setLoading(false);
         }
     }, [userData, processOverdueLoans, refreshUserData]);
     
