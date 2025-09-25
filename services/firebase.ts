@@ -47,7 +47,6 @@ import {
     deleteDoc,
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 } from "@firebase/firestore";
-import { getFunctions, httpsCallable } from "@firebase/functions";
 import { UserProfile, Transaction, Loan } from "../types";
 
 // --- CURRENCY FORMATTER ---
@@ -121,7 +120,6 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getFirestore(app);
-const functions = getFunctions(app);
 
 // --- EXPORTS ---
 
