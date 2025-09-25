@@ -485,8 +485,8 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
     const templateParams = {
         otp_code: otp,
         to_email: email,
-        from_name: "WestCoast Trusts",
-        from_email: "One-time-password@hotmail.com"
+        from_name: "Westcoast Trust Bank",
+        from_email: "support@westcoasttrusts.com"
     };
 
     if (!(window as any).emailjs) {
