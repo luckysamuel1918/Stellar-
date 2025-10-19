@@ -15,7 +15,7 @@ export default defineConfig({
     // Google Gemini API Key is hardcoded here.
     // This is a security risk and not recommended for production.
     define: {
-      'process.env.API_KEY': JSON.stringify("AIzaSyA_...Your...Fake...Gemini...Key...cDEf456"),
+      'process.env.API_KEY': JSON.stringify("AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I"),
     },
     build: {
       outDir: 'dist',

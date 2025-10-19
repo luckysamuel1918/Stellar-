@@ -4,7 +4,6 @@
 
 // IMPORTANT SECURITY WARNING: Credentials have been hardcoded in this file.
 // This is not recommended for production environments.
-// Please replace the placeholder values with your actual credentials.
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -53,15 +52,15 @@ const formatCurrency = (amount: number, currency: string) => {
 
 // --- EMAILJS HELPERS ---
 // Credit/Debit Alert Credentials
-const ALERT_SERVICE_ID = "service_w3f7z9c";
-const ALERT_PUBLIC_KEY = "user_1234567890abcdefghij";
-const CREDIT_TEMPLATE_ID = "template_credit_alert";
-const DEBIT_TEMPLATE_ID = "template_debit_alert";
+const ALERT_SERVICE_ID = "service_27dimqt";
+const ALERT_PUBLIC_KEY = "XiKkaXx4HIwQb00-G";
+const CREDIT_TEMPLATE_ID = "template_kozdmyg";
+const DEBIT_TEMPLATE_ID = "template_ms0phzn";
 
 // OTP Credentials
-const OTP_SERVICE_ID = "service_w3f7z9c";
-const OTP_PUBLIC_KEY = "user_1234567890abcdefghij";
-const OTP_TEMPLATE_ID = "template_otp_service";
+const OTP_SERVICE_ID = "service_1oxm0rs";
+const OTP_PUBLIC_KEY = "VYfq3eW-NMpJkm35M";
+const OTP_TEMPLATE_ID = "template_zsv0alp";
 
 const sendCreditEmail = async (params: any) => {
     if (!ALERT_SERVICE_ID || !CREDIT_TEMPLATE_ID || !ALERT_PUBLIC_KEY) {
@@ -91,13 +90,13 @@ const sendDebitEmail = async (params: any) => {
 
 // Firebase configuration with hardcoded credentials
 const firebaseConfig = {
-  apiKey: "AIzaSyA_...Your...Fake...API...Key...Co398s",
-  authDomain: "westcoast-trust-bank.firebaseapp.com",
-  projectId: "westcoast-trust-bank",
-  storageBucket: "westcoast-trust-bank.appspot.com",
-  messagingSenderId: "123456789012",
-  appId: "1:123456789012:web:123abc456def789ghi012jkl",
-  measurementId: "G-ABC123DEF4"
+  apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
+  authDomain: "westcoast-c85e4.firebaseapp.com",
+  projectId: "westcoast-c85e4",
+  storageBucket: "westcoast-c85e4.appspot.com",
+  messagingSenderId: "15776220227",
+  appId: "1:15776220227:web:a5cf2658b895aff29180f6",
+  measurementId: "G-MNTK4NDZH4"
 };
 
 
