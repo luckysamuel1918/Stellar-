@@ -93,7 +93,7 @@ const firebaseConfig = {
   apiKey: "AIzaSyBMdIjlbAJ2nPMjOLtVhFhC0iArzNYKd6I",
   authDomain: "westcoast-c85e4.firebaseapp.com",
   projectId: "westcoast-c85e4",
-  storageBucket: "westcoast-c85e4.appspot.com",
+  storageBucket: "westcoast-c85e4.firebasestorage.app",
   messagingSenderId: "15776220227",
   appId: "1:15776220227:web:a5cf2658b895aff29180f6",
   measurementId: "G-MNTK4NDZH4"
