@@ -53,14 +53,16 @@ import { UserProfile, Transaction, Loan } from "../types";
 const formatCurrency = (amount: number, currency: string) => {
     const safeCurrency = currency || 'USD';
     try {
-        return new Intl.NumberFormat('en-US', {
+        // Using `undefined` for locale uses the browser's default locale,
+        // which is better for international users.
+        return new Intl.NumberFormat(undefined, {
             style: 'currency',
             currency: safeCurrency,
         }).format(amount);
     } catch (e) {
         console.error(`Invalid currency code: ${safeCurrency}`, e);
-        // Fallback to just using the amount with a dollar sign if formatting fails
-        return `$${amount.toFixed(2)}`;
+        // Fallback to showing the currency code if formatting fails, instead of always '$'
+        return `${safeCurrency} ${amount.toFixed(2)}`;
     }
 };
 
@@ -546,7 +548,7 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
     } catch (error: any) {
         console.error("EmailJS OTP send failed:", error);
         
-        let detailedError = "Failed to send OTP. An unknown error occurred. Please check the browser console for details.";
+        let detailedError = "Failed to send OTP. This may be due to a network issue or a problem with our email provider. Please check your connection and try again. If the problem persists, contact support.";
 
         // EmailJS SDK returns an object with status and text on failure.
         if (error && typeof error.status === 'number') {

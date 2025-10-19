@@ -280,7 +280,7 @@ const AdminDashboardPage: React.FC = () => {
     const [showChatModal, setShowChatModal] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     
-    const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
+    const [selectedLoan, setSelectedLoan] = useState<{ loan: Loan, user: UserProfile } | null>(null);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -357,7 +357,19 @@ const AdminDashboardPage: React.FC = () => {
     };
     
     const formatCurrency = (amount: number, currency: string) => {
-        return new Intl.NumberFormat('en-US', { style: 'currency', currency: currency || 'USD' }).format(amount);
+        const safeCurrency = currency || 'USD';
+        try {
+            // Using `undefined` for locale uses the browser's default locale,
+            // which is better for international users.
+            return new Intl.NumberFormat(undefined, {
+                style: 'currency',
+                currency: safeCurrency,
+            }).format(amount);
+        } catch (e) {
+            console.error(`Invalid currency code: ${safeCurrency}`, e);
+            // Fallback to showing the currency code if formatting fails, instead of always '$'
+            return `${safeCurrency} ${amount.toFixed(2)}`;
+        }
     };
 
     const filteredUsers = users.filter(user =>
@@ -369,7 +381,7 @@ const AdminDashboardPage: React.FC = () => {
     const totalUsers = users.length;
     const totalBalance = users.reduce((acc, user) => acc + user.balance, 0);
 
-    const LoanApprovalModal: React.FC<{ loan: Loan, onClose: () => void, onUpdate: () => void }> = ({ loan, onClose, onUpdate }) => {
+    const LoanApprovalModal: React.FC<{ loan: Loan, user: UserProfile, onClose: () => void, onUpdate: () => void }> = ({ loan, user, onClose, onUpdate }) => {
         const [interestRate, setInterestRate] = useState('5.5');
         const [dueDate, setDueDate] = useState('');
         const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
@@ -400,9 +412,9 @@ const AdminDashboardPage: React.FC = () => {
                     updatedLoanData.dueDate = Timestamp.fromDate(new Date(dueDate));
                     updatedLoanData.approvalDate = Timestamp.now();
                     
-                    const user = users.find(u => u.uid === loan.userId);
-                    if(user) {
-                        await adminUpdateBalance(user, loan.loanAmount, 'credit', 'Loan Disbursement', 'Westcoast Trust Loans', undefined, 'loan_disbursement');
+                    const loanUser = users.find(u => u.uid === loan.userId);
+                    if(loanUser) {
+                        await adminUpdateBalance(loanUser, loan.loanAmount, 'credit', 'Loan Disbursement', 'Westcoast Trust Loans', undefined, 'loan_disbursement');
                     }
                 }
                 await updateLoan(loan.id!, updatedLoanData);
@@ -420,7 +432,7 @@ const AdminDashboardPage: React.FC = () => {
                     <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Manage Loan Application</h2>
                     <form onSubmit={handleSubmit} className="space-y-4">
                         <p><span className="font-semibold">Applicant:</span> {loan.fullName}</p>
-                        <p><span className="font-semibold">Amount:</span> {formatCurrency(loan.loanAmount, 'USD')}</p>
+                        <p><span className="font-semibold">Amount:</span> {formatCurrency(loan.loanAmount, user.currencyCode)}</p>
                         <p><span className="font-semibold">Purpose:</span> {loan.loanPurpose}</p>
 
                         <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
@@ -556,13 +568,20 @@ const AdminDashboardPage: React.FC = () => {
                                     {loans.map(loan => (
                                         <tr key={loan.id} className="border-b dark:border-gray-700">
                                             <td className="p-3 font-medium text-gray-900 dark:text-white">{loan.fullName}</td>
-                                            <td className="p-3">{formatCurrency(loan.loanAmount, 'USD')}</td>
+                                            <td className="p-3">{formatCurrency(loan.loanAmount, users.find(u => u.uid === loan.userId)?.currencyCode || 'USD')}</td>
                                             <td className="p-3">{getLoanStatusPill(loan.status)}</td>
                                             <td className="p-3">{formatDate(loan.requestDate)}</td>
                                             <td className="p-3">{loan.dueDate ? formatDate(loan.dueDate) : 'N/A'}</td>
                                             <td className="p-3">
                                                 {loan.status === 'pending' && (
-                                                    <button onClick={() => setSelectedLoan(loan)} className="font-semibold text-blue-600 hover:underline">Review</button>
+                                                    <button onClick={() => {
+                                                        const loanUser = users.find(u => u.uid === loan.userId);
+                                                        if (loanUser) {
+                                                            setSelectedLoan({ loan, user: loanUser });
+                                                        } else {
+                                                            alert("Could not find user for this loan.");
+                                                        }
+                                                    }} className="font-semibold text-blue-600 hover:underline">Review</button>
                                                 )}
                                             </td>
                                         </tr>
@@ -659,7 +678,7 @@ const AdminDashboardPage: React.FC = () => {
                 </div>
             )}
             {showChatModal && selectedUser && <ChatModal user={selectedUser} onClose={() => setShowChatModal(false)} />}
-            {selectedLoan && <LoanApprovalModal loan={selectedLoan} onClose={() => setSelectedLoan(null)} onUpdate={handleUpdate} />}
+            {selectedLoan && <LoanApprovalModal loan={selectedLoan.loan} user={selectedLoan.user} onClose={() => setSelectedLoan(null)} onUpdate={handleUpdate} />}
         </div>
     );
 };

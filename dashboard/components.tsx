@@ -15,13 +15,16 @@ import { WestcoastLogo } from '../components/icons';
 export const formatCurrency = (amount: number, currency: string) => {
     const safeCurrency = currency || 'USD';
     try {
-        return new Intl.NumberFormat('en-US', {
+        // Using `undefined` for locale uses the browser's default locale,
+        // which is better for international users.
+        return new Intl.NumberFormat(undefined, {
             style: 'currency',
             currency: safeCurrency,
         }).format(amount);
     } catch (e) {
         console.error(`Invalid currency code: ${safeCurrency}`, e);
-        return `$${amount.toFixed(2)}`;
+        // Fallback to showing the currency code if formatting fails, instead of always '$'
+        return `${safeCurrency} ${amount.toFixed(2)}`;
     }
 };
 
