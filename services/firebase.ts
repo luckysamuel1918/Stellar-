@@ -140,39 +140,41 @@ export { Timestamp, serverTimestamp };
 export const createUserProfileDocument = async (userAuth: User, additionalData: any) => {
   if (!userAuth) return;
   const userRef = doc(db, `users/${userAuth.uid}`);
-  const snapshot = await getDoc(userRef);
 
-  if (!snapshot.exists()) {
-    const { email } = userAuth;
-    const { fullName, phone, address, state, country, currencyCode, accountNumber, pin, maritalStatus, occupation, dateOfBirth, zipCode } = additionalData;
-    try {
-      const newUserProfile: Omit<UserProfile, 'uid'> & { pin: string } = {
-        email,
-        fullName,
-        phone,
-        address,
-        state,
-        country,
-        currencyCode,
-        accountNumber,
-        customerId: `WCB-${userAuth.uid.slice(-8).toUpperCase()}`,
-        pin, // Note: Storing a PIN directly is insecure. This is for demonstration only.
-        balance: 0, 
-        isAdmin: email === 'admin@westcoasttrust.com', // Example admin setup
-        isSuspended: false,
-        createdAt: serverTimestamp(),
-        photoURL: null,
-        isDeleted: false,
-        deletedAt: null,
-        maritalStatus,
-        occupation,
-        dateOfBirth,
-        zipCode,
-      };
-      await setDoc(userRef, newUserProfile);
-    } catch (error) {
-      console.error("Error creating user document:", error);
-    }
+  // This function will now create or overwrite the user document.
+  // This fixes a race condition where a default profile (with USD/United States)
+  // could be created by an onAuthStateChanged listener before this function completes.
+  // By always writing the data from the signup form, we ensure the user's selections are saved.
+  const { email } = userAuth;
+  const { fullName, phone, address, state, country, currencyCode, accountNumber, pin, maritalStatus, occupation, dateOfBirth, zipCode } = additionalData;
+  try {
+    const newUserProfile: Omit<UserProfile, 'uid'> & { pin: string } = {
+      email,
+      fullName,
+      phone,
+      address,
+      state,
+      country,
+      currencyCode,
+      accountNumber,
+      customerId: `WCB-${userAuth.uid.slice(-8).toUpperCase()}`,
+      pin, // Note: Storing a PIN directly is insecure. This is for demonstration only.
+      balance: 0, 
+      isAdmin: email === 'admin@westcoasttrust.com', // Example admin setup
+      isSuspended: false,
+      createdAt: serverTimestamp(),
+      photoURL: null,
+      isDeleted: false,
+      deletedAt: null,
+      maritalStatus,
+      occupation,
+      dateOfBirth,
+      zipCode,
+    };
+    // setDoc will create the document or overwrite it if it already exists.
+    await setDoc(userRef, newUserProfile);
+  } catch (error) {
+    console.error("Error creating user document:", error);
   }
   return userRef;
 };
