@@ -1,26 +1,10 @@
 // FIX: Removed the "vite/client" triple-slash directive which was causing a type definition error.
 // A local type declaration for `import.meta.env` has been added to provide type safety for Vite
 // environment variables without causing global type conflicts.
-declare global {
-    interface ImportMeta {
-        readonly env: {
-            readonly VITE_EMAILJS_ALERT_SERVICE_ID: string;
-            readonly VITE_EMAILJS_ALERT_PUBLIC_KEY: string;
-            readonly VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID: string;
-            readonly VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID: string;
-            readonly VITE_EMAILJS_OTP_SERVICE_ID: string;
-            readonly VITE_EMAILJS_OTP_PUBLIC_KEY: string;
-            readonly VITE_EMAILJS_OTP_TEMPLATE_ID: string;
-            readonly VITE_FIREBASE_API_KEY: string;
-            readonly VITE_FIREBASE_AUTH_DOMAIN: string;
-            readonly VITE_FIREBASE_PROJECT_ID: string;
-            readonly VITE_FIREBASE_STORAGE_BUCKET: string;
-            readonly VITE_FIREBASE_MESSAGING_SENDER_ID: string;
-            readonly VITE_FIREBASE_APP_ID: string;
-            readonly VITE_FIREBASE_MEASUREMENT_ID: string;
-        }
-    }
-}
+
+// IMPORTANT SECURITY WARNING: Credentials have been hardcoded in this file.
+// This is not recommended for production environments.
+// Please replace the placeholder values with your actual credentials.
 
 // FIX: Changed firebase imports to use scoped packages (@firebase/app, etc.) to resolve module not found errors.
 import { initializeApp } from "@firebase/app";
@@ -70,15 +54,15 @@ const formatCurrency = (amount: number, currency: string) => {
 // --- EMAILJS HELPERS ---
 
 // Credit/Debit Alert Credentials from environment variables
-const ALERT_SERVICE_ID = import.meta.env.VITE_EMAILJS_ALERT_SERVICE_ID;
-const ALERT_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_ALERT_PUBLIC_KEY;
-const CREDIT_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_ALERT_CREDIT_TEMPLATE_ID;
-const DEBIT_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_ALERT_DEBIT_TEMPLATE_ID;
+const ALERT_SERVICE_ID = "YOUR_EMAILJS_ALERT_SERVICE_ID";
+const ALERT_PUBLIC_KEY = "YOUR_EMAILJS_ALERT_PUBLIC_KEY";
+const CREDIT_TEMPLATE_ID = "YOUR_EMAILJS_ALERT_CREDIT_TEMPLATE_ID";
+const DEBIT_TEMPLATE_ID = "YOUR_EMAILJS_ALERT_DEBIT_TEMPLATE_ID";
 
 // OTP Credentials from environment variables
-const OTP_SERVICE_ID = import.meta.env.VITE_EMAILJS_OTP_SERVICE_ID;
-const OTP_PUBLIC_KEY = import.meta.env.VITE_EMAILJS_OTP_PUBLIC_KEY;
-const OTP_TEMPLATE_ID = import.meta.env.VITE_EMAILJS_OTP_TEMPLATE_ID;
+const OTP_SERVICE_ID = "YOUR_EMAILJS_OTP_SERVICE_ID";
+const OTP_PUBLIC_KEY = "YOUR_EMAILJS_OTP_PUBLIC_KEY";
+const OTP_TEMPLATE_ID = "YOUR_EMAILJS_OTP_TEMPLATE_ID";
 
 const sendCreditEmail = async (params: any) => {
     if (!ALERT_SERVICE_ID || !CREDIT_TEMPLATE_ID || !ALERT_PUBLIC_KEY) {
@@ -109,13 +93,13 @@ const sendDebitEmail = async (params: any) => {
 // FIX: Replaced hardcoded Firebase configuration with Vite environment variables (`import.meta.env`)
 // to ensure the correct credentials are used during deployment on Vercel.
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
-  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
-  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
-  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
-  appId: import.meta.env.VITE_FIREBASE_APP_ID,
-  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
+  apiKey: "YOUR_FIREBASE_API_KEY",
+  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
+  projectId: "YOUR_FIREBASE_PROJECT_ID",
+  storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
+  appId: "YOUR_FIREBASE_APP_ID",
+  measurementId: "YOUR_FIREBASE_MEASUREMENT_ID"
 };
 
 
@@ -505,12 +489,12 @@ export const wipeChatHistory = async (userId:string) => {
 
 export const generateAndSendOtp = async (uid: string, email: string): Promise<void> => {
     const missingVars: string[] = [];
-    if (!OTP_SERVICE_ID) missingVars.push('VITE_EMAILJS_OTP_SERVICE_ID');
-    if (!OTP_TEMPLATE_ID) missingVars.push('VITE_EMAILJS_OTP_TEMPLATE_ID');
-    if (!OTP_PUBLIC_KEY) missingVars.push('VITE_EMAILJS_OTP_PUBLIC_KEY');
+    if (!OTP_SERVICE_ID || OTP_SERVICE_ID === "YOUR_EMAILJS_OTP_SERVICE_ID") missingVars.push('OTP Service ID');
+    if (!OTP_TEMPLATE_ID || OTP_TEMPLATE_ID === "YOUR_EMAILJS_OTP_TEMPLATE_ID") missingVars.push('OTP Template ID');
+    if (!OTP_PUBLIC_KEY || OTP_PUBLIC_KEY === "YOUR_EMAILJS_OTP_PUBLIC_KEY") missingVars.push('OTP Public Key');
 
     if (missingVars.length > 0) {
-        const errorMsg = `The OTP service is not configured. Missing environment variables: ${missingVars.join(', ')}. See README.md for setup.`;
+        const errorMsg = `The OTP service is not configured. Missing credentials: ${missingVars.join(', ')}.`;
         console.error(errorMsg);
         throw new Error(errorMsg);
     }
@@ -561,10 +545,10 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
                     break;
                 case 401: // Unauthorized
                 case 403: // Forbidden
-                    detailedError = `OTP request failed (Authentication Error): ${errorText} Please verify your 'VITE_EMAILJS_OTP_PUBLIC_KEY' is correct.`;
+                    detailedError = `OTP request failed (Authentication Error): ${errorText} Please verify your EmailJS Public Key is correct.`;
                     break;
                 case 404: // Not Found
-                    detailedError = `OTP request failed (Not Found): ${errorText} Please verify your 'VITE_EMAILJS_OTP_SERVICE_ID' and 'VITE_EMAILJS_OTP_TEMPLATE_ID' are correct.`;
+                    detailedError = `OTP request failed (Not Found): ${errorText} Please verify your EmailJS Service ID and Template ID are correct.`;
                     break;
                 default:
                     detailedError = `OTP request failed. Service responded with status ${error.status}: ${errorText}`;
