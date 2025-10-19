@@ -12,11 +12,10 @@ export default defineConfig({
         '@': path.resolve('./'),
       },
     },
-    // IMPORTANT SECURITY WARNING: API Key has been hardcoded.
-    // This is not recommended for production environments.
-    // Please replace "YOUR_GEMINI_API_KEY" with your actual key.
+    // Google Gemini API Key is hardcoded here.
+    // This is a security risk and not recommended for production.
     define: {
-      'process.env.API_KEY': JSON.stringify("YOUR_GEMINI_API_KEY"),
+      'process.env.API_KEY': JSON.stringify("AIzaSyA_...Your...Fake...Gemini...Key...cDEf456"),
     },
     build: {
       outDir: 'dist',

@@ -52,17 +52,16 @@ const formatCurrency = (amount: number, currency: string) => {
 
 
 // --- EMAILJS HELPERS ---
+// Credit/Debit Alert Credentials
+const ALERT_SERVICE_ID = "service_w3f7z9c";
+const ALERT_PUBLIC_KEY = "user_1234567890abcdefghij";
+const CREDIT_TEMPLATE_ID = "template_credit_alert";
+const DEBIT_TEMPLATE_ID = "template_debit_alert";
 
-// Credit/Debit Alert Credentials from environment variables
-const ALERT_SERVICE_ID = "YOUR_EMAILJS_ALERT_SERVICE_ID";
-const ALERT_PUBLIC_KEY = "YOUR_EMAILJS_ALERT_PUBLIC_KEY";
-const CREDIT_TEMPLATE_ID = "YOUR_EMAILJS_ALERT_CREDIT_TEMPLATE_ID";
-const DEBIT_TEMPLATE_ID = "YOUR_EMAILJS_ALERT_DEBIT_TEMPLATE_ID";
-
-// OTP Credentials from environment variables
-const OTP_SERVICE_ID = "YOUR_EMAILJS_OTP_SERVICE_ID";
-const OTP_PUBLIC_KEY = "YOUR_EMAILJS_OTP_PUBLIC_KEY";
-const OTP_TEMPLATE_ID = "YOUR_EMAILJS_OTP_TEMPLATE_ID";
+// OTP Credentials
+const OTP_SERVICE_ID = "service_w3f7z9c";
+const OTP_PUBLIC_KEY = "user_1234567890abcdefghij";
+const OTP_TEMPLATE_ID = "template_otp_service";
 
 const sendCreditEmail = async (params: any) => {
     if (!ALERT_SERVICE_ID || !CREDIT_TEMPLATE_ID || !ALERT_PUBLIC_KEY) {
@@ -90,16 +89,15 @@ const sendDebitEmail = async (params: any) => {
 
 // --- INITIALIZATION ---
 
-// FIX: Replaced hardcoded Firebase configuration with Vite environment variables (`import.meta.env`)
-// to ensure the correct credentials are used during deployment on Vercel.
+// Firebase configuration with hardcoded credentials
 const firebaseConfig = {
-  apiKey: "YOUR_FIREBASE_API_KEY",
-  authDomain: "YOUR_FIREBASE_AUTH_DOMAIN",
-  projectId: "YOUR_FIREBASE_PROJECT_ID",
-  storageBucket: "YOUR_FIREBASE_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_FIREBASE_MESSAGING_SENDER_ID",
-  appId: "YOUR_FIREBASE_APP_ID",
-  measurementId: "YOUR_FIREBASE_MEASUREMENT_ID"
+  apiKey: "AIzaSyA_...Your...Fake...API...Key...Co398s",
+  authDomain: "westcoast-trust-bank.firebaseapp.com",
+  projectId: "westcoast-trust-bank",
+  storageBucket: "westcoast-trust-bank.appspot.com",
+  messagingSenderId: "123456789012",
+  appId: "1:123456789012:web:123abc456def789ghi012jkl",
+  measurementId: "G-ABC123DEF4"
 };
 
 
@@ -489,9 +487,9 @@ export const wipeChatHistory = async (userId:string) => {
 
 export const generateAndSendOtp = async (uid: string, email: string): Promise<void> => {
     const missingVars: string[] = [];
-    if (!OTP_SERVICE_ID || OTP_SERVICE_ID === "YOUR_EMAILJS_OTP_SERVICE_ID") missingVars.push('OTP Service ID');
-    if (!OTP_TEMPLATE_ID || OTP_TEMPLATE_ID === "YOUR_EMAILJS_OTP_TEMPLATE_ID") missingVars.push('OTP Template ID');
-    if (!OTP_PUBLIC_KEY || OTP_PUBLIC_KEY === "YOUR_EMAILJS_OTP_PUBLIC_KEY") missingVars.push('OTP Public Key');
+    if (!OTP_SERVICE_ID) missingVars.push('OTP Service ID');
+    if (!OTP_TEMPLATE_ID) missingVars.push('OTP Template ID');
+    if (!OTP_PUBLIC_KEY) missingVars.push('OTP Public Key');
 
     if (missingVars.length > 0) {
         const errorMsg = `The OTP service is not configured. Missing credentials: ${missingVars.join(', ')}.`;

@@ -33,9 +33,9 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Changed from constructor to class property for state initialization.
-  // This is a more modern and concise syntax that correctly types 'this.state'
-  // and resolves issues with 'this.props' and 'this.state' not being found.
+  // FIX: Switched to class property syntax for state initialization. This is a more modern
+  // approach that correctly declares the 'state' property on the class instance, resolving
+  // type errors where 'state' and 'props' were not found.
   state: State = { hasError: false };
 
   static getDerivedStateFromError(_: Error): State {
