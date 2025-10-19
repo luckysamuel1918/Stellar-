@@ -28,15 +28,15 @@ export const formatCurrency = (amount: number, currency: string) => {
     }
 };
 
+const DetailRow: React.FC<{ label: any; value: any }> = ({ label, value }) => (
+    <div className="flex justify-between items-start gap-4">
+        <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
+        <span className="font-semibold text-westcoast-text-dark dark:text-gray-200 text-right break-words text-base">{value}</span>
+    </div>
+);
+
 export const ReceiptView: React.FC<{ receiptData: Transaction, user: UserProfile, onClose: () => void, isInternational?: boolean, bankDetails?: any }> = ({ receiptData, user, onClose, isInternational = false, bankDetails }) => {
     const printReceipt = () => window.print();
-
-    const DetailRow: React.FC<{ label: any; value: any }> = ({ label, value }) => (
-        <div className="flex justify-between items-start gap-4">
-            <span className="text-gray-500 dark:text-gray-400 flex-shrink-0 text-sm">{label}</span>
-            <span className="font-semibold text-westcoast-text-dark dark:text-gray-200 text-right break-words text-base">{value}</span>
-        </div>
-    );
 
     return (
         <div className="text-center">

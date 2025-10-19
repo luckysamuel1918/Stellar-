@@ -368,17 +368,27 @@ const MarketInsightsSection: React.FC = () => {
     );
 };
 
+const staffData = [
+    { name: 'Dr. Evelyn Reed', title: 'Chief Executive Officer', description: 'With over 20 years in finance, Evelyn guides our strategic vision, ensuring sustainable growth and innovation while fostering a customer-centric culture.', imgSrc: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+    { name: 'Benjamin Carter', title: 'Chief Financial Officer', description: 'Ben oversees all financial operations, leveraging data-driven insights to maintain our fiscal health, manage risk, and drive shareholder value.', imgSrc: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+    { name: 'Olivia Martinez', title: 'Head of Investment Strategy', description: 'Olivia leads our investment team, crafting bespoke portfolios that help clients navigate complex markets and achieve their long-term wealth goals.', imgSrc: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+    { name: 'Samuel Chen', title: 'Chief Technology Officer', description: 'Samuel drives our digital transformation. He focuses on building the secure and intuitive platform our customers rely on for seamless banking.', imgSrc: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+    { name: 'Aisha Khan', title: 'Head of Personal Banking', description: 'Aisha is dedicated to providing exceptional customer service and tailored banking solutions for individuals and families, making banking simple and personal.', imgSrc: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
+    { name: 'Marcus Holloway', title: 'Director of Compliance', description: 'Marcus ensures our operations adhere to the highest standards of regulatory compliance and security, safeguarding our clients and the institution.', imgSrc: 'https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' }
+];
+
+const StaffCard: React.FC<{ staff: typeof staffData[0], cardRef: (el: HTMLDivElement | null) => void }> = ({ staff, cardRef }) => (
+    <div ref={cardRef} className="snap-start flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 p-4">
+        <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-full flex flex-col items-center text-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+            <img src={staff.imgSrc} alt={staff.name} onError={handleImageError} className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-white dark:border-gray-700 shadow-md" />
+            <h3 className="text-xl font-bold text-westcoast-text-dark dark:text-white">{staff.name}</h3>
+            <p className="italic text-westcoast-blue dark:text-westcoast-accent my-1">{staff.title}</p>
+            <p className="text-sm text-westcoast-text-light dark:text-gray-300 mt-2 flex-grow">{staff.description}</p>
+        </div>
+    </div>
+);
 
 const TeamSection: React.FC = () => {
-    const staffData = [
-        { name: 'Dr. Evelyn Reed', title: 'Chief Executive Officer', description: 'With over 20 years in finance, Evelyn guides our strategic vision, ensuring sustainable growth and innovation while fostering a customer-centric culture.', imgSrc: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
-        { name: 'Benjamin Carter', title: 'Chief Financial Officer', description: 'Ben oversees all financial operations, leveraging data-driven insights to maintain our fiscal health, manage risk, and drive shareholder value.', imgSrc: 'https://images.unsplash.com/photo-1556157382-97eda2d62296?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
-        { name: 'Olivia Martinez', title: 'Head of Investment Strategy', description: 'Olivia leads our investment team, crafting bespoke portfolios that help clients navigate complex markets and achieve their long-term wealth goals.', imgSrc: 'https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
-        { name: 'Samuel Chen', title: 'Chief Technology Officer', description: 'Samuel drives our digital transformation. He focuses on building the secure and intuitive platform our customers rely on for seamless banking.', imgSrc: 'https://images.unsplash.com/photo-1531427186611-ecfd6d936c79?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
-        { name: 'Aisha Khan', title: 'Head of Personal Banking', description: 'Aisha is dedicated to providing exceptional customer service and tailored banking solutions for individuals and families, making banking simple and personal.', imgSrc: 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' },
-        { name: 'Marcus Holloway', title: 'Director of Compliance', description: 'Marcus ensures our operations adhere to the highest standards of regulatory compliance and security, safeguarding our clients and the institution.', imgSrc: 'https://images.unsplash.com/photo-1590650516494-0c8e4a4dd67e?q=80&w=200&h=200&auto=format&fit=crop&ixlib=rb-4.0.3' }
-    ];
-    
     const [currentIndex, setCurrentIndex] = useState(0);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
@@ -423,17 +433,6 @@ const TeamSection: React.FC = () => {
         }
         setCurrentIndex(nextIndex);
     };
-
-    const StaffCard: React.FC<{ staff: typeof staffData[0], cardRef: (el: HTMLDivElement | null) => void }> = ({ staff, cardRef }) => (
-        <div ref={cardRef} className="snap-start flex-shrink-0 w-full sm:w-1/2 lg:w-1/3 p-4">
-            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 h-full flex flex-col items-center text-center hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
-                <img src={staff.imgSrc} alt={staff.name} onError={handleImageError} className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-white dark:border-gray-700 shadow-md" />
-                <h3 className="text-xl font-bold text-westcoast-text-dark dark:text-white">{staff.name}</h3>
-                <p className="italic text-westcoast-blue dark:text-westcoast-accent my-1">{staff.title}</p>
-                <p className="text-sm text-westcoast-text-light dark:text-gray-300 mt-2 flex-grow">{staff.description}</p>
-            </div>
-        </div>
-    );
 
     return (
         <div className="bg-westcoast-bg dark:bg-gray-900 py-20">

@@ -121,6 +121,13 @@ const ManageBalanceModal: React.FC<{ user: UserProfile; onClose: () => void; onU
     );
 };
 
+const InputField = ({ label, ...props }) => (
+    <div>
+        <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
+        <input {...props} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
+    </div>
+);
+
 const EditUserModal = ({ user, onClose, onUpdate }) => {
     const [formData, setFormData] = useState({ ...user });
     const [loading, setLoading] = useState(false);
@@ -184,14 +191,6 @@ const EditUserModal = ({ user, onClose, onUpdate }) => {
         </div>
     );
 };
-
-const InputField = ({ label, ...props }) => (
-    <div>
-        <label className="block text-sm font-medium text-westcoast-text-light dark:text-gray-300">{label}</label>
-        <input {...props} className="w-full mt-1 px-4 py-2 border border-gray-300 rounded-lg dark:bg-gray-700 dark:border-gray-600 dark:text-white" />
-    </div>
-);
-
 
 const ChatModal: React.FC<{ user: UserProfile, onClose: () => void }> = ({ user, onClose }) => {
     const { userData: admin } = useAuth();
@@ -267,13 +266,107 @@ const ChatModal: React.FC<{ user: UserProfile, onClose: () => void }> = ({ user,
     );
 };
 
+const LoanApprovalModal: React.FC<{ loan: Loan, user: UserProfile, onClose: () => void, onUpdate: () => void }> = ({ loan, user, onClose, onUpdate }) => {
+    const [interestRate, setInterestRate] = useState('5.5');
+    const [dueDate, setDueDate] = useState('');
+    const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleSubmit = async (e: React.FormEvent) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            const updatedLoanData: Partial<Omit<Loan, 'id'>> = { status };
+            if (status === 'approved') {
+                const rate = parseFloat(interestRate);
+                if (isNaN(rate) || rate <= 0) {
+                    setError('Invalid interest rate.');
+                    setLoading(false);
+                    return;
+                }
+                if (!dueDate) {
+                    setError('Due date is required for approval.');
+                    setLoading(false);
+                    return;
+                }
+                const totalOwed = loan.loanAmount * (1 + rate / 100);
+                updatedLoanData.interestRate = rate;
+                updatedLoanData.totalOwed = totalOwed;
+                updatedLoanData.dueDate = Timestamp.fromDate(new Date(dueDate));
+                updatedLoanData.approvalDate = Timestamp.now();
+                
+                // The user object passed here might not be the most up-to-date.
+                // It's safer to fetch all users once than to re-fetch here.
+                // Assuming the parent component passes a user from a fresh list.
+                await adminUpdateBalance(user, loan.loanAmount, 'credit', 'Loan Disbursement', 'Westcoast Trust Loans', undefined, 'loan_disbursement');
+            }
+            await updateLoan(loan.id!, updatedLoanData);
+            onUpdate();
+        } catch (err: any) {
+            setError(err.message || 'Failed to update loan status.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
+                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Manage Loan Application</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <p><span className="font-semibold">Applicant:</span> {loan.fullName}</p>
+                    <p><span className="font-semibold">Amount:</span> {formatCurrency(loan.loanAmount, user.currencyCode)}</p>
+                    <p><span className="font-semibold">Purpose:</span> {loan.loanPurpose}</p>
+
+                    <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                        <option value="approved">Approve</option>
+                        <option value="rejected">Reject</option>
+                    </select>
+
+                    {status === 'approved' && (
+                        <>
+                            <div>
+                                <label className="block text-sm font-medium">Interest Rate (%)</label>
+                                <input type="number" step="0.1" value={interestRate} onChange={e => setInterestRate(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required/>
+                            </div>
+                             <div>
+                                <label className="block text-sm font-medium">Due Date</label>
+                                <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required/>
+                            </div>
+                        </>
+                    )}
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                    <div className="flex justify-end gap-4">
+                        <button type="button" onClick={onClose}>Cancel</button>
+                        <button type="submit" disabled={loading} className="px-4 py-2 bg-westcoast-blue text-white font-semibold rounded-lg">
+                            {loading ? 'Submitting...' : 'Submit Decision'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+const NavButton = ({ view, icon, label, selectedView, onClick }) => (
+    <button 
+        onClick={onClick} 
+        className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${selectedView === view ? 'bg-blue-50 dark:bg-blue-900/50 text-westcoast-blue' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
+    >
+        {icon}
+        <span>{label}</span>
+    </button>
+);
+
+
 const AdminDashboardPage: React.FC = () => {
     const { userData, signOut } = useAuth();
     const [users, setUsers] = useState<UserProfile[]>([]);
-    const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [loans, setLoans] = useState<Loan[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selectedView, setSelectedView] = useState<'dashboard' | 'users' | 'transactions' | 'loans'>('dashboard');
+    const [selectedView, setSelectedView] = useState<'dashboard' | 'users' | 'loans'>('dashboard');
     const [selectedUser, setSelectedUser] = useState<UserProfile | null>(null);
     const [showManageBalanceModal, setShowManageBalanceModal] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
@@ -365,91 +458,6 @@ const AdminDashboardPage: React.FC = () => {
     
     const totalUsers = users.length;
     const totalBalance = users.reduce((acc, user) => acc + user.balance, 0);
-
-    const LoanApprovalModal: React.FC<{ loan: Loan, user: UserProfile, onClose: () => void, onUpdate: () => void }> = ({ loan, user, onClose, onUpdate }) => {
-        const [interestRate, setInterestRate] = useState('5.5');
-        const [dueDate, setDueDate] = useState('');
-        const [status, setStatus] = useState<'approved' | 'rejected'>('approved');
-        const [loading, setLoading] = useState(false);
-        const [error, setError] = useState('');
-
-        const handleSubmit = async (e: React.FormEvent) => {
-            e.preventDefault();
-            setLoading(true);
-            setError('');
-            try {
-                const updatedLoanData: Partial<Omit<Loan, 'id'>> = { status };
-                if (status === 'approved') {
-                    const rate = parseFloat(interestRate);
-                    if (isNaN(rate) || rate <= 0) {
-                        setError('Invalid interest rate.');
-                        setLoading(false);
-                        return;
-                    }
-                    if (!dueDate) {
-                        setError('Due date is required for approval.');
-                        setLoading(false);
-                        return;
-                    }
-                    const totalOwed = loan.loanAmount * (1 + rate / 100);
-                    updatedLoanData.interestRate = rate;
-                    updatedLoanData.totalOwed = totalOwed;
-                    updatedLoanData.dueDate = Timestamp.fromDate(new Date(dueDate));
-                    updatedLoanData.approvalDate = Timestamp.now();
-                    
-                    const loanUser = users.find(u => u.uid === loan.userId);
-                    if(loanUser) {
-                        await adminUpdateBalance(loanUser, loan.loanAmount, 'credit', 'Loan Disbursement', 'Westcoast Trust Loans', undefined, 'loan_disbursement');
-                    }
-                }
-                await updateLoan(loan.id!, updatedLoanData);
-                onUpdate();
-            } catch (err: any) {
-                setError(err.message || 'Failed to update loan status.');
-            } finally {
-                setLoading(false);
-            }
-        };
-
-        return (
-             <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
-                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
-                    <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Manage Loan Application</h2>
-                    <form onSubmit={handleSubmit} className="space-y-4">
-                        <p><span className="font-semibold">Applicant:</span> {loan.fullName}</p>
-                        <p><span className="font-semibold">Amount:</span> {formatCurrency(loan.loanAmount, user.currencyCode)}</p>
-                        <p><span className="font-semibold">Purpose:</span> {loan.loanPurpose}</p>
-
-                        <select value={status} onChange={e => setStatus(e.target.value as any)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
-                            <option value="approved">Approve</option>
-                            <option value="rejected">Reject</option>
-                        </select>
-
-                        {status === 'approved' && (
-                            <>
-                                <div>
-                                    <label className="block text-sm font-medium">Interest Rate (%)</label>
-                                    <input type="number" step="0.1" value={interestRate} onChange={e => setInterestRate(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required/>
-                                </div>
-                                 <div>
-                                    <label className="block text-sm font-medium">Due Date</label>
-                                    <input type="date" value={dueDate} onChange={e => setDueDate(e.target.value)} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600" required/>
-                                </div>
-                            </>
-                        )}
-                        {error && <p className="text-red-500 text-sm">{error}</p>}
-                        <div className="flex justify-end gap-4">
-                            <button type="button" onClick={onClose}>Cancel</button>
-                            <button type="submit" disabled={loading} className="px-4 py-2 bg-westcoast-blue text-white font-semibold rounded-lg">
-                                {loading ? 'Submitting...' : 'Submit Decision'}
-                            </button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        );
-    };
-
 
     const renderView = () => {
         switch(selectedView) {
@@ -610,16 +618,6 @@ const AdminDashboardPage: React.FC = () => {
         return <div className="flex justify-center items-center h-screen bg-westcoast-bg dark:bg-gray-900"><Loader2 className="animate-spin text-westcoast-blue w-8 h-8"/></div>;
     }
 
-    const NavButton = ({ view, icon, label }) => (
-        <button 
-            onClick={() => setSelectedView(view)} 
-            className={`flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold transition-colors ${selectedView === view ? 'bg-blue-50 dark:bg-blue-900/50 text-westcoast-blue' : 'text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'}`}
-        >
-            {icon}
-            <span>{label}</span>
-        </button>
-    );
-
     return (
         <div className="flex min-h-screen bg-westcoast-bg dark:bg-gray-900 font-sans">
             <aside className="w-64 bg-white dark:bg-gray-800 border-r dark:border-gray-700 p-4 flex flex-col">
@@ -631,9 +629,9 @@ const AdminDashboardPage: React.FC = () => {
                     </div>
                 </div>
                  <nav className="flex-grow space-y-2">
-                     <NavButton view="dashboard" icon={<TrendingUp size={20}/>} label="Dashboard" />
-                     <NavButton view="users" icon={<Users size={20}/>} label="Users" />
-                     <NavButton view="loans" icon={<Banknote size={20}/>} label="Loans" />
+                     <NavButton view="dashboard" icon={<TrendingUp size={20}/>} label="Dashboard" selectedView={selectedView} onClick={() => setSelectedView('dashboard')} />
+                     <NavButton view="users" icon={<Users size={20}/>} label="Users" selectedView={selectedView} onClick={() => setSelectedView('users')} />
+                     <NavButton view="loans" icon={<Banknote size={20}/>} label="Loans" selectedView={selectedView} onClick={() => setSelectedView('loans')} />
                 </nav>
                  <div>
                     <button onClick={signOut} className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-sm font-semibold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">
