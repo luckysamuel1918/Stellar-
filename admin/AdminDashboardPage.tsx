@@ -8,6 +8,7 @@ import {
     wipeChatHistory, Timestamp, getAllLoans, updateLoan
 } from '../services/firebase';
 import { Users, DollarSign, Edit, Trash2, MessageSquare, Clock, X, Loader2, Send as SendIcon, AlertTriangle, Search, TrendingUp, ShieldOff, ShieldCheck, LogOut, Banknote } from 'lucide-react';
+import { formatCurrency } from '../dashboard/components';
 
 const Avatar: React.FC<{ user: UserProfile, size?: string, textClass?: string }> = ({ user, size = 'w-10 h-10', textClass = 'text-sm' }) => {
     const [imgError, setImgError] = useState(false);
@@ -356,22 +357,6 @@ const AdminDashboardPage: React.FC = () => {
         return 'N/A';
     };
     
-    const formatCurrency = (amount: number, currency: string) => {
-        const safeCurrency = currency || 'USD';
-        try {
-            // Using `undefined` for locale uses the browser's default locale,
-            // which is better for international users.
-            return new Intl.NumberFormat(undefined, {
-                style: 'currency',
-                currency: safeCurrency,
-            }).format(amount);
-        } catch (e) {
-            console.error(`Invalid currency code: ${safeCurrency}`, e);
-            // Fallback to showing the currency code if formatting fails, instead of always '$'
-            return `${safeCurrency} ${amount.toFixed(2)}`;
-        }
-    };
-
     const filteredUsers = users.filter(user =>
         user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||

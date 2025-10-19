@@ -262,9 +262,9 @@ const DashboardLayout: React.FC = () => {
                         </div>
                     </aside>
                     <main className="flex-1 pb-20 md:pb-0 flex flex-col">
-                         <div className="max-w-4xl mx-auto px-4 md:px-8 md:py-6 w-full flex-grow flex flex-col">
+                         <div className="max-w-4xl lg:max-w-5xl xl:max-w-6xl mx-auto px-4 md:px-8 md:py-6 w-full flex-grow flex flex-col">
                             <header className="hidden md:flex justify-between items-center mb-8">
-                                <h1 className="text-3xl font-bold text-westcoast-text-dark dark:text-white">{pageTitle}</h1>
+                                <h1 className="text-2xl sm:text-3xl font-bold text-westcoast-text-dark dark:text-white">{pageTitle}</h1>
                                 <div className="flex items-center gap-4">
                                     <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><MessageSquare className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
                                     <button className="p-2 bg-white dark:bg-gray-800 rounded-full shadow-sm"><Bell className="w-5 h-5 text-gray-600 dark:text-gray-300"/></button>
