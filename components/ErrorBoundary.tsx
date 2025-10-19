@@ -33,13 +33,10 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Replaced the class property initializer for state with a standard constructor.
-  // The property initializer was causing TypeScript to not recognize the inherited `this.props`,
-  // leading to a build error. A constructor correctly initializes state and ensures `this.props` is available.
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // FIX: Replaced the constructor with a class property for state initialization.
+  // The existing constructor-based initialization was causing TypeScript errors where 'state' and 'props' were not recognized.
+  // Using a class property is a more modern approach and can resolve such issues in certain build configurations.
+  state: State = { hasError: false };
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.

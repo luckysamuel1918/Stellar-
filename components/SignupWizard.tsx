@@ -265,18 +265,24 @@ const SignupWizard: React.FC<{ onLoginSwitch: () => void }> = ({ onLoginSwitch }
             try {
                 // FIX: Use `createUserWithEmailAndPassword` as a function, passing `auth` as the first argument.
                 const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.password);
+                
+                if (!userCredential || !userCredential.user || !userCredential.user.uid) {
+                    console.error("Firebase authentication returned an invalid user object.", userCredential);
+                    throw new Error("Account creation failed: Invalid response from authentication service.");
+                }
+
                 const { user } = userCredential;
                 const newAccountNumber = Math.floor(1000000000 + Math.random() * 9000000000).toString();
                 setAccountNumber(newAccountNumber);
                 await createUserProfileDocument(user, { ...formData, accountNumber: newAccountNumber });
                 setStep(4);
             } catch (error: any) {
+                console.error("Signup failed:", error);
                 if(error.code === 'auth/email-already-in-use') {
                     setFirebaseError('This email address is already in use.');
                 } else {
-                    setFirebaseError('Failed to create account. Please try again.');
+                    setFirebaseError(error.message || 'Failed to create account. Please check your credentials and try again.');
                 }
-                console.error(error);
             } finally {
                 setLoading(false);
             }

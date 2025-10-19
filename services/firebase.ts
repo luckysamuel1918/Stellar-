@@ -557,14 +557,14 @@ export const generateAndSendOtp = async (uid: string, email: string): Promise<vo
             const errorText = error.text || 'No additional details provided.';
             switch(error.status) {
                 case 400:
-                    detailedError = `OTP request failed (Bad Request): ${errorText} Please ensure your EmailJS template variables match the data being sent.`;
+                    detailedError = `OTP request failed (Bad Request): ${errorText} Please check your EmailJS template. It requires variables like 'otp_code' and 'to_email'.`;
                     break;
                 case 401: // Unauthorized
                 case 403: // Forbidden
-                    detailedError = `OTP request failed (Authentication Error): ${errorText} Please verify your EmailJS Public Key is correct for this service.`;
+                    detailedError = `OTP request failed (Authentication Error): ${errorText} Please verify your 'VITE_EMAILJS_OTP_PUBLIC_KEY' is correct.`;
                     break;
                 case 404: // Not Found
-                    detailedError = `OTP request failed (Not Found): ${errorText} Please verify your EmailJS Service ID and Template ID are correct.`;
+                    detailedError = `OTP request failed (Not Found): ${errorText} Please verify your 'VITE_EMAILJS_OTP_SERVICE_ID' and 'VITE_EMAILJS_OTP_TEMPLATE_ID' are correct.`;
                     break;
                 default:
                     detailedError = `OTP request failed. Service responded with status ${error.status}: ${errorText}`;
