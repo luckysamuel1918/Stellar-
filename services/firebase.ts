@@ -344,18 +344,46 @@ export const adminUpdateBalance = async (
 
     await updateDoc(userRef, { balance: increment(amountToIncrement) });
 
-    const newTransaction = await createTransaction({
-        amount,
-        description,
-        status: 'completed',
-        type: transactionType || type,
-        senderId: 'admin',
-        senderName: senderName || 'Westcoast Trust Bank Admin',
-        receiverId: user.uid,
-        receiverName: user.fullName,
-        receiverAccountNumber: user.accountNumber,
-        timestamp: customTimestamp || serverTimestamp(),
-    });
+    let transactionData: Omit<Transaction, 'id'>;
+
+    if (type === 'credit') {
+        transactionData = {
+            amount,
+            description,
+            status: 'completed',
+            type: transactionType || type,
+            senderId: 'admin',
+            senderName: senderName || 'Westcoast Trust Bank Admin',
+            receiverId: user.uid,
+            receiverName: user.fullName,
+            receiverAccountNumber: user.accountNumber,
+            timestamp: customTimestamp || serverTimestamp(),
+        };
+    } else { // debit
+        let recipientName = 'Westcoast Trust Bank';
+        if (transactionType === 'bill_payment' && description.startsWith('Bill Payment to ')) {
+            recipientName = description.substring('Bill Payment to '.length);
+        }
+        if (transactionType === 'loan_repayment') {
+            recipientName = 'Westcoast Trust Bank Loans';
+        }
+        
+        transactionData = {
+            amount,
+            description,
+            status: 'completed',
+            type: transactionType || type,
+            senderId: user.uid,
+            senderName: user.fullName,
+            receiverId: 'admin',
+            receiverName: recipientName,
+            receiverAccountNumber: 'N/A',
+            timestamp: customTimestamp || serverTimestamp(),
+        };
+    }
+
+    const newTransaction = await createTransaction(transactionData);
+
 
     if (newTransaction) {
         const updatedUser = await getUserData(user.uid);

@@ -33,11 +33,9 @@ const ErrorFallbackUI = () => {
 
 
 class ErrorBoundary extends React.Component<Props, State> {
-  // FIX: Replaced the state class property with a standard constructor. While class property initialization is modern, a constructor is more explicit and can resolve subtle type inference issues where instance properties like `props` are not being correctly recognized on the component type.
-  constructor(props: Props) {
-    super(props);
-    this.state = { hasError: false };
-  }
+  // FIX: The constructor was causing type inference issues where `this.props` and `this.state` were not being correctly recognized.
+  // Using a class property to initialize state is a more modern and concise approach that resolves these errors.
+  state: State = { hasError: false };
 
   static getDerivedStateFromError(_: Error): State {
     // Update state so the next render will show the fallback UI.

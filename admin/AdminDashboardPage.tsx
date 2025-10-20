@@ -360,6 +360,154 @@ const NavButton = ({ view, icon, label, selectedView, onClick }) => (
     </button>
 );
 
+const EditTransactionModal = ({ transaction, onClose, onUpdate }) => {
+    const initialDate = transaction.timestamp.toDate();
+    const [formData, setFormData] = useState({
+        amount: transaction.amount,
+        status: transaction.status,
+        description: transaction.description,
+        date: initialDate.toISOString().split('T')[0],
+        time: initialDate.toTimeString().substring(0, 5),
+    });
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+
+    const handleChange = (e) => {
+        const { name, value } = e.target;
+        setFormData(prev => ({ ...prev, [name]: value }));
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        setLoading(true);
+        setError('');
+        try {
+            const numAmount = parseFloat(formData.amount);
+            if (isNaN(numAmount) || numAmount <= 0) {
+                setError('Invalid amount.');
+                setLoading(false);
+                return;
+            }
+
+            const newTimestamp = Timestamp.fromDate(new Date(`${formData.date}T${formData.time}`));
+            const dataToUpdate = {
+                amount: numAmount,
+                status: formData.status,
+                description: formData.description,
+                timestamp: newTimestamp,
+            };
+
+            await adminUpdateTransaction(transaction.id, dataToUpdate);
+            onUpdate();
+        } catch (err) {
+            setError('Failed to update transaction.');
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-[60] p-4">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-lg">
+                <h2 className="text-xl font-bold text-westcoast-dark dark:text-white mb-4">Edit Transaction</h2>
+                <form onSubmit={handleSubmit} className="space-y-4">
+                    <InputField label="Amount" name="amount" type="number" value={formData.amount} onChange={handleChange} />
+                    <InputField label="Description" name="description" value={formData.description} onChange={handleChange} />
+                    <div className="grid grid-cols-2 gap-4">
+                        <InputField label="Date" name="date" type="date" value={formData.date} onChange={handleChange} />
+                        <InputField label="Time" name="time" type="time" value={formData.time} onChange={handleChange} />
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium">Status</label>
+                        <select name="status" value={formData.status} onChange={handleChange} className="w-full mt-1 px-4 py-2 border rounded-lg dark:bg-gray-700 dark:border-gray-600">
+                            <option value="completed">Completed</option>
+                            <option value="pending">Pending</option>
+                            <option value="failed">Failed</option>
+                        </select>
+                    </div>
+                    {error && <p className="text-red-500 text-sm">{error}</p>}
+                    <div className="flex justify-end space-x-4 pt-4">
+                        <button type="button" onClick={onClose} className="px-4 py-2 bg-gray-200 rounded-lg">Cancel</button>
+                        <button type="submit" disabled={loading} className="px-4 py-2 bg-westcoast-blue text-white font-semibold rounded-lg">
+                            {loading ? 'Saving...' : 'Save Changes'}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+};
+
+
+const UserTransactionsModal = ({ user, onClose, onUpdate }) => {
+    const [transactions, setTransactions] = useState<Transaction[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null);
+
+    const fetchTransactions = useCallback(async () => {
+        setLoading(true);
+        const txs = await getUserTransactions(user.uid);
+        setTransactions(txs);
+        setLoading(false);
+    }, [user.uid]);
+
+    useEffect(() => {
+        fetchTransactions();
+    }, [fetchTransactions]);
+
+    const handleUpdateAndRefetch = () => {
+        setEditingTransaction(null);
+        fetchTransactions();
+        onUpdate(); // Also trigger the main dashboard refetch if needed
+    };
+
+    return (
+        <>
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-4xl h-[90vh] flex flex-col">
+                    <div className="flex justify-between items-center mb-4">
+                        <h2 className="text-xl font-bold text-westcoast-dark dark:text-white">Transaction History for {user.fullName}</h2>
+                        <button onClick={onClose}><X /></button>
+                    </div>
+                    <div className="flex-grow overflow-y-auto">
+                        {loading ? <div className="flex justify-center items-center h-full"><Loader2 className="animate-spin" /></div> : (
+                            <table className="w-full text-sm">
+                                <thead>
+                                    <tr className="text-left text-gray-500">
+                                        <th className="p-2">Date</th>
+                                        <th className="p-2">Description</th>
+                                        <th className="p-2">Amount</th>
+                                        <th className="p-2">Status</th>
+                                        <th className="p-2">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {transactions.map(tx => (
+                                        <tr key={tx.id} className="border-t dark:border-gray-700">
+                                            <td className="p-2">{new Date(tx.timestamp.toDate()).toLocaleString()}</td>
+                                            <td className="p-2">{tx.description}</td>
+                                            <td className={`p-2 font-semibold ${tx.senderId === user.uid ? 'text-red-500' : 'text-green-500'}`}>
+                                                {formatCurrency(tx.amount, user.currencyCode)}
+                                            </td>
+                                            <td className="p-2">{tx.status}</td>
+                                            <td className="p-2">
+                                                <button onClick={() => setEditingTransaction(tx)} className="p-1 text-blue-500 hover:bg-blue-100 rounded-full">
+                                                    <Edit size={16} />
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        )}
+                    </div>
+                </div>
+            </div>
+            {editingTransaction && <EditTransactionModal transaction={editingTransaction} onClose={() => setEditingTransaction(null)} onUpdate={handleUpdateAndRefetch} />}
+        </>
+    );
+};
 
 const AdminDashboardPage: React.FC = () => {
     const { userData, signOut } = useAuth();
@@ -375,6 +523,7 @@ const AdminDashboardPage: React.FC = () => {
     const [searchTerm, setSearchTerm] = useState('');
     
     const [selectedLoan, setSelectedLoan] = useState<{ loan: Loan, user: UserProfile } | null>(null);
+    const [showTransactionsModal, setShowTransactionsModal] = useState(false);
 
     const fetchData = useCallback(async () => {
         setLoading(true);
@@ -400,6 +549,7 @@ const AdminDashboardPage: React.FC = () => {
         if (selectedUser) {
             setShowManageBalanceModal(false);
             setShowEditModal(false);
+            setShowTransactionsModal(false);
         }
         if (selectedLoan) {
             setSelectedLoan(null);
@@ -515,6 +665,7 @@ const AdminDashboardPage: React.FC = () => {
                                             <td className="p-3 text-right">
                                                 <div className="flex justify-end items-center space-x-1">
                                                     <button onClick={() => { setSelectedUser(user); setShowManageBalanceModal(true); }} className="p-2 text-blue-500 hover:bg-blue-100 rounded-full" title="Manage Balance"><DollarSign size={16}/></button>
+                                                    <button onClick={() => { setSelectedUser(user); setShowTransactionsModal(true); }} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full" title="View Transactions"><Clock size={16}/></button>
                                                     <button onClick={() => { setSelectedUser(user); setShowEditModal(true); }} className="p-2 text-gray-500 hover:bg-gray-200 rounded-full" title="Edit User"><Edit size={16}/></button>
                                                     <button onClick={() => openChat(user)} className="p-2 text-purple-500 hover:bg-purple-100 rounded-full" title="Chat with User"><MessageSquare size={16}/></button>
                                                     {user.isDeleted ? (
@@ -648,6 +799,7 @@ const AdminDashboardPage: React.FC = () => {
 
             {showManageBalanceModal && selectedUser && <ManageBalanceModal user={selectedUser} onClose={() => setShowManageBalanceModal(false)} onUpdate={handleUpdate} />}
             {showEditModal && selectedUser && <EditUserModal user={selectedUser} onClose={() => setShowEditModal(false)} onUpdate={handleUpdate} />}
+            {showTransactionsModal && selectedUser && <UserTransactionsModal user={selectedUser} onClose={() => setShowTransactionsModal(false)} onUpdate={handleUpdate} />}
             {showDeleteModal && selectedUser && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-800 rounded-xl shadow-xl p-6 w-full max-w-md">
