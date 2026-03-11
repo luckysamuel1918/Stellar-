@@ -58,7 +58,7 @@ const CREDIT_TEMPLATE_ID = "template_kozdmyg";
 const DEBIT_TEMPLATE_ID = "template_ms0phzn";
 
 // OTP Credentials
-const OTP_SERVICE_ID = "service_1oxm0rs";
+const OTP_SERVICE_ID = "service_ipqc4lp";
 const OTP_PUBLIC_KEY = "VYfq3eW-NMpJkm35M";
 const OTP_TEMPLATE_ID = "template_zsv0alp";
 
