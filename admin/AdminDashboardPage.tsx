@@ -600,14 +600,14 @@ const AdminDashboardPage: React.FC = () => {
         return 'N/A';
     };
     
-    const filteredUsers = users.filter(user =>
-        user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.accountNumber.includes(searchTerm)
-    );
+const filteredUsers = users.filter(user =>
+    (user.fullName ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (user.email ?? '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.accountNumber.includes(searchTerm)
+);
     
     const totalUsers = users.length;
-    const totalBalance = users.reduce((acc, user) => acc + user.balance, 0);
+    const totalBalance = users.reduce((acc, user) => acc + (parseFloat(user.balance) || 0), 0);
 
     const renderView = () => {
         switch(selectedView) {
@@ -740,24 +740,24 @@ const AdminDashboardPage: React.FC = () => {
                 return (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex items-center gap-4">
-                            <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full"><Users className="text-blue-500"/></div>
-                            <div>
+                            <div className="bg-blue-100 dark:bg-blue-900/50 p-3 rounded-full flex-shrink-0"><Users className="text-blue-500"/></div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Users</p>
-                                <p className="text-2xl font-bold text-gray-800 dark:text-white">{totalUsers}</p>
+                                <p className="text-2xl font-bold text-gray-800 dark:text-white break-words">{totalUsers}</p>
                             </div>
                         </div>
                          <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex items-center gap-4">
-                            <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full"><TrendingUp className="text-green-500"/></div>
-                            <div>
+                            <div className="bg-green-100 dark:bg-green-900/50 p-3 rounded-full flex-shrink-0"><TrendingUp className="text-green-500"/></div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Total Platform Balance</p>
-                                <p className="text-2xl font-bold text-gray-800 dark:text-white">{formatCurrency(totalBalance, 'USD')}</p>
+                                <p className="text-lg font-bold text-gray-800 dark:text-white break-all" style={{wordBreak: 'break-all', overflowWrap: 'anywhere'}}>{formatCurrency(totalBalance, 'USD')}</p>
                             </div>
                         </div>
                         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm flex items-center gap-4">
-                            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-3 rounded-full"><Banknote className="text-yellow-500"/></div>
-                            <div>
+                            <div className="bg-yellow-100 dark:bg-yellow-900/50 p-3 rounded-full flex-shrink-0"><Banknote className="text-yellow-500"/></div>
+                            <div className="min-w-0 flex-1">
                                 <p className="text-sm text-gray-500 dark:text-gray-400">Pending Loans</p>
-                                <p className="text-2xl font-bold text-gray-800 dark:text-white">{loans.filter(l => l.status === 'pending').length}</p>
+                                <p className="text-2xl font-bold text-gray-800 dark:text-white break-words">{loans.filter(l => l.status === 'pending').length}</p>
                             </div>
                         </div>
                     </div>
